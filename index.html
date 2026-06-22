@@ -1,200 +1,75 @@
 <!doctype html>
 <html lang="it">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <title>SB Coach Gestionale 4.0</title>
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#101827">
-  <style>
-    :root{--navy:#101827;--navy2:#1b2434;--gold:#d5ad52;--bg:#f4f6f8;--card:#fff;--text:#111827;--muted:#6b7280;--red:#dc2626;--green:#16a34a;--yellow:#f59e0b;--line:#e5e7eb}
-    *{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:var(--text)}
-    header{background:linear-gradient(145deg,var(--navy),var(--navy2));border-bottom:4px solid var(--gold);padding:18px 14px 12px;position:sticky;top:0;z-index:10}
-    .logo{display:block;width:210px;max-width:72%;margin:0 auto 8px}header h1{margin:0;text-align:center;color:#fff;font-size:17px}header p{margin:5px 0 0;text-align:center;color:#d1d5db;font-size:12px}
-    nav{display:flex;gap:8px;overflow:auto;background:#fff;padding:10px;border-bottom:1px solid var(--line);position:sticky;top:115px;z-index:9}
-    nav button{border:0;border-radius:999px;background:#eef2f7;color:var(--navy);font-weight:900;padding:10px 12px;white-space:nowrap}nav button.active{background:var(--navy);color:#fff;border:2px solid var(--gold)}
-    main{max-width:960px;margin:0 auto;padding:12px}.section{display:none}.section.active{display:block}
-    .card{background:#fff;border-radius:18px;padding:14px;margin:12px 0;box-shadow:0 4px 14px rgba(0,0,0,.06)}h2{margin:0 0 12px;color:var(--navy);font-size:18px}h3{margin:0;color:var(--navy);font-size:17px}
-    .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.kpi{background:#fff;border-radius:16px;padding:14px;border-top:4px solid var(--gold);box-shadow:0 4px 14px rgba(0,0,0,.06)}.kpi strong{display:block;font-size:25px;color:var(--navy)}.kpi span{font-size:12px;color:var(--muted);font-weight:800}
-    label{display:block;font-size:12px;font-weight:900;color:#334155;margin:10px 0 4px}input,select,textarea{width:100%;border:1px solid #cbd5e1;border-radius:12px;padding:12px;font-size:16px;background:#fff}textarea{min-height:82px}
-    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.btn{border:0;border-radius:13px;padding:12px 14px;font-size:15px;font-weight:900;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:7px;cursor:pointer}.full{width:100%;margin-top:10px}
-    .primary{background:var(--navy);color:#fff}.gold{background:var(--gold);color:#111827}.light{background:#eef2f7;color:var(--navy)}.red{background:#fee2e2;color:#991b1b}.green{background:#25D366;color:#fff}
-    .badge{display:inline-block;border-radius:999px;padding:6px 9px;font-size:12px;font-weight:900;margin:5px 4px 2px 0}.ok{background:#dcfce7;color:#166534}.warn{background:#fef3c7;color:#92400e}.bad{background:#fee2e2;color:#991b1b}.info{background:#dbeafe;color:#1e40af}
-    .meta{font-size:13px;color:var(--muted);line-height:1.45;margin:6px 0}.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.empty{text-align:center;color:var(--muted);padding:20px 6px;font-size:14px}.hidden{display:none!important}
-    .loginbox{max-width:430px;margin:18px auto}.topbar{display:flex;justify-content:space-between;align-items:center;gap:8px}.small{font-size:12px;color:var(--muted)}
-    @media(max-width:580px){.row{grid-template-columns:1fr}.grid{grid-template-columns:repeat(2,1fr)}main{padding:10px}nav{top:112px}}
-  </style>
-</head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>SB Personal Coach Gestionale 5.0</title><link rel="manifest" href="manifest.json"><meta name="theme-color" content="#101827">
+<style>
+:root{--navy:#101827;--navy2:#1b2434;--gold:#d5ad52;--bg:#f4f6f8;--card:#fff;--text:#111827;--muted:#6b7280;--red:#dc2626;--green:#16a34a;--yellow:#f59e0b;--line:#e5e7eb}*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;color:var(--text)}header{background:linear-gradient(145deg,var(--navy),var(--navy2));border-bottom:4px solid var(--gold);padding:18px 14px 12px;position:sticky;top:0;z-index:30}.logo{display:block;width:210px;max-width:72%;margin:0 auto 8px}header h1{margin:0;text-align:center;color:#fff;font-size:17px}header p{margin:5px 0 0;text-align:center;color:#d1d5db;font-size:12px}nav{display:flex;gap:8px;overflow:auto;background:#fff;padding:10px;border-bottom:1px solid var(--line);position:sticky;top:115px;z-index:25}nav button{border:0;border-radius:999px;background:#eef2f7;color:var(--navy);font-weight:900;padding:10px 12px;white-space:nowrap}nav button.active{background:var(--navy);color:#fff;border:2px solid var(--gold)}main{max-width:1080px;margin:0 auto;padding:12px}.section{display:none}.section.active{display:block}.card{background:#fff;border-radius:18px;padding:14px;margin:12px 0;box-shadow:0 4px 14px rgba(0,0,0,.06)}h2{margin:0 0 12px;color:var(--navy);font-size:18px}h3{margin:0;color:var(--navy);font-size:17px}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.kpi{background:#fff;border-radius:16px;padding:14px;border-top:4px solid var(--gold);box-shadow:0 4px 14px rgba(0,0,0,.06)}.kpi strong{display:block;font-size:25px;color:var(--navy)}.kpi span{font-size:12px;color:var(--muted);font-weight:800}label{display:block;font-size:12px;font-weight:900;color:#334155;margin:10px 0 4px}input,select,textarea{width:100%;border:1px solid #cbd5e1;border-radius:12px;padding:12px;font-size:16px;background:#fff}textarea{min-height:82px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.btn{border:0;border-radius:13px;padding:12px 14px;font-size:15px;font-weight:900;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:7px;cursor:pointer}.full{width:100%;margin-top:10px}.primary{background:var(--navy);color:#fff}.gold{background:var(--gold);color:#111827}.light{background:#eef2f7;color:var(--navy)}.red{background:#fee2e2;color:#991b1b}.green{background:#25D366;color:#fff}.badge{display:inline-block;border-radius:999px;padding:6px 9px;font-size:12px;font-weight:900;margin:5px 4px 2px 0}.ok{background:#dcfce7;color:#166534}.warn{background:#fef3c7;color:#92400e}.bad{background:#fee2e2;color:#991b1b}.info{background:#dbeafe;color:#1e40af}.meta{font-size:13px;color:var(--muted);line-height:1.45;margin:6px 0}.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.empty{text-align:center;color:var(--muted);padding:20px 6px;font-size:14px}.hidden{display:none!important}.loginbox{max-width:430px;margin:18px auto}.topbar{display:flex;justify-content:space-between;align-items:center;gap:8px}.small{font-size:12px;color:var(--muted)}.notice{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412;border-radius:14px;padding:12px;margin:12px 0;font-size:13px}@media(max-width:580px){.row{grid-template-columns:1fr}.grid{grid-template-columns:repeat(2,1fr)}main{padding:10px}nav{top:112px}}
+</style></head>
 <body>
-<header>
-  <img src="logo.jpeg" class="logo" alt="Salvatore Barone Personal Coach">
-  <h1>Gestionale Clienti 4.0</h1>
-  <p>Firebase Cloud · iPhone · Mac · WhatsApp</p>
-</header>
-
-<div id="loginView" class="loginbox card">
-  <h2>🔐 Accesso Coach</h2>
-  <label>Email</label><input id="loginEmail" type="email" placeholder="la tua email">
-  <label>Password</label><input id="loginPassword" type="password" placeholder="password">
-  <button class="btn primary full" onclick="login()">Accedi</button>
-  <button class="btn gold full" onclick="signup()">Crea account</button>
-  <p class="meta">Usa una sola email: sarà il tuo archivio clienti personale.</p>
-</div>
-
-<div id="appView" class="hidden">
-<nav>
-  <button class="active" onclick="show('dashboard',this)">Dashboard</button>
-  <button onclick="show('clienti',this)">Clienti</button>
-  <button onclick="show('contatti',this)">Da contattare</button>
-  <button onclick="show('rinnovi',this)">Rinnovi</button>
-  <button onclick="show('messaggi',this)">Messaggi</button>
-  <button onclick="show('backup',this)">Backup</button>
-</nav>
-
-<main>
-<section id="dashboard" class="section active">
-  <div class="topbar card">
-    <div><b id="userEmail"></b><br><span class="small">Database cloud sincronizzato</span></div>
-    <button class="btn red" onclick="logout()">Esci</button>
-  </div>
-  <div class="grid">
-    <div class="kpi"><strong id="kClienti">0</strong><span>Clienti attivi</span></div>
-    <div class="kpi"><strong id="kContatti">0</strong><span>Da contattare</span></div>
-    <div class="kpi"><strong id="kRinnovi">0</strong><span>Pacchetti rinnovati</span></div>
-    <div class="kpi"><strong id="kIncassi">€0</strong><span>Crediti da incassare</span></div>
-  </div>
-  <div class="card"><h2>📌 Priorità di oggi</h2><div id="priorita"></div></div>
-</section>
-
-<section id="clienti" class="section">
-  <div class="card">
-    <h2>➕ Nuovo cliente</h2>
-    <input type="hidden" id="editId">
-    <div class="row"><div><label>Nome cliente</label><input id="nome"></div><div><label>Telefono WhatsApp</label><input id="telefono" placeholder="393331234567"></div></div>
-    <div class="row"><div><label>Servizio</label><select id="servizio"><option>Personal Training</option><option>Coaching Online</option><option>Small Group Training</option><option>BIA / Plicometria</option></select></div><div><label>Pacchetto lezioni</label><select id="pacchetto"><option value="8">8 lezioni</option><option value="10">10 lezioni</option><option value="12" selected>12 lezioni</option><option value="16">16 lezioni</option><option value="manuale">Personalizzato</option></select></div></div>
-    <div class="row" id="manualeBox" style="display:none"><div><label>Numero lezioni personalizzato</label><input id="pacchettoManuale" type="number" min="1"></div></div>
-    <div class="row"><div><label>Frequenza settimanale</label><select id="frequenza"><option value="1">1 volta/settimana</option><option value="2" selected>2 volte/settimana</option><option value="3">3 volte/settimana</option><option value="4">4 volte/settimana</option><option value="5">5 volte/settimana</option></select></div><div><label>Data inizio</label><input id="inizio" type="date"></div></div>
-    <div class="row"><div><label>Importo dovuto (€)</label><input id="dovuto" type="number" min="0"></div><div><label>Importo pagato (€)</label><input id="pagato" type="number" min="0"></div></div>
-    <label>Note</label><textarea id="note"></textarea>
-    <button class="btn primary full" onclick="salvaCliente()">Salva cliente</button>
-    <button class="btn light full" onclick="pulisciForm()">Pulisci modulo</button>
-  </div>
-  <input id="search" placeholder="Cerca cliente..." oninput="render()">
-  <div id="listaClienti"></div>
-</section>
-
-<section id="contatti" class="section"><div class="card"><h2>💬 Da contattare</h2><div id="listaContatti"></div></div></section>
-<section id="rinnovi" class="section"><div class="card"><h2>🔁 Storico rinnovi</h2><p class="meta">Ogni rinnovo viene salvato nel database cloud.</p><div id="listaRinnovi"></div></div></section>
-
-<section id="messaggi" class="section">
-  <div class="card">
-    <h2>✍️ Testi WhatsApp modificabili</h2>
-    <p class="meta">Usa: {nome}, {scadenza}, {lezioniResidue}, {residuo}, {servizio}.</p>
-    <label>Rinnovo pacchetto</label><textarea id="tplRinnovo"></textarea>
-    <label>Scadenza imminente</label><textarea id="tplScadenza"></textarea>
-    <label>Saldo residuo</label><textarea id="tplSaldo"></textarea>
-    <label>Check / aggiornamento</label><textarea id="tplCheck"></textarea>
-    <button class="btn primary full" onclick="salvaTemplate()">Salva testi</button>
-    <button class="btn light full" onclick="resetTemplate()">Ripristina testi consigliati</button>
-  </div>
-</section>
-
-<section id="backup" class="section">
-  <div class="card">
-    <h2>🗄️ Backup</h2>
-    <p class="meta">I dati sono su Firebase. Puoi comunque scaricare un backup JSON.</p>
-    <button class="btn gold full" onclick="exportDB()">Scarica backup</button>
-  </div>
-</section>
-</main>
-</div>
-
+<header><img src="logo.jpeg" class="logo"><h1>Gestionale Clienti 5.0</h1><p>Coach · Clienti · Pacchetti · Check · Prenotazioni</p></header>
+<div id="configWarning" class="notice" style="margin:12px">⚠️ Configurazione Firebase non ancora inserita. Apri <b>firebase-config.js</b> e incolla i dati Firebase.</div>
+<div id="loginView" class="loginbox card"><h2>🔐 Accesso Coach</h2><label>Email</label><input id="loginEmail" type="email" placeholder="la tua email"><label>Password</label><input id="loginPassword" type="password" placeholder="password"><button class="btn primary full" onclick="login()">Accedi</button><button class="btn gold full" onclick="signup()">Crea account coach</button><p class="meta">Il primo account creato sarà usato come area coach.</p></div>
+<div id="appView" class="hidden"><nav><button class="active" onclick="show('dashboard',this)">Dashboard</button><button onclick="show('clienti',this)">Clienti</button><button onclick="show('contatti',this)">Da contattare</button><button onclick="show('check',this)">Check</button><button onclick="show('agenda',this)">Agenda</button><button onclick="show('rinnovi',this)">Rinnovi</button><button onclick="show('messaggi',this)">Messaggi</button><button onclick="show('regolamento',this)">Regole</button><button onclick="show('backup',this)">Backup</button></nav><main>
+<section id="dashboard" class="section active"><div class="topbar card"><div><b id="userEmail"></b><br><span class="small">Database cloud Firestore</span></div><button class="btn red" onclick="logout()">Esci</button></div><div class="grid"><div class="kpi"><strong id="kClienti">0</strong><span>Clienti attivi</span></div><div class="kpi"><strong id="kContatti">0</strong><span>Da contattare oggi</span></div><div class="kpi"><strong id="kRinnovi">0</strong><span>Pacchetti rinnovati</span></div><div class="kpi"><strong id="kIncassi">€0</strong><span>Crediti da incassare</span></div><div class="kpi"><strong id="kCheck">0</strong><span>Check da programmare</span></div><div class="kpi"><strong id="kCert">0</strong><span>Certificati in scadenza</span></div></div><div class="card"><h2>📌 Priorità</h2><div id="priorita"></div></div></section>
+<section id="clienti" class="section"><div class="card"><h2>➕ Nuovo / modifica cliente</h2><input type="hidden" id="editId"><div class="row"><div><label>Nome</label><input id="nome"></div><div><label>Cognome</label><input id="cognome"></div></div><div class="row"><div><label>Email cliente</label><input id="emailCliente" type="email"></div><div><label>Telefono WhatsApp</label><input id="telefono" placeholder="393331234567"></div></div><div class="row"><div><label>Data nascita</label><input id="dataNascita" type="date"></div><div><label>Sesso</label><select id="sesso"><option>Maschio</option><option>Femmina</option><option>Altro / non specificato</option></select></div></div><label>Servizi attivi</label><select id="servizio"><option>Personal Training</option><option>Nutrizione</option><option>Coaching Online</option><option>Preparazione Gara</option><option>PT + Nutrizione</option><option>Combinato</option></select><div class="row"><div><label>Pacchetto lezioni</label><select id="pacchetto"><option value="0">Nessun pacchetto lezioni</option><option value="8">8 lezioni</option><option value="10">10 lezioni</option><option value="12" selected>12 lezioni</option><option value="16">16 lezioni</option><option value="manuale">Personalizzato</option></select></div><div><label>Frequenza settimanale</label><select id="frequenza"><option value="1">1 volta/settimana</option><option value="2" selected>2 volte/settimana</option><option value="3">3 volte/settimana</option><option value="4">4 volte/settimana</option><option value="5">5 volte/settimana</option></select></div></div><div class="row" id="manualeBox" style="display:none"><div><label>Numero lezioni personalizzato</label><input id="pacchettoManuale" type="number" min="1"></div></div><div class="row"><div><label>Data inizio pacchetto</label><input id="inizio" type="date"></div><div><label>Scadenza certificato medico</label><input id="certificatoScadenza" type="date"></div></div><div class="row"><div><label>Importo dovuto (€)</label><input id="dovuto" type="number" min="0"></div><div><label>Importo pagato (€)</label><input id="pagato" type="number" min="0"></div></div><label>Anamnesi / note interne coach</label><textarea id="anamnesi" placeholder="Patologie, farmaci, infortuni, allergie, intolleranze, obiettivo..."></textarea><label>Note generali</label><textarea id="note"></textarea><label><input type="checkbox" id="regoleAccettate" style="width:auto"> Regolamento one to one accettato</label><button class="btn primary full" onclick="salvaCliente()">Salva cliente</button><button class="btn light full" onclick="pulisciForm()">Pulisci modulo</button></div><input id="search" placeholder="Cerca cliente..." oninput="render()"><div id="listaClienti"></div></section>
+<section id="contatti" class="section"><div class="card"><h2>💬 Da contattare oggi</h2><div id="listaContatti"></div></div></section>
+<section id="check" class="section"><div class="card"><h2>📏 Nuovo check</h2><label>Cliente</label><select id="checkCliente"></select><div class="row"><div><label>Data check</label><input id="checkData" type="date"></div><div><label>Peso kg</label><input id="checkPeso" type="number" step="0.1"></div></div><label>Circonferenze</label><textarea id="checkCirc" placeholder="Vita, fianchi, coscia, braccio..."></textarea><label>7 pliche</label><textarea id="checkPliche" placeholder="Pettorale, tricipitale, sottoscapolare, addominale, sovrailiaca..."></textarea><label>Note check</label><textarea id="checkNote"></textarea><button class="btn primary full" onclick="salvaCheck()">Salva check</button></div><div id="listaCheck"></div></section>
+<section id="agenda" class="section"><div class="card"><h2>📅 Agenda / prenotazioni</h2><p class="meta">Modulo base: gli slot verdi/rossi e Google Calendar saranno collegati nella fase successiva. Qui puoi già registrare lezioni e check programmati.</p><label>Cliente</label><select id="agendaCliente"></select><div class="row"><div><label>Data</label><input id="agendaData" type="date"></div><div><label>Ora</label><input id="agendaOra" type="time"></div></div><label>Tipo</label><select id="agendaTipo"><option>Lezione PT</option><option>Check</option><option>Consulenza</option></select><button class="btn primary full" onclick="salvaEvento()">Salva evento</button></div><div id="listaEventi"></div></section>
+<section id="rinnovi" class="section"><div class="card"><h2>🔁 Storico rinnovi</h2><div id="listaRinnovi"></div></div></section>
+<section id="messaggi" class="section"><div class="card"><h2>✍️ Testi WhatsApp modificabili</h2><p class="meta">Usa: {nome}, {scadenza}, {lezioniResidue}, {residuo}, {servizio}.</p><label>Rinnovo pacchetto</label><textarea id="tplRinnovo"></textarea><label>Scadenza imminente</label><textarea id="tplScadenza"></textarea><label>Saldo residuo</label><textarea id="tplSaldo"></textarea><label>Check</label><textarea id="tplCheck"></textarea><label>Certificato medico</label><textarea id="tplCertificato"></textarea><button class="btn primary full" onclick="salvaTemplate()">Salva testi</button><button class="btn light full" onclick="resetTemplate()">Ripristina testi consigliati</button></div></section>
+<section id="regolamento" class="section"><div class="card"><h2>📜 Regolamento lezioni one to one</h2><div class="meta" style="white-space:pre-wrap" id="regoleTesto"></div></div></section>
+<section id="backup" class="section"><div class="card"><h2>🗄️ Backup</h2><p class="meta">Scarica una copia JSON dei dati principali.</p><button class="btn gold full" onclick="exportDB()">Scarica backup</button></div></section>
+</main></div>
 <script type="module">
-/* 
-  1) Crea progetto Firebase
-  2) Attiva Authentication Email/Password
-  3) Attiva Firestore Database
-  4) Sostituisci firebaseConfig qui sotto
-*/
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, addDoc, getDocs, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { firebaseConfig } from './firebase-config.js';
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js';
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js';
+import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js';
+const configured=firebaseConfig&&firebaseConfig.apiKey&&!firebaseConfig.apiKey.includes('INCOLLA');if(configured)configWarning.classList.add('hidden');
+let app,auth,db;try{app=initializeApp(firebaseConfig);auth=getAuth(app);db=getFirestore(app)}catch(e){console.warn(e)}
+const defaultTpl={rinnovo:'Ciao {nome}, ti scrivo per avvisarti che il tuo pacchetto è quasi terminato. Ti restano {lezioniResidue} lezioni. Fammi sapere se vuoi procedere con il rinnovo, così manteniamo continuità nel percorso.',scadenza:'Ciao {nome}, ti ricordo che il tuo pacchetto scade il {scadenza}. Fammi sapere se vuoi procedere con il rinnovo, così organizziamo al meglio le prossime lezioni.',saldo:'Ciao {nome}, ti ricordo che risulta ancora un saldo residuo di €{residuo} relativo al tuo percorso. Quando riesci, fammi sapere così aggiorno la tua posizione.',check:'Ciao {nome}, ti scrivo per ricordarti di prenotare/effettuare il prossimo check del percorso.',certificato:'Ciao {nome}, ti ricordo che il certificato medico è in scadenza. Appena riesci, aggiornami così manteniamo la documentazione in regola.'};
+const regolamento=`REGOLAMENTO LEZIONI ONE TO ONE – PERSONAL TRAINING
 
-const firebaseConfig = {
-  apiKey: "INCOLLA_LA_TUA_API_KEY",
-  authDomain: "INCOLLA_AUTH_DOMAIN",
-  projectId: "INCOLLA_PROJECT_ID",
-  storageBucket: "INCOLLA_STORAGE_BUCKET",
-  messagingSenderId: "INCOLLA_MESSAGING_SENDER_ID",
-  appId: "INCOLLA_APP_ID"
-};
+1. Oggetto
+Il Trainer si impegna a fornire al Cliente lezioni private di personal training, finalizzate al miglioramento della forma fisica, secondo un programma di allenamento personalizzato e concordato tra le parti.
 
-const defaultTpl={
-rinnovo:"Ciao {nome}, ti scrivo per avvisarti che il tuo pacchetto è quasi terminato. Ti restano {lezioniResidue} lezioni. Fammi sapere se vuoi procedere con il rinnovo, così manteniamo continuità nel percorso.",
-scadenza:"Ciao {nome}, ti ricordo che il tuo pacchetto scade il {scadenza}. Fammi sapere se vuoi procedere con il rinnovo, così organizziamo al meglio le prossime lezioni.",
-saldo:"Ciao {nome}, ti ricordo che risulta ancora un saldo residuo di €{residuo} relativo al tuo percorso. Quando riesci, fammi sapere così aggiorno la tua posizione.",
-check:"Ciao {nome}, ti scrivo per aggiornarti sul tuo percorso e organizzare le prossime lezioni/check."
-};
+2. Durata e frequenza
+Le lezioni avranno una frequenza minima di 2 e massima di 4 sedute a settimana.
+Il pacchetto acquistato non potrà estendersi oltre 6 settimane, anche in caso di mancato completamento delle lezioni previste, salvo cause imputabili al Trainer.
+Ogni lezione avrà una durata massima di 60 minuti.
 
-const app=initializeApp(firebaseConfig);
-const auth=getAuth(app);
-const db=getFirestore(app);
+3. Orario delle lezioni
+L’orario concordato all’inizio del pacchetto verrà riservato e bloccato per l’intera durata del percorso, salvo imprevisti o cause di forza maggiore da parte di una delle due parti.
+Nel caso in cui il Cliente si presenti in ritardo, il tempo perso non verrà recuperato. La lezione terminerà comunque all’orario stabilito.
 
-let user=null, clienti=[], rinnovi=[], templates={...defaultTpl};
+4. Compenso e modalità di pagamento
+Il pagamento potrà avvenire in contanti e/o tramite bonifico bancario.
+Il pagamento avverrà anticipatamente o secondo le modalità concordate tra le parti.
 
-window.login=()=>signInWithEmailAndPassword(auth, loginEmail.value, loginPassword.value).catch(e=>alert(e.message));
-window.signup=()=>createUserWithEmailAndPassword(auth, loginEmail.value, loginPassword.value).catch(e=>alert(e.message));
-window.logout=()=>signOut(auth);
+5. Cancellazione e recupero lezioni
+Il Cliente può cancellare o spostare una lezione con un preavviso minimo di 24 ore.
+In caso di mancato preavviso, disdetta tardiva o mancata presenza, la lezione sarà considerata regolarmente effettuata e non sarà recuperabile.
+Le lezioni cancellate dal Trainer saranno recuperate in una data successivamente concordata.
 
-onAuthStateChanged(auth, u=>{
-  user=u;
-  if(!u){loginView.classList.remove("hidden"); appView.classList.add("hidden"); return;}
-  loginView.classList.add("hidden"); appView.classList.remove("hidden"); userEmail.textContent=u.email;
-  subscribe();
-});
-
-function path(name){return collection(db,"users",user.uid,name)}
-function docPath(name,id){return doc(db,"users",user.uid,name,id)}
-function subscribe(){
-  onSnapshot(path("clienti"), snap=>{clienti=snap.docs.map(d=>({id:d.id,...d.data()})); render();});
-  onSnapshot(path("rinnovi"), snap=>{rinnovi=snap.docs.map(d=>({id:d.id,...d.data()})); render();});
-  onSnapshot(doc(db,"users",user.uid,"settings","templates"), snap=>{templates=snap.exists()?snap.data():{...defaultTpl}; render();});
-}
-
-window.show=(id,btn)=>{document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));document.getElementById(id).classList.add("active");document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));btn.classList.add("active");render();}
-window.onload=()=>{inizio.valueAsDate=new Date();}
-pacchetto.onchange=()=>manualeBox.style.display=pacchetto.value==="manuale"?"grid":"none";
-
-function fmt(d){return new Date(d).toLocaleDateString("it-IT")}
-function addDays(date,days){let d=new Date(date);d.setDate(d.getDate()+days);return d}
-function daysLeft(date){let o=new Date();o.setHours(0,0,0,0);let s=new Date(date);s.setHours(0,0,0,0);return Math.ceil((s-o)/86400000)}
-function pack(){return pacchetto.value==="manuale"?Number(pacchettoManuale.value||0):Number(pacchetto.value)}
-function calcExpiry(start,lessons,freq){return addDays(start,Math.ceil((lessons/freq)*7)).toISOString().slice(0,10)}
-
-window.pulisciForm=()=>{["editId","nome","telefono","pacchettoManuale","dovuto","pagato","note"].forEach(id=>document.getElementById(id).value="");inizio.valueAsDate=new Date();pacchetto.value="12";frequenza.value="2";manualeBox.style.display="none";}
-window.salvaCliente=async()=>{
-  let id=editId.value, lez=pack(), freq=Number(frequenza.value);
-  if(!nome.value.trim()||!telefono.value.trim()||!lez||!freq||!inizio.value){alert("Compila nome, telefono, pacchetto, frequenza e data inizio.");return}
-  let old=clienti.find(c=>c.id===id);
-  let data={nome:nome.value.trim(),telefono:telefono.value.trim(),servizio:servizio.value,lezioniTotali:lez,lezioniFatte:old?old.lezioniFatte:0,lezioniResidue:old?Math.max(0,lez-old.lezioniFatte):lez,frequenza:freq,inizio:inizio.value,scadenza:calcExpiry(inizio.value,lez,freq),dovuto:Number(dovuto.value||0),pagato:Number(pagato.value||0),note:note.value||"",updatedAt:serverTimestamp()};
-  if(id) await setDoc(docPath("clienti",id), data, {merge:true}); else await addDoc(path("clienti"), data);
-  pulisciForm();
-}
-window.editCliente=(id)=>{let c=clienti.find(x=>x.id===id); if(!c)return; editId.value=c.id; nome.value=c.nome; telefono.value=c.telefono; servizio.value=c.servizio; if([8,10,12,16].includes(c.lezioniTotali)){pacchetto.value=c.lezioniTotali;manualeBox.style.display="none"}else{pacchetto.value="manuale";manualeBox.style.display="grid";pacchettoManuale.value=c.lezioniTotali} frequenza.value=c.frequenza; inizio.value=c.inizio; dovuto.value=c.dovuto||0; pagato.value=c.pagato||0; note.value=c.note||""; window.scrollTo({top:130,behavior:"smooth"});}
-window.lezione=async(id)=>{let c=clienti.find(x=>x.id===id); if(!c||c.lezioniResidue<=0)return; await setDoc(docPath("clienti",id), {lezioniFatte:(c.lezioniFatte||0)+1,lezioniResidue:(c.lezioniResidue||0)-1,updatedAt:serverTimestamp()}, {merge:true});}
-window.rinnova=async(id)=>{let c=clienti.find(x=>x.id===id); if(!c)return; await addDoc(path("rinnovi"), {cliente:c.nome,servizio:c.servizio,pacchetto:c.lezioniTotali,data:new Date().toISOString().slice(0,10),importo:c.dovuto||0,createdAt:serverTimestamp()}); let start=new Date().toISOString().slice(0,10); await setDoc(docPath("clienti",id), {lezioniFatte:0,lezioniResidue:c.lezioniTotali,inizio:start,scadenza:calcExpiry(start,c.lezioniTotali,c.frequenza),updatedAt:serverTimestamp()}, {merge:true});}
-window.delCliente=async(id)=>{if(confirm("Eliminare cliente?")) await deleteDoc(docPath("clienti",id));}
-
-function fill(t,c){let res=Math.max(0,(c.dovuto||0)-(c.pagato||0));return t.replaceAll("{nome}",c.nome).replaceAll("{scadenza}",fmt(c.scadenza)).replaceAll("{lezioniResidue}",c.lezioniResidue).replaceAll("{residuo}",res).replaceAll("{servizio}",c.servizio)}
-function msg(c){let g=daysLeft(c.scadenza),res=Math.max(0,(c.dovuto||0)-(c.pagato||0));if(c.lezioniResidue<=3)return fill(templates.rinnovo,c);if(g<=7)return fill(templates.scadenza,c);if(res>0)return fill(templates.saldo,c);return fill(templates.check,c)}
-function wa(c){let p=String(c.telefono||"").replace(/\D/g,"");return `https://wa.me/${p}?text=${encodeURIComponent(msg(c))}`}
-function stat(c){let g=daysLeft(c.scadenza); if(g<0)return["bad","Scaduto"]; if(g<=7)return["bad","In scadenza"]; if(g<=15)return["warn","Attenzione"]; return["ok","Attivo"]}
-function card(c){let g=daysLeft(c.scadenza),res=Math.max(0,(c.dovuto||0)-(c.pagato||0)),s=stat(c);return `<div class="card"><h3>${c.nome}</h3><p class="meta">${c.servizio} · ${c.lezioniTotali} lezioni · ${c.frequenza}x settimana</p><span class="badge ${s[0]}">${s[1]}</span><span class="badge ${c.lezioniResidue<=1?'bad':c.lezioniResidue<=3?'warn':'ok'}">${c.lezioniResidue} lezioni residue</span><span class="badge ${res>0?'bad':'ok'}">${res>0?'Residuo €'+res:'Pagato'}</span><p class="meta">Inizio: ${fmt(c.inizio)} · Scadenza: ${fmt(c.scadenza)} · Giorni mancanti: ${g}</p>${c.note?`<p class="meta">Note: ${c.note}</p>`:""}<a class="btn green full" href="${wa(c)}" target="_blank">💬 Scrivi su WhatsApp</a><div class="actions"><button class="btn light" onclick="lezione('${c.id}')">+ Lezione</button><button class="btn gold" onclick="rinnova('${c.id}')">Rinnova pacchetto</button><button class="btn light" onclick="editCliente('${c.id}')">Modifica</button><button class="btn red" onclick="delCliente('${c.id}')">Elimina</button></div></div>`}
-function contacts(){return clienti.filter(c=>daysLeft(c.scadenza)<=7||c.lezioniResidue<=3||Math.max(0,(c.dovuto||0)-(c.pagato||0))>0)}
-window.render=()=>{let q=(search?.value||"").toLowerCase();let f=clienti.filter(c=>c.nome.toLowerCase().includes(q)||c.servizio.toLowerCase().includes(q));let dc=contacts();kClienti.textContent=clienti.length;kContatti.textContent=dc.length;kRinnovi.textContent=rinnovi.length;kIncassi.textContent="€"+clienti.reduce((s,c)=>s+Math.max(0,(c.dovuto||0)-(c.pagato||0)),0);listaClienti.innerHTML=f.length?f.map(card).join(""):`<div class="empty">Nessun cliente inserito.</div>`;listaContatti.innerHTML=dc.length?dc.map(card).join(""):`<div class="empty">Nessun cliente da contattare.</div>`;priorita.innerHTML=dc.length?dc.slice(0,5).map(c=>`<p><b>${c.nome}</b><br><span class="meta">${c.lezioniResidue} lezioni residue · scadenza ${fmt(c.scadenza)}</span></p>`).join(""):`<div class="empty">Nessuna priorità.</div>`;listaRinnovi.innerHTML=rinnovi.length?rinnovi.slice().sort((a,b)=>(b.data||"").localeCompare(a.data||"")).map(r=>`<p><b>${r.cliente}</b> · ${r.pacchetto} lezioni<br><span class="meta">${fmt(r.data)} · ${r.servizio} · €${r.importo||0}</span></p>`).join(""):`<div class="empty">Ancora nessun rinnovo registrato.</div>`;tplRinnovo.value=templates.rinnovo;tplScadenza.value=templates.scadenza;tplSaldo.value=templates.saldo;tplCheck.value=templates.check;}
-window.salvaTemplate=async()=>{templates={rinnovo:tplRinnovo.value,scadenza:tplScadenza.value,saldo:tplSaldo.value,check:tplCheck.value};await setDoc(doc(db,"users",user.uid,"settings","templates"),templates);alert("Testi salvati.")}
-window.resetTemplate=async()=>{templates={...defaultTpl};await setDoc(doc(db,"users",user.uid,"settings","templates"),templates);}
-window.exportDB=()=>{let blob=new Blob([JSON.stringify({clienti,rinnovi,templates,exported:new Date().toISOString()},null,2)],{type:"application/json"});let a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="backup_sb_coach_firebase.json";a.click();}
-</script>
-</body>
-</html>
+6. Certificato medico e responsabilità
+Il Cliente dichiara di essere in buona salute e di possedere un certificato medico per attività sportiva non agonistica in corso di validità.
+Il Trainer declina ogni responsabilità per infortuni o danni derivanti da condizioni fisiche non dichiarate o dal mancato rispetto delle indicazioni fornite durante l’allenamento.`;
+let user=null,clienti=[],rinnovi=[],checks=[],eventi=[],templates={...defaultTpl};
+window.login=()=>signInWithEmailAndPassword(auth,loginEmail.value,loginPassword.value).catch(e=>alert(e.message));window.signup=()=>createUserWithEmailAndPassword(auth,loginEmail.value,loginPassword.value).catch(e=>alert(e.message));window.logout=()=>signOut(auth);
+if(auth)onAuthStateChanged(auth,u=>{user=u;if(!u){loginView.classList.remove('hidden');appView.classList.add('hidden');return}loginView.classList.add('hidden');appView.classList.remove('hidden');userEmail.textContent=u.email;subscribe()});
+function path(n){return collection(db,'users',user.uid,n)}function docPath(n,id){return doc(db,'users',user.uid,n,id)}
+function subscribe(){onSnapshot(path('clienti'),s=>{clienti=s.docs.map(d=>({id:d.id,...d.data()}));render()});onSnapshot(path('rinnovi'),s=>{rinnovi=s.docs.map(d=>({id:d.id,...d.data()}));render()});onSnapshot(path('checks'),s=>{checks=s.docs.map(d=>({id:d.id,...d.data()}));render()});onSnapshot(path('eventi'),s=>{eventi=s.docs.map(d=>({id:d.id,...d.data()}));render()});onSnapshot(doc(db,'users',user.uid,'settings','templates'),s=>{templates=s.exists()?s.data():{...defaultTpl};render()})}
+window.show=(id,btn)=>{document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');document.querySelectorAll('nav button').forEach(b=>b.classList.remove('active'));btn.classList.add('active');render()};window.onload=()=>{inizio.valueAsDate=new Date();checkData.valueAsDate=new Date();agendaData.valueAsDate=new Date()};pacchetto.onchange=()=>manualeBox.style.display=pacchetto.value==='manuale'?'grid':'none';
+function fmt(d){return d?new Date(d).toLocaleDateString('it-IT'):'-'}function addDays(date,days){let d=new Date(date);d.setDate(d.getDate()+days);return d}function daysLeft(date){if(!date)return 999;let o=new Date();o.setHours(0,0,0,0);let s=new Date(date);s.setHours(0,0,0,0);return Math.ceil((s-o)/86400000)}function pack(){return pacchetto.value==='manuale'?Number(pacchettoManuale.value||0):Number(pacchetto.value)}function calcExpiry(start,lessons,freq){if(!lessons)return '';return addDays(start,Math.ceil((lessons/freq)*7)).toISOString().slice(0,10)}
+window.pulisciForm=()=>{['editId','nome','cognome','emailCliente','telefono','dataNascita','pacchettoManuale','dovuto','pagato','note','anamnesi','certificatoScadenza'].forEach(id=>document.getElementById(id).value='');inizio.valueAsDate=new Date();pacchetto.value='12';frequenza.value='2';manualeBox.style.display='none';regoleAccettate.checked=false};
+window.salvaCliente=async()=>{let id=editId.value,lez=pack(),freq=Number(frequenza.value);if(!nome.value.trim()||!cognome.value.trim()||!telefono.value.trim()){alert('Compila almeno nome, cognome e telefono.');return}let old=clienti.find(c=>c.id===id);let data={nome:nome.value.trim(),cognome:cognome.value.trim(),email:emailCliente.value.trim(),telefono:telefono.value.trim(),dataNascita:dataNascita.value,sesso:sesso.value,servizio:servizio.value,stato:'attivo',lezioniTotali:lez,lezioniFatte:old?old.lezioniFatte:0,lezioniResidue:old?Math.max(0,lez-(old.lezioniFatte||0)):lez,frequenza:freq,inizio:inizio.value,scadenza:lez?calcExpiry(inizio.value,lez,freq):'',certificatoScadenza:certificatoScadenza.value,dovuto:Number(dovuto.value||0),pagato:Number(pagato.value||0),note:note.value||'',anamnesi:anamnesi.value||'',regoleAccettate:regoleAccettate.checked,dataAccettazioneRegole:regoleAccettate.checked?(old?.dataAccettazioneRegole||new Date().toISOString().slice(0,10)):'',updatedAt:serverTimestamp()};if(id)await setDoc(docPath('clienti',id),data,{merge:true});else await addDoc(path('clienti'),data);pulisciForm()};
+window.editCliente=id=>{let c=clienti.find(x=>x.id===id);if(!c)return;editId.value=c.id;nome.value=c.nome;cognome.value=c.cognome||'';emailCliente.value=c.email||'';telefono.value=c.telefono||'';dataNascita.value=c.dataNascita||'';sesso.value=c.sesso||'Maschio';servizio.value=c.servizio||'Personal Training';if([0,8,10,12,16].includes(c.lezioniTotali)){pacchetto.value=c.lezioniTotali;manualeBox.style.display='none'}else{pacchetto.value='manuale';manualeBox.style.display='grid';pacchettoManuale.value=c.lezioniTotali}frequenza.value=c.frequenza||2;inizio.value=c.inizio||'';certificatoScadenza.value=c.certificatoScadenza||'';dovuto.value=c.dovuto||0;pagato.value=c.pagato||0;note.value=c.note||'';anamnesi.value=c.anamnesi||'';regoleAccettate.checked=!!c.regoleAccettate;window.scrollTo({top:130,behavior:'smooth'})};
+window.lezione=async id=>{let c=clienti.find(x=>x.id===id);if(!c||c.lezioniResidue<=0)return;await setDoc(docPath('clienti',id),{lezioniFatte:(c.lezioniFatte||0)+1,lezioniResidue:(c.lezioniResidue||0)-1,updatedAt:serverTimestamp()},{merge:true})};window.rinnova=async id=>{let c=clienti.find(x=>x.id===id);if(!c)return;await addDoc(path('rinnovi'),{cliente:c.nome+' '+(c.cognome||''),servizio:c.servizio,pacchetto:c.lezioniTotali,data:new Date().toISOString().slice(0,10),importo:c.dovuto||0,createdAt:serverTimestamp()});let start=new Date().toISOString().slice(0,10);await setDoc(docPath('clienti',id),{lezioniFatte:0,lezioniResidue:c.lezioniTotali,inizio:start,scadenza:calcExpiry(start,c.lezioniTotali,c.frequenza),updatedAt:serverTimestamp()},{merge:true})};window.inattivo=async id=>await setDoc(docPath('clienti',id),{stato:'inattivo',updatedAt:serverTimestamp()},{merge:true});
+window.salvaCheck=async()=>{if(!checkCliente.value){alert('Seleziona un cliente');return}let c=clienti.find(c=>c.id===checkCliente.value);await addDoc(path('checks'),{clienteId:checkCliente.value,clienteNome:(c?.nome||'')+' '+(c?.cognome||''),data:checkData.value,peso:Number(checkPeso.value||0),circonferenze:checkCirc.value,pliche:checkPliche.value,note:checkNote.value,createdAt:serverTimestamp()});checkPeso.value='';checkCirc.value='';checkPliche.value='';checkNote.value='';render()};window.salvaEvento=async()=>{if(!agendaCliente.value){alert('Seleziona un cliente');return}let c=clienti.find(c=>c.id===agendaCliente.value);await addDoc(path('eventi'),{clienteId:agendaCliente.value,clienteNome:(c?.nome||'')+' '+(c?.cognome||''),data:agendaData.value,ora:agendaOra.value,tipo:agendaTipo.value,stato:'programmato',createdAt:serverTimestamp()});agendaOra.value='';render()};
+function fill(t,c){let res=Math.max(0,(c.dovuto||0)-(c.pagato||0));return t.replaceAll('{nome}',c.nome).replaceAll('{scadenza}',fmt(c.scadenza)).replaceAll('{lezioniResidue}',c.lezioniResidue||0).replaceAll('{residuo}',res).replaceAll('{servizio}',c.servizio||'')}function msg(c){let g=daysLeft(c.scadenza),res=Math.max(0,(c.dovuto||0)-(c.pagato||0));if((c.lezioniResidue||0)<=3&&c.lezioniTotali>0)return fill(templates.rinnovo,c);if(g<=7)return fill(templates.scadenza,c);if(res>0)return fill(templates.saldo,c);if(daysLeft(c.certificatoScadenza)<=30)return fill(templates.certificato,c);return fill(templates.check,c)}function wa(c){let p=String(c.telefono||'').replace(/\D/g,'');return `https://wa.me/${p}?text=${encodeURIComponent(msg(c))}`}function stat(c){let g=daysLeft(c.scadenza);if(c.stato==='inattivo')return['info','Inattivo'];if(g<0&&c.lezioniTotali>0)return['bad','Scaduto'];if(g<=7&&c.lezioniTotali>0)return['bad','In scadenza'];if(g<=15&&c.lezioniTotali>0)return['warn','Attenzione'];return['ok','Attivo']}
+function card(c){let nomeC=(c.nome||'')+' '+(c.cognome||''),g=daysLeft(c.scadenza),res=Math.max(0,(c.dovuto||0)-(c.pagato||0)),s=stat(c);return `<div class="card"><h3>${nomeC}</h3><p class="meta">${c.servizio||''} · ${c.lezioniTotali||0} lezioni · ${c.frequenza||0}x settimana</p><span class="badge ${s[0]}">${s[1]}</span><span class="badge ${(c.lezioniResidue||0)<=1&&c.lezioniTotali>0?'bad':(c.lezioniResidue||0)<=3&&c.lezioniTotali>0?'warn':'ok'}">${c.lezioniResidue||0} lezioni residue</span><span class="badge ${res>0?'bad':'ok'}">${res>0?'Residuo €'+res:'Pagato'}</span>${daysLeft(c.certificatoScadenza)<=30?`<span class="badge warn">Certificato in scadenza</span>`:''}<p class="meta">Scadenza pacchetto: ${fmt(c.scadenza)} · Certificato: ${fmt(c.certificatoScadenza)}</p>${c.regoleAccettate?`<p class="meta">Regolamento accettato il ${fmt(c.dataAccettazioneRegole)}</p>`:`<p class="meta">⚠️ Regolamento non ancora segnato come accettato</p>`}<a class="btn green full" href="${wa(c)}" target="_blank">💬 Scrivi su WhatsApp</a><div class="actions"><button class="btn light" onclick="lezione('${c.id}')">+ Lezione</button><button class="btn gold" onclick="rinnova('${c.id}')">Rinnova</button><button class="btn light" onclick="editCliente('${c.id}')">Modifica</button><button class="btn red" onclick="inattivo('${c.id}')">Inattivo</button></div></div>`}
+function contacts(){return clienti.filter(c=>c.stato!=='inattivo'&&(daysLeft(c.scadenza)<=7||((c.lezioniResidue||0)<=3&&c.lezioniTotali>0)||Math.max(0,(c.dovuto||0)-(c.pagato||0))>0||daysLeft(c.certificatoScadenza)<=30))}
+window.render=()=>{regoleTesto.textContent=regolamento;let q=(search?.value||'').toLowerCase();let active=clienti.filter(c=>c.stato!=='inattivo');let f=clienti.filter(c=>((c.nome||'')+' '+(c.cognome||'')+' '+(c.servizio||'')).toLowerCase().includes(q));let dc=contacts();kClienti.textContent=active.length;kContatti.textContent=dc.length;kRinnovi.textContent=rinnovi.length;kIncassi.textContent='€'+clienti.reduce((s,c)=>s+Math.max(0,(c.dovuto||0)-(c.pagato||0)),0);kCheck.textContent=active.filter(c=>daysLeft(c.scadenza)<=30).length;kCert.textContent=active.filter(c=>daysLeft(c.certificatoScadenza)<=30).length;let opts=clienti.map(c=>`<option value="${c.id}">${c.nome||''} ${c.cognome||''}</option>`).join('');checkCliente.innerHTML=opts;agendaCliente.innerHTML=opts;listaClienti.innerHTML=f.length?f.map(card).join(''):'<div class="empty">Nessun cliente inserito.</div>';listaContatti.innerHTML=dc.length?dc.map(card).join(''):'<div class="empty">Nessun cliente da contattare.</div>';priorita.innerHTML=dc.length?dc.slice(0,6).map(c=>`<p><b>${c.nome} ${c.cognome||''}</b><br><span class="meta">${c.lezioniResidue||0} lezioni residue · residuo €${Math.max(0,(c.dovuto||0)-(c.pagato||0))} · cert. ${fmt(c.certificatoScadenza)}</span></p>`).join(''):'<div class="empty">Nessuna priorità.</div>';listaRinnovi.innerHTML=rinnovi.length?rinnovi.slice().sort((a,b)=>(b.data||'').localeCompare(a.data||'')).map(r=>`<p><b>${r.cliente}</b> · ${r.pacchetto} lezioni<br><span class="meta">${fmt(r.data)} · ${r.servizio} · €${r.importo||0}</span></p>`).join(''):'<div class="empty">Ancora nessun rinnovo registrato.</div>';listaCheck.innerHTML=checks.length?checks.slice().sort((a,b)=>(b.data||'').localeCompare(a.data||'')).map(ch=>`<div class="card"><h3>${ch.clienteNome||'Cliente'}</h3><p class="meta">${fmt(ch.data)} · peso ${ch.peso||'-'} kg</p><p class="meta">${ch.note||''}</p></div>`).join(''):'<div class="empty">Ancora nessun check.</div>';listaEventi.innerHTML=eventi.length?eventi.slice().sort((a,b)=>(a.data||'').localeCompare(b.data||'')).map(ev=>`<div class="card"><h3>${ev.tipo}</h3><p class="meta">${ev.clienteNome||'Cliente'} · ${fmt(ev.data)} ore ${ev.ora||'-'} · ${ev.stato}</p></div>`).join(''):'<div class="empty">Nessun evento programmato.</div>';tplRinnovo.value=templates.rinnovo;tplScadenza.value=templates.scadenza;tplSaldo.value=templates.saldo;tplCheck.value=templates.check;tplCertificato.value=templates.certificato};
+window.salvaTemplate=async()=>{templates={rinnovo:tplRinnovo.value,scadenza:tplScadenza.value,saldo:tplSaldo.value,check:tplCheck.value,certificato:tplCertificato.value};await setDoc(doc(db,'users',user.uid,'settings','templates'),templates);alert('Testi salvati.')};window.resetTemplate=async()=>{templates={...defaultTpl};await setDoc(doc(db,'users',user.uid,'settings','templates'),templates)};window.exportDB=()=>{let blob=new Blob([JSON.stringify({clienti,rinnovi,checks,eventi,templates,exported:new Date().toISOString()},null,2)],{type:'application/json'});let a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='backup_sb_personal_coach_5_0.json';a.click()};
+</script></body></html>

@@ -1,35 +1,37 @@
-# SB Coach Gestionale 4.0 - Firebase
+SB PERSONAL COACH GESTIONALE 5.0
 
-## Cosa contiene
-- Web app mobile con logo Salvatore Barone
+COME INSTALLARE
+1. Carica questi file nel repository GitHub:
+   - index.html
+   - firebase-config.js
+   - manifest.json
+   - logo.jpeg
+
+2. In Firebase vai su:
+   Impostazioni progetto > Generali > Le tue app > SB Personal Coach Web App
+
+3. Seleziona "Configurazione" e copia il blocco firebaseConfig.
+
+4. Apri firebase-config.js su GitHub e sostituisci i valori INCOLLA_... con i tuoi dati reali.
+
+5. Salva/commit.
+
+6. Apri:
+   https://salvatorebarone90-jpg.github.io/Salvo-Coach-Pt-gestione-clienti/
+
+FUNZIONI INCLUSE
 - Login Firebase
-- Database cloud Firestore
-- Clienti, pacchetti, rinnovi, pagamenti
-- Tasto WhatsApp con testi modificabili
+- Dashboard coach
+- Clienti attivi/inattivi
+- Pacchetti lezioni
+- Calcolo scadenza automatico
+- Pagamenti e residui
+- Check e metriche
+- Agenda base
+- WhatsApp automatico
+- Regolamento one to one
+- Certificato medico in scadenza
 - Backup JSON
 
-## Passaggi Firebase
-1. Vai su https://console.firebase.google.com
-2. Crea un progetto
-3. Aggiungi una Web App
-4. Copia la configurazione firebaseConfig
-5. Apri index.html e sostituisci i valori:
-   - INCOLLA_LA_TUA_API_KEY
-   - INCOLLA_AUTH_DOMAIN
-   - INCOLLA_PROJECT_ID
-   - INCOLLA_STORAGE_BUCKET
-   - INCOLLA_MESSAGING_SENDER_ID
-   - INCOLLA_APP_ID
-6. In Firebase attiva Authentication > Email/Password
-7. Attiva Firestore Database in modalità test per iniziare
-8. Pubblica la cartella su GitHub Pages, Vercel, Cloudflare Pages o Netlify
-
-## Regole Firestore consigliate dopo i test
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /users/{userId}/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
-    }
-  }
-}
+NOTA
+Google Calendar, area cliente completa e prenotazione autonoma saranno collegati nello step successivo.
