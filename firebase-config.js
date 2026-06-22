@@ -1,4 +1,4 @@
-const firebaseConfig = {
+export const firebaseConfig = {
   apiKey: "AIzaSyD2KH46cUna2Fy8j_VbjHS3jBLFWUR_94s",
   authDomain: "sb-personal-coach-gestionale.firebaseapp.com",
   projectId: "sb-personal-coach-gestionale",
