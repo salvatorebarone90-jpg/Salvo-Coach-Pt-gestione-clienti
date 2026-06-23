@@ -1,37 +1,21 @@
-SB PERSONAL COACH GESTIONALE 5.0
+SB PERSONAL COACH GESTIONALE 6.0 PROFESSIONAL
 
-COME INSTALLARE
-1. Carica questi file nel repository GitHub:
-   - index.html
-   - firebase-config.js
-   - manifest.json
-   - logo.jpeg
+Carica su GitHub:
+- index.html
+- firebase-config.js
+- manifest.json
+- logo.jpeg
+- README_ISTRUZIONI.txt
 
-2. In Firebase vai su:
-   Impostazioni progetto > Generali > Le tue app > SB Personal Coach Web App
+Novità:
+- filtri clienti
+- check attivo sì/no con frequenza 4/5/6 settimane o personalizzata
+- certificato medico annuale automatico
+- calendario con stati e logica 24h
+- pulsante restituisci lezione
+- lead management
+- compleanni del mese
+- dashboard più completa
+- WhatsApp template modificabili
 
-3. Seleziona "Configurazione" e copia il blocco firebaseConfig.
-
-4. Apri firebase-config.js su GitHub e sostituisci i valori INCOLLA_... con i tuoi dati reali.
-
-5. Salva/commit.
-
-6. Apri:
-   https://salvatorebarone90-jpg.github.io/Salvo-Coach-Pt-gestione-clienti/
-
-FUNZIONI INCLUSE
-- Login Firebase
-- Dashboard coach
-- Clienti attivi/inattivi
-- Pacchetti lezioni
-- Calcolo scadenza automatico
-- Pagamenti e residui
-- Check e metriche
-- Agenda base
-- WhatsApp automatico
-- Regolamento one to one
-- Certificato medico in scadenza
-- Backup JSON
-
-NOTA
-Google Calendar, area cliente completa e prenotazione autonoma saranno collegati nello step successivo.
+Google Calendar bidirezionale e area cliente avanzata saranno lo step successivo.
