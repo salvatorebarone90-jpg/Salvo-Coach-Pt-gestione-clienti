@@ -3,61 +3,82 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Area Cliente</title>
+<title>Area Cliente Premium</title>
 <link rel="manifest" href="manifest.json">
 <style>
-:root{--n:#101827;--g:#d5ad52;--b:#f4f6f8}
+:root{--n:#101827;--g:#d5ad52;--b:#f4f6f8;--muted:#6b7280;--line:#e5e7eb}
 *{box-sizing:border-box}
-body{margin:0;background:var(--b);font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Arial;color:#111827}
-header{background:linear-gradient(145deg,#101827,#1b2434);border-bottom:4px solid var(--g);padding:20px 12px;position:sticky;top:0;z-index:9}
-.logo{display:block;width:210px;max-width:72%;margin:0 auto 8px}
-h1{margin:0;text-align:center;color:white;font-size:20px}
-header p{text-align:center;color:#d1d5db;margin:6px 0 0;font-size:13px}
-main{max-width:760px;margin:auto;padding:12px}
-.card{background:white;border-radius:18px;padding:16px;margin:12px 0;box-shadow:0 4px 14px #0001}
-h2{font-size:19px;color:var(--n);margin:0 0 12px}
-h3{margin:0;color:var(--n)}
-.btn{border:0;border-radius:13px;padding:13px 14px;font-size:15px;font-weight:900;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:7px}
-.full{width:100%;margin-top:10px}
-.green{background:#25D366;color:white}
-.badge{display:inline-block;border-radius:999px;padding:7px 10px;font-size:12px;font-weight:900;margin:5px 4px 2px 0}
-.ok{background:#dcfce7;color:#166534}
-.bad{background:#fee2e2;color:#991b1b}
-.meta{font-size:14px;color:#6b7280;line-height:1.45;margin:7px 0}
-.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-.kpi{background:white;border-radius:16px;padding:14px;border-top:4px solid var(--g);box-shadow:0 4px 14px #0001}
-.kpi strong{display:block;font-size:26px;color:var(--n)}
-.kpi span{font-size:12px;color:#6b7280;font-weight:800}
-.empty{text-align:center;color:#6b7280;padding:20px 6px}
-.hidden{display:none!important}
+body{margin:0;background:linear-gradient(180deg,#eef2f7 0%,#f7f8fa 100%);font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Arial;color:#111827}
+header{background:radial-gradient(circle at top,#25314a 0%,#101827 62%);border-bottom:4px solid var(--g);padding:24px 14px 28px;position:sticky;top:0;z-index:10;box-shadow:0 12px 30px #0002}
+.logo{display:block;width:220px;max-width:72%;margin:0 auto 12px;filter:drop-shadow(0 8px 20px #0006)}
+h1{margin:0;text-align:center;color:white;font-size:23px}
+header p{text-align:center;color:#d1d5db;margin:7px 0 0;font-size:14px}
+main{max-width:780px;margin:auto;padding:14px}
+.card{background:rgba(255,255,255,.96);border-radius:22px;padding:18px;margin:14px 0;box-shadow:0 10px 30px #10182712;border:1px solid #fff}
+.premium{background:linear-gradient(145deg,#101827,#1d293d);color:white;border:1px solid #344155;position:relative;overflow:hidden}
+.premium:after{content:"";position:absolute;right:-40px;top:-40px;width:130px;height:130px;background:radial-gradient(circle,#d5ad5266,transparent 62%)}
+h2{font-size:20px;color:var(--n);margin:0 0 12px}
+.premium h2{color:white;font-size:24px;position:relative;z-index:1}
+h3{margin:0;color:var(--n);font-size:18px}
+.btn{border:0;border-radius:15px;padding:13px 14px;font-size:15px;font-weight:900;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:7px;cursor:pointer}
+.full{width:100%;margin-top:10px}.green{background:#22c55e;color:white}.red{background:#fee2e2;color:#991b1b}.gold{background:linear-gradient(135deg,#d5ad52,#f3d37a);color:#111827}.light{background:#eef2f7;color:#111827}
+.badge{display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:8px 11px;font-size:12px;font-weight:900;margin:5px 4px 2px 0}
+.ok{background:#dcfce7;color:#166534}.bad{background:#fee2e2;color:#991b1b}.warn{background:#fef3c7;color:#92400e}.info{background:#dbeafe;color:#1e40af}
+.meta{font-size:14px;color:var(--muted);line-height:1.45;margin:7px 0}.premium .meta{color:#cbd5e1}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.kpi{background:white;border-radius:20px;padding:16px;border-top:4px solid var(--g);box-shadow:0 8px 24px #10182710}
+.kpi strong{display:block;font-size:27px;color:var(--n)}
+.kpi span{font-size:12px;color:#6b7280;font-weight:900;text-transform:uppercase}
+.empty{text-align:center;color:#6b7280;padding:22px 6px}.hidden{display:none!important}
+.rule{background:#fff8eb;border:1px solid #f1d49b;border-radius:16px;padding:14px;margin:10px 0;color:#7c2d12;font-size:14px;line-height:1.5}
+.alert{border-radius:18px;padding:14px;margin:10px 0;font-weight:800;font-size:14px;line-height:1.4}
+.redA{background:#fee2e2;color:#991b1b}.goldA{background:#fef3c7;color:#92400e}.greenA{background:#dcfce7;color:#166534}
+.lesson{border:1px solid var(--line);border-radius:20px;padding:16px;margin:12px 0;background:linear-gradient(180deg,#fff,#f9fafb)}
+.lesson-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.datepill{background:#101827;color:white;border-radius:15px;padding:10px 12px;text-align:center;min-width:76px}
+.datepill b{display:block;font-size:20px;line-height:1}.datepill span{display:block;font-size:11px;color:#cbd5e1;text-transform:uppercase;font-weight:900}
+.month-card{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:10px}
+.dayh{font-size:11px;font-weight:900;color:#6b7280;text-align:center}
+.day{min-height:42px;border-radius:12px;background:#f1f5f9;text-align:center;padding:6px 2px;font-weight:800;color:#334155;position:relative}
+.day.event{background:#101827;color:white;border:2px solid #d5ad52}.day.today{outline:2px solid #d5ad52}
+.dot{width:6px;height:6px;border-radius:50%;background:#d5ad52;position:absolute;left:50%;bottom:5px;transform:translateX(-50%)}
+.check{border-left:4px solid var(--g);padding:12px;background:#fff;border-radius:16px;margin:10px 0}
+.docs{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:520px){main{padding:12px}.grid{gap:10px}.docs{grid-template-columns:1fr}.premium h2{font-size:22px}}
 </style>
 </head>
 <body>
 <header>
 <img src="logo.jpeg" class="logo">
-<h1>Area Cliente</h1>
-<p>Lezioni · Check · Scadenze · Comunicazioni</p>
+<h1>Area Cliente Premium</h1>
+<p>Lezioni · Check · Calendario · Regolamento</p>
 </header>
 
 <main>
-<div id="loading" class="card">
-<h2>Caricamento...</h2>
-<p class="meta">Sto recuperando la tua scheda cliente.</p>
-</div>
-
-<div id="errorBox" class="card hidden">
-<h2>⚠️ Link non valido</h2>
-<p class="meta" id="errorMsg">Richiedi un nuovo link al coach.</p>
-</div>
+<div id="loading" class="card"><h2>Caricamento...</h2><p class="meta">Sto recuperando la tua scheda cliente.</p></div>
+<div id="errorBox" class="card hidden"><h2>⚠️ Link non valido</h2><p class="meta" id="errorMsg">Richiedi un nuovo link al coach.</p></div>
 
 <div id="clientArea" class="hidden">
-<div class="card">
-<h2 id="nomeCliente">Cliente</h2>
-<p class="meta" id="servizioCliente"></p>
-<span id="statoBadge" class="badge ok">Attivo</span>
-<span id="lezioniBadge" class="badge ok">0 residue</span>
-<span id="saldoBadge" class="badge ok">Saldo OK</span>
+<div id="welcomeRegolamento" class="card hidden">
+<h2>📋 Regolamento</h2>
+<p class="meta">Prima di utilizzare l'area cliente prendi visione del regolamento.</p>
+<div class="rule"><ul>
+<li>Le lezioni possono essere annullate solo con almeno 24 ore di anticipo.</li>
+<li>Le lezioni annullate sotto le 24 ore vengono considerate effettuate/persa disponibilità.</li>
+<li>Il pacchetto ha una scadenza e va utilizzato entro il periodo indicato.</li>
+<li>Il certificato medico deve essere sempre valido.</li>
+<li>Le comunicazioni operative devono avvenire tramite i canali indicati dal coach.</li>
+</ul></div>
+<button id="acceptRulesBtn" class="btn gold full">Ho letto e accetto il regolamento</button>
 </div>
+
+<div class="card premium">
+<h2 id="welcomeName">Benvenuto 👋</h2>
+<p class="meta" id="servizioCliente"></p>
+<div id="heroBadges"></div>
+</div>
+
+<div id="alertsBox"></div>
 
 <div class="grid">
 <div class="kpi"><strong id="kLezioni">0</strong><span>Lezioni residue</span></div>
@@ -66,8 +87,24 @@ h3{margin:0;color:var(--n)}
 <div class="kpi"><strong id="kCert">-</strong><span>Certificato</span></div>
 </div>
 
-<div class="card"><h2>📅 Prossime lezioni</h2><div id="listaEventi"></div></div>
-<div class="card"><h2>📋 Ultimi check / note</h2><div id="listaCheck"></div></div>
+<div class="card"><h2>📅 Calendario mensile</h2><p class="meta" id="monthLabel"></p><div class="month-card" id="calendarGrid"></div></div>
+
+<div class="card"><h2>📌 Prossime lezioni</h2><p class="meta">Puoi annullare una lezione solo se mancano più di 24 ore.</p><div id="listaEventi"></div></div>
+
+<div class="card"><h2>📊 Storico check</h2><div id="listaCheck"></div></div>
+
+<div class="card">
+<h2>📄 Documenti personali</h2>
+<p class="meta">Qui trovi eventuali PDF caricati dal coach.</p>
+<div class="docs">
+<a id="pdfAlimentazione" class="btn light full hidden" target="_blank">📄 Scheda alimentare</a>
+<a id="pdfAllenamento" class="btn light full hidden" target="_blank">📄 Scheda allenamento</a>
+</div>
+<div id="docsEmpty" class="empty">Nessun PDF collegato al momento.</div>
+</div>
+
+<div class="card"><h2>📋 Regolamento sempre visibile</h2><div class="rule"><b>Regola annullamento:</b><br>Le lezioni possono essere annullate solo con almeno <b>24 ore di anticipo</b>. Sotto le 24 ore la lezione non è più annullabile automaticamente e resta conteggiata secondo il regolamento del pacchetto.<br><br><b>Certificato medico:</b><br>Il certificato ha validità annuale e deve essere mantenuto aggiornato.<br><br><b>Pacchetto lezioni:</b><br>Le lezioni vanno utilizzate entro la scadenza indicata nella scheda cliente.</div></div>
+
 <div class="card"><h2>💬 Contatta il coach</h2><a id="waBtn" class="btn green full" target="_blank">Scrivi su WhatsApp</a></div>
 </div>
 </main>
@@ -75,105 +112,136 @@ h3{margin:0;color:var(--n)}
 <script type="module">
 import { firebaseConfig } from "./firebase-config.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-import { getFirestore, doc, getDoc, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc, collection, getDocs, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 const COACH_UID = "2Oiruc1vW6e0Mo432j6oLSo2sAV2";
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-
 let cliente = null, eventi = [], checkPro = [];
 const $ = id => document.getElementById(id);
 
 function pad(n){return String(n).padStart(2,"0")}
 function localISO(date){return date.getFullYear()+"-"+pad(date.getMonth()+1)+"-"+pad(date.getDate())}
-function parseLocalDate(s){const [y,m,d]=String(s||"").split("-").map(Number);return new Date(y,m-1,d,12,0,0)}
+function parseLocalDate(s){const a=String(s||"").split("-").map(Number);return new Date(a[0],a[1]-1,a[2],12,0,0)}
 function fmt(d){return d ? parseLocalDate(d).toLocaleDateString("it-IT") : "-"}
+function shortDate(d){return d ? parseLocalDate(d).toLocaleDateString("it-IT",{day:"2-digit",month:"short"}) : "-"}
 function onlyDigits(s){return String(s||"").replace(/\D/g,"")}
-
-function showError(msg){
-  $("loading").classList.add("hidden");
-  $("errorBox").classList.remove("hidden");
-  $("clientArea").classList.add("hidden");
-  if(msg) $("errorMsg").textContent = msg;
-}
+function eventDateTime(ev){if(!ev.data)return null;const a=String(ev.data).split("-").map(Number);let h=9,mi=0;if(ev.ora&&String(ev.ora).includes(":")){const p=String(ev.ora).split(":").map(Number);h=p[0]||0;mi=p[1]||0}return new Date(a[0],a[1]-1,a[2],h,mi,0)}
+function hoursToEvent(ev){const dt=eventDateTime(ev);if(!dt)return 9999;return (dt.getTime()-Date.now())/3600000}
+function daysLeft(date){if(!date)return 9999;const t=new Date();t.setHours(12,0,0,0);return Math.ceil((parseLocalDate(date)-t)/86400000)}
+function showError(msg){$("loading").classList.add("hidden");$("errorBox").classList.remove("hidden");$("clientArea").classList.add("hidden");if(msg)$("errorMsg").textContent=msg}
 
 async function load(){
-  const id = new URLSearchParams(location.search).get("id");
-  if(!id){ showError("Il link non contiene il codice cliente."); return; }
+ const id = new URLSearchParams(location.search).get("id");
+ if(!id){showError("Il link non contiene il codice cliente.");return}
+ const clienteRef = doc(db,"users",COACH_UID,"clienti",id);
+ const clienteSnap = await getDoc(clienteRef);
+ if(!clienteSnap.exists()){showError("Scheda cliente non trovata. Richiedi un nuovo link al coach.");return}
+ cliente = {id:clienteSnap.id,...clienteSnap.data()};
+ const evSnap = await getDocs(query(collection(db,"users",COACH_UID,"eventi"),where("clienteId","==",id)));
+ eventi = evSnap.docs.map(d=>({id:d.id,...d.data()}));
+ try{
+  const chSnap = await getDocs(query(collection(db,"users",COACH_UID,"checkPro"),where("clienteId","==",id)));
+  checkPro = chSnap.docs.map(d=>({id:d.id,...d.data()}));
+ }catch(e){checkPro=[]}
+ render();
+}
 
-  const clienteRef = doc(db, "users", COACH_UID, "clienti", id);
-  const clienteSnap = await getDoc(clienteRef);
+async function acceptRules(){
+ if(!cliente)return;
+ await setDoc(doc(db,"users",COACH_UID,"clienti",cliente.id),{regolamentoAccettato:true,regolamentoAccettatoIl:new Date().toISOString(),updatedAt:serverTimestamp()},{merge:true});
+ cliente.regolamentoAccettato = true;
+ render();
+}
 
-  if(!clienteSnap.exists()){
-    showError("Scheda cliente non trovata. Richiedi un nuovo link al coach.");
-    return;
-  }
+async function annullaLezione(eventId){
+ const ev = eventi.find(x=>x.id===eventId);
+ if(!ev)return;
+ if(hoursToEvent(ev)<24){alert("Questa lezione è entro le 24 ore e non può essere annullata automaticamente. Contatta il coach.");return}
+ if(!confirm("Vuoi annullare questa lezione?"))return;
+ await setDoc(doc(db,"users",COACH_UID,"eventi",eventId),{stato:"Annullata dal cliente",annullataDaCliente:true,annullataIl:new Date().toISOString(),updatedAt:serverTimestamp()},{merge:true});
+ ev.stato="Annullata dal cliente"; ev.annullataDaCliente=true;
+ render();
+ alert("Lezione annullata correttamente.");
+}
+window.annullaLezione = annullaLezione;
+$("acceptRulesBtn").addEventListener("click",acceptRules);
 
-  cliente = { id: clienteSnap.id, ...clienteSnap.data() };
+function renderAlerts(){
+ const alerts=[];
+ const certDays=daysLeft(cliente.certificatoScadenza);
+ const packDays=daysLeft(cliente.scadenza);
+ const residue=Number(cliente.lezioniResidue||0);
+ if(certDays<=0) alerts.push('<div class="alert redA">🔴 Certificato medico scaduto. Contatta il coach.</div>');
+ else if(certDays<=30) alerts.push('<div class="alert goldA">🔔 Certificato medico in scadenza tra '+certDays+' giorni.</div>');
+ if(residue<=2) alerts.push('<div class="alert goldA">🔔 Pacchetto quasi terminato: restano '+residue+' lezioni.</div>');
+ if(packDays<=7) alerts.push('<div class="alert goldA">🔔 Pacchetto in scadenza tra '+packDays+' giorni.</div>');
+ if(!alerts.length) alerts.push('<div class="alert greenA">🟢 Tutto regolare: pacchetto e scadenze sotto controllo.</div>');
+ $("alertsBox").innerHTML=alerts.join("");
+}
 
-  const evSnap = await getDocs(query(
-    collection(db, "users", COACH_UID, "eventi"),
-    where("clienteId", "==", id)
-  ));
-  eventi = evSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+function renderCalendar(next){
+ const now=new Date();
+ const y=now.getFullYear(), m=now.getMonth();
+ $("monthLabel").textContent=now.toLocaleDateString("it-IT",{month:"long",year:"numeric"});
+ const first=new Date(y,m,1);
+ const last=new Date(y,m+1,0).getDate();
+ const start=(first.getDay()+6)%7;
+ const evDays=new Set(next.filter(e=>e.data).map(e=>parseLocalDate(e.data).getDate()));
+ const names=["L","M","M","G","V","S","D"];
+ let out=names.map(n=>'<div class="dayh">'+n+'</div>').join("");
+ for(let i=0;i<start;i++) out += '<div></div>';
+ const today=new Date();
+ for(let d=1;d<=last;d++){
+   const isToday=today.getFullYear()===y&&today.getMonth()===m&&today.getDate()===d;
+   const has=evDays.has(d);
+   out += '<div class="day '+(has?'event':'')+' '+(isToday?'today':'')+'">'+d+(has?'<span class="dot"></span>':'')+'</div>';
+ }
+ $("calendarGrid").innerHTML=out;
+}
 
-  let chSnap;
-  try{
-    chSnap = await getDocs(query(
-      collection(db, "users", COACH_UID, "checkPro"),
-      where("clienteId", "==", id)
-    ));
-    checkPro = chSnap.docs.map(d => ({ id: d.id, ...d.data() }));
-  }catch(e){
-    checkPro = [];
-  }
-
-  render();
+function renderDocs(){
+ let shown=false;
+ const setDocBtn=(id,url)=>{
+   const el=$(id);
+   if(url){el.href=url;el.classList.remove("hidden");shown=true;}
+   else el.classList.add("hidden");
+ };
+ setDocBtn("pdfAlimentazione", cliente.pdfAlimentazione || cliente.schedaAlimentareUrl || cliente.alimentazioneUrl);
+ setDocBtn("pdfAllenamento", cliente.pdfAllenamento || cliente.schedaAllenamentoUrl || cliente.allenamentoUrl);
+ $("docsEmpty").classList.toggle("hidden",shown);
 }
 
 function render(){
-  $("loading").classList.add("hidden");
-  $("clientArea").classList.remove("hidden");
-
-  $("nomeCliente").textContent = (cliente.nome||"") + " " + (cliente.cognome||"");
-  $("servizioCliente").textContent = (cliente.servizio||"") + " · " + (cliente.modalitaPrenotazione||"");
-
-  const residuo = Math.max(0, (cliente.dovuto||0) - (cliente.pagato||0));
-
-  $("statoBadge").textContent = cliente.stato === "inattivo" ? "Inattivo" : "Attivo";
-  $("statoBadge").className = "badge " + (cliente.stato === "inattivo" ? "bad" : "ok");
-
-  $("lezioniBadge").textContent = (cliente.lezioniResidue||0) + " residue su " + (cliente.lezioniTotali||0);
-
-  $("saldoBadge").textContent = residuo > 0 ? "Residuo €" + residuo : "Saldo OK";
-  $("saldoBadge").className = "badge " + (residuo > 0 ? "bad" : "ok");
-
-  $("kLezioni").textContent = cliente.lezioniResidue || 0;
-  $("kScadenza").textContent = fmt(cliente.scadenza);
-  $("kCert").textContent = fmt(cliente.certificatoScadenza);
-
-  const today = localISO(new Date());
-  const next = eventi
-    .filter(e => e.data && e.data >= today)
-    .sort((a,b) => (a.data+a.ora).localeCompare(b.data+b.ora));
-
-  $("kProssima").textContent = next[0] ? fmt(next[0].data) : "-";
-
-  $("listaEventi").innerHTML = next.length
-    ? next.slice(0,10).map(e => `<div class="card"><h3>${e.tipo||"Lezione PT"}</h3><p class="meta">${fmt(e.data)} ore ${e.ora||"-"} · ${e.stato||"Prenotata"}</p></div>`).join("")
-    : `<div class="empty">Nessuna lezione programmata.</div>`;
-
-  $("listaCheck").innerHTML = checkPro.length
-    ? checkPro.slice().sort((a,b)=>(b.data||"").localeCompare(a.data||"")).slice(0,5).map(ch => `<div class="card"><h3>${fmt(ch.data)}</h3>${ch.peso?`<span class="badge ok">${ch.peso} kg</span>`:""}<p class="meta"><b>Note:</b><br>${(ch.note||"-").replaceAll("\\n","<br>")}</p>${ch.messaggio?`<p class="meta"><b>Messaggio:</b><br>${ch.messaggio.replaceAll("\\n","<br>")}</p>`:""}</div>`).join("")
-    : `<div class="empty">Nessun check disponibile.</div>`;
-
-  $("waBtn").href = "https://wa.me/" + onlyDigits(cliente.telefono) + "?text=" + encodeURIComponent("Ciao, ti scrivo dalla mia area cliente.");
+ $("loading").classList.add("hidden");$("clientArea").classList.remove("hidden");
+ const accepted = cliente.regolamentoAccettato === true;
+ $("welcomeRegolamento").classList.toggle("hidden",accepted);
+ const nome=(cliente.nome||"Cliente").trim();
+ $("welcomeName").textContent = "Benvenuto " + nome + " 👋";
+ $("servizioCliente").textContent=(cliente.servizio||"")+" · "+(cliente.modalitaPrenotazione||"");
+ const residuo=Math.max(0,(cliente.dovuto||0)-(cliente.pagato||0));
+ const saldoBadge = residuo>0 ? '<span class="badge bad">🔴 Da saldare €'+residuo+'</span>' : '<span class="badge ok">🟢 Saldo regolare</span>';
+ const rulesBadge = accepted ? '<span class="badge ok">📋 Regolamento accettato</span>' : '<span class="badge warn">📋 Regolamento da accettare</span>';
+ const activeBadge = cliente.stato==="inattivo" ? '<span class="badge bad">Inattivo</span>' : '<span class="badge ok">Attivo</span>';
+ $("heroBadges").innerHTML = activeBadge + '<span class="badge ok">'+(cliente.lezioniResidue||0)+' residue su '+(cliente.lezioniTotali||0)+'</span>' + saldoBadge + rulesBadge;
+ $("kLezioni").textContent=cliente.lezioniResidue||0;$("kScadenza").textContent=fmt(cliente.scadenza);$("kCert").textContent=fmt(cliente.certificatoScadenza);
+ const today=localISO(new Date());
+ const next=eventi.filter(e=>e.data&&e.data>=today&&e.stato!=="Annullata"&&e.stato!=="Annullata dal cliente").sort((a,b)=>(a.data+a.ora).localeCompare(b.data+b.ora));
+ $("kProssima").textContent=next[0]?shortDate(next[0].data):"-";
+ renderAlerts(); renderCalendar(next); renderDocs();
+ $("listaEventi").innerHTML=next.length?next.slice(0,10).map(e=>{
+   const canCancel=hoursToEvent(e)>=24;
+   const dt=parseLocalDate(e.data);
+   const day=dt.getDate();
+   const mon=dt.toLocaleDateString("it-IT",{month:"short"});
+   return '<div class="lesson"><div class="lesson-top"><div><h3>'+(e.tipo||"Lezione PT")+'</h3><p class="meta">'+fmt(e.data)+' ore '+(e.ora||"-")+' · '+(e.stato||"Prenotata")+'</p></div><div class="datepill"><b>'+day+'</b><span>'+mon+'</span></div></div>'+(canCancel?'<button class="btn red full" onclick="annullaLezione(\\''+e.id+'\\')">Annulla lezione</button>':'<p class="meta"><b>Entro 24h:</b> non annullabile automaticamente.</p>')+'</div>';
+ }).join(""):'<div class="empty">Nessuna lezione programmata.</div>';
+ $("listaCheck").innerHTML=checkPro.length?checkPro.slice().sort((a,b)=>(b.data||"").localeCompare(a.data||"")).slice(0,8).map(ch=>{
+   return '<div class="check"><h3>'+fmt(ch.data)+'</h3><div>'+(ch.peso?'<span class="badge ok">⚖️ '+ch.peso+' kg</span>':'')+(ch.vita?'<span class="badge info">📏 Vita '+ch.vita+'</span>':'')+(ch.fotoUrl?'<a class="badge warn" href="'+ch.fotoUrl+'" target="_blank">📷 Foto check</a>':'')+'</div><p class="meta"><b>Note coach:</b><br>'+((ch.note||"-").replaceAll("\\n","<br>"))+'</p>'+(ch.messaggio?'<p class="meta"><b>Messaggio:</b><br>'+ch.messaggio.replaceAll("\\n","<br>")+'</p>':'')+'</div>';
+ }).join(""):'<div class="empty">Nessun check disponibile.</div>';
+ $("waBtn").href="https://wa.me/"+onlyDigits(cliente.telefono)+"?text="+encodeURIComponent("Ciao, ti scrivo dalla mia area cliente.");
 }
-
-load().catch(e => {
-  console.error(e);
-  showError("Errore di lettura Firebase. Controlla le regole Firestore oppure richiedi un nuovo link.");
-});
+load().catch(e=>{console.error(e);showError("Errore di lettura Firebase. Controlla le regole Firestore oppure richiedi un nuovo link.")});
 </script>
 </body>
 </html>
