@@ -1,11 +1,12 @@
-SB PERSONAL COACH GESTIONALE 7.3 ACCESSO CLIENTE RAPIDO
+SB PERSONAL COACH GESTIONALE 8.0 SMART CALENDAR + LINK CLIENTE DIRETTO
 
 Novità:
-- Link Area Cliente completo già visibile in dashboard.
-- Tasto "Copia link cliente".
-- Tasto "Invia accesso cliente" dentro ogni scheda cliente.
-- Messaggio WhatsApp già pronto con link e istruzioni.
-- Mantiene Area Coach, Area Cliente, Check Pro e Messaggi.
+- Area cliente senza password, senza UID e senza registrazione.
+- Ogni cliente ha un link personale: cliente.html?id=ID_CLIENTE.
+- Pulsante "Invia accesso cliente" su WhatsApp con link personale.
+- Link generale area cliente copiabile dalla dashboard.
+- Google Calendar gratuito: pulsante per singola lezione + export .ics.
+- Nessun servizio aggiuntivo a pagamento.
 
 Carica su GitHub:
 - index.html

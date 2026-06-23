@@ -34,7 +34,7 @@ textarea{min-height:80px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10p
 </style>
 </head>
 <body>
-<header><img src="logo.jpeg" class="logo"><h1>Gestionale Clienti 7.3 Coach</h1><p>Link cliente rapido · WhatsApp · Check Pro</p></header>
+<header><img src="logo.jpeg" class="logo"><h1>Gestionale Clienti 8.0 Coach</h1><p>Smart Calendar · Link cliente diretto · Widget</p></header>
 
 <div id="loginView" class="card" style="max-width:430px;margin:18px auto">
 <h2>🔐 Accesso Coach</h2>
@@ -63,11 +63,12 @@ textarea{min-height:80px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10p
 <main>
 <section id="dashboard" class="section active">
 <div class="card" style="display:flex;justify-content:space-between;align-items:center"><div><b id="userEmail"></b><br><span class="meta">Database cloud Firestore</span></div><button id="logoutBtn" class="btn red">Esci</button></div>
-<div class="card"><h2>📱 Area Cliente</h2><p class="meta">Link da inviare ai clienti:</p><input readonly value="cliente.html"><p class="meta">Link completo: aggiungi <b>/cliente.html</b> alla fine del link del gestionale.</p></div><div class="card">
+<div class="card">
 <h2>📱 Area Cliente</h2>
-<p class="meta">Link cliente già pronto da copiare e inviare:</p>
+<p class="meta">Link generale area cliente:</p>
 <input id="clientAreaUrl" readonly>
-<button id="copyClientAreaBtn" class="btn gold full">Copia link cliente</button>
+<button id="copyClientAreaBtn" class="btn gold full">Copia link generale</button>
+<p class="meta">Dentro ogni cliente trovi <b>Invia accesso cliente</b> con link personale diretto.</p>
 <p id="copyStatus" class="meta"></p>
 </div>
 <div class="grid">
@@ -591,41 +592,37 @@ function waCheckPro(ch){
 }
 
 
-function clientAreaLink(){
- const base=location.href.split("#")[0].split("?")[0];
- const root=base.substring(0,base.lastIndexOf("/")+1);
- return root+"cliente.html";
-}
+
+
+
+function appRootLink(){const base=location.href.split("#")[0].split("?")[0];return base.substring(0,base.lastIndexOf("/")+1)}
+function clientAreaLink(){return appRootLink()+"cliente.html"}
+function directClientLink(c){return clientAreaLink()+"?id="+encodeURIComponent(c.id)}
 async function copyClientAreaLink(){
  const link=clientAreaLink();
- try{
-  if(navigator.clipboard&&navigator.clipboard.writeText){await navigator.clipboard.writeText(link);}
-  else{const tmp=document.createElement("input");tmp.value=link;document.body.appendChild(tmp);tmp.select();document.execCommand("copy");tmp.remove();}
-  if($("copyStatus"))$("copyStatus").textContent="Link copiato negli appunti.";
- }catch(e){
-  if($("copyStatus"))$("copyStatus").textContent=link;
- }
+ try{if(navigator.clipboard&&navigator.clipboard.writeText){await navigator.clipboard.writeText(link)}else{const t=document.createElement("input");t.value=link;document.body.appendChild(t);t.select();document.execCommand("copy");t.remove()} if($("copyStatus"))$("copyStatus").textContent="Link copiato negli appunti."}
+ catch(e){if($("copyStatus"))$("copyStatus").textContent=link}
 }
-function accessoClienteMsg(c){
- return `Ciao ${c.nome||""},
+function accessoClienteMsg(c){return `Ciao ${c.nome||""},
 
 questa è la tua area cliente personale:
 
-${clientAreaLink()}
+${directClientLink(c)}
 
-Da qui potrai controllare:
+Da qui puoi controllare:
 • lezioni residue
 • prossimi appuntamenti
 • check e note
 • scadenza pacchetto/certificato
 
-Accedi usando la stessa email che mi hai comunicato.
-
-Salvatore Barone Personal Coach`;
-}
-function waAccessoCliente(c){
- return `https://wa.me/${String(c.telefono||"").replace(/\D/g,"")}?text=${encodeURIComponent(accessoClienteMsg(c))}`;
-}
+Salvatore Barone Personal Coach`}
+function waAccessoCliente(c){return `https://wa.me/${String(c.telefono||"").replace(/\D/g,"")}?text=${encodeURIComponent(accessoClienteMsg(c))}`}
+function eventDateObj(ev){if(!ev.data)return null;const [y,m,d]=ev.data.split("-").map(Number);let h=9,mi=0;if(ev.ora&&ev.ora.includes(":")){const p=ev.ora.split(":").map(Number);h=p[0]||0;mi=p[1]||0}return new Date(y,m-1,d,h,mi,0)}
+function googleCalendarUrl(ev){const s=eventDateObj(ev);if(!s)return "#";const e=new Date(s.getTime()+Number(ev.durata||60)*60000);const f=d=>d.toISOString().replace(/[-:]/g,"").split(".")[0]+"Z";return "https://calendar.google.com/calendar/render?action=TEMPLATE&text="+encodeURIComponent((ev.tipo||"Lezione PT")+" - "+(ev.clienteNome||"Cliente"))+"&dates="+f(s)+"/"+f(e)+"&details="+encodeURIComponent("Evento generato da SB Personal Coach Gestionale")}
+function icsDate(d){return d.toISOString().replace(/[-:]/g,"").split(".")[0]+"Z"}
+function escapeICS(s){return String(s||"").replace(/\\/g,"\\\\").replace(/;/g,"\\;").replace(/,/g,"\\,").replace(/\n/g,"\\n")}
+function exportICS(){const valid=eventi.filter(e=>e.data&&e.ora&&e.clienteNome&&e.tipo);if(!valid.length){alert("Nessun evento valido da esportare.");return}let ics=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//SB Personal Coach//Gestionale 8.0//IT","CALSCALE:GREGORIAN","METHOD:PUBLISH"];valid.sort((a,b)=>(a.data+a.ora).localeCompare(b.data+b.ora)).forEach(ev=>{const st=eventDateObj(ev);if(!st)return;const en=new Date(st.getTime()+Number(ev.durata||60)*60000);ics.push("BEGIN:VEVENT","UID:"+ev.id+"@sbpersonalcoach","DTSTAMP:"+icsDate(new Date()),"DTSTART:"+icsDate(st),"DTEND:"+icsDate(en),"SUMMARY:"+escapeICS((ev.tipo||"Lezione PT")+" - "+(ev.clienteNome||"Cliente")),"DESCRIPTION:"+escapeICS("Generato da SB Personal Coach Gestionale"),"END:VEVENT")});ics.push("END:VCALENDAR");const blob=new Blob([ics.join("\\r\\n")],{type:"text/calendar;charset=utf-8"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="sb_personal_coach_agenda.ics";a.click()}
+function showGoogleGuide(){const b=$("googleGuide");if(!b)return;b.style.display=b.style.display==="none"?"block":"none";b.textContent="Puoi aggiungere una singola lezione con il pulsante Google Calendar, oppure esportare tutta l'agenda in formato .ics. Soluzione gratuita, senza servizi aggiuntivi."}
 
 function wa(c){return `https://wa.me/${String(c.telefono||"").replace(/\D/g,"")}?text=${encodeURIComponent(fillTemplate(chooseTemplate(c),c))}`}
 function contacts(){return clienti.filter(c=>c.stato!=="inattivo"&&(daysLeft(c.scadenza)<=7||((c.lezioniResidue||0)<=3&&c.lezioniTotali>0)||Math.max(0,(c.dovuto||0)-(c.pagato||0))>0||daysLeft(c.certificatoScadenza)<=30||(c.checkAttivo==="Sì"&&daysLeft(c.prossimoCheck)<=7)))}
