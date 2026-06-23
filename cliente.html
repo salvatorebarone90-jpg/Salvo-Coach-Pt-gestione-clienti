@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SB Personal Coach - Area Cliente</title>
+<link rel="manifest" href="manifest.json">
+<style>
+:root{--n:#101827;--g:#d5ad52;--b:#f4f6f8}
+*{box-sizing:border-box}body{margin:0;background:var(--b);font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Arial;color:#111827}
+header{background:linear-gradient(145deg,#101827,#1b2434);border-bottom:4px solid var(--g);padding:20px 12px;position:sticky;top:0;z-index:9}
+.logo{display:block;width:210px;max-width:72%;margin:0 auto 8px}h1{margin:0;text-align:center;color:white;font-size:20px}
+header p{text-align:center;color:#d1d5db;margin:6px 0 0;font-size:13px}
+main{max-width:760px;margin:auto;padding:12px}.card{background:white;border-radius:18px;padding:16px;margin:12px 0;box-shadow:0 4px 14px #0001}
+h2{font-size:19px;color:var(--n);margin:0 0 12px}h3{margin:0;color:var(--n)}
+label{display:block;font-size:12px;font-weight:900;color:#334155;margin:10px 0 4px}
+input{width:100%;border:1px solid #cbd5e1;border-radius:12px;padding:12px;font-size:16px;background:white}
+.btn{border:0;border-radius:13px;padding:13px 14px;font-size:15px;font-weight:900;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:7px;cursor:pointer}
+.full{width:100%;margin-top:10px}.primary{background:var(--n);color:white}.gold{background:var(--g);color:#111}.green{background:#25D366;color:white}.red{background:#fee2e2;color:#991b1b}
+.badge{display:inline-block;border-radius:999px;padding:7px 10px;font-size:12px;font-weight:900;margin:5px 4px 2px 0}.ok{background:#dcfce7;color:#166534}.bad{background:#fee2e2;color:#991b1b}.info{background:#dbeafe;color:#1e40af}
+.meta{font-size:14px;color:#6b7280;line-height:1.45;margin:7px 0}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.kpi{background:white;border-radius:16px;padding:14px;border-top:4px solid var(--g);box-shadow:0 4px 14px #0001}.kpi strong{display:block;font-size:26px;color:var(--n)}.kpi span{font-size:12px;color:#6b7280;font-weight:800}
+.hidden{display:none!important}.empty{text-align:center;color:#6b7280;padding:20px 6px}
+</style>
+</head>
+<body>
+<header><img src="logo.jpeg" class="logo"><h1>Area Cliente</h1><p>Lezioni · Check · Scadenze · Comunicazioni</p></header>
+<main>
+<div id="loginView" class="card">
+<h2>🔐 Accesso cliente</h2>
+<p class="meta">Inserisci email e password. L'email deve essere la stessa salvata dal coach nella tua scheda.</p>
+<label>Email</label><input id="email" type="email" autocomplete="username">
+<label>Password</label><input id="password" type="password" autocomplete="current-password">
+<label>Codice coach Firebase UID</label><input id="coachUid" placeholder="Da inserire una sola volta">
+<button id="loginBtn" class="btn primary full">Accedi</button>
+<button id="signupBtn" class="btn gold full">Crea accesso cliente</button>
+<p id="status" class="meta">Pronto.</p>
+</div>
+<div id="appView" class="hidden">
+<div class="card" style="display:flex;justify-content:space-between;align-items:center;gap:10px"><div><b id="clientEmail"></b><br><span class="meta">Area riservata cliente</span></div><button id="logoutBtn" class="btn red">Esci</button></div>
+<div id="noClient" class="card hidden"><h2>⚠️ Scheda non trovata</h2><p class="meta">La tua email non risulta ancora associata ad una scheda cliente. Contatta il coach.</p></div>
+<div id="clientArea" class="hidden">
+<div class="card"><h2 id="nomeCliente">Cliente</h2><p class="meta" id="servizioCliente"></p><span id="statoBadge" class="badge ok">Attivo</span><span id="lezioniBadge" class="badge ok">0 residue</span><span id="saldoBadge" class="badge ok">Saldo OK</span></div>
+<div class="grid"><div class="kpi"><strong id="kLezioni">0</strong><span>Lezioni residue</span></div><div class="kpi"><strong id="kProssima">-</strong><span>Prossima lezione</span></div><div class="kpi"><strong id="kScadenza">-</strong><span>Scadenza pacchetto</span></div><div class="kpi"><strong id="kCert">-</strong><span>Certificato</span></div></div>
+<div class="card"><h2>📅 Prossime lezioni</h2><div id="listaEventi"></div></div>
+<div class="card"><h2>📋 Ultimi check / note</h2><div id="listaCheck"></div></div>
+<div class="card"><h2>💬 Contatta il coach</h2><a id="waBtn" class="btn green full" target="_blank">Scrivi su WhatsApp</a></div>
+</div>
+</div>
+</main>
+<script type="module">
+import { firebaseConfig } from "./firebase-config.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+const app=initializeApp(firebaseConfig), auth=getAuth(app), db=getFirestore(app);
+let user=null, cliente=null, eventi=[], checkPro=[];
+const $=id=>document.getElementById(id);
+function status(t){$("status").textContent=t}
+function pad(n){return String(n).padStart(2,"0")}
+function localISO(date){return date.getFullYear()+"-"+pad(date.getMonth()+1)+"-"+pad(date.getDate())}
+function parseLocalDate(s){const [y,m,d]=String(s||"").split("-").map(Number);return new Date(y,m-1,d,12,0,0)}
+function fmt(d){return d?parseLocalDate(d).toLocaleDateString("it-IT"):"-"}
+function onlyDigits(s){return String(s||"").replace(/\D/g,"")}
+$("coachUid").value=localStorage.getItem("coachUid")||"";
+$("loginBtn").onclick=async()=>{try{localStorage.setItem("coachUid",$("coachUid").value.trim());status("Accesso...");await signInWithEmailAndPassword(auth,$("email").value.trim(),$("password").value)}catch(e){status("Errore: "+e.message);alert(e.message)}};
+$("signupBtn").onclick=async()=>{try{localStorage.setItem("coachUid",$("coachUid").value.trim());status("Creazione...");await createUserWithEmailAndPassword(auth,$("email").value.trim(),$("password").value)}catch(e){status("Errore: "+e.message);alert(e.message)}};
+$("logoutBtn").onclick=()=>signOut(auth);
+onAuthStateChanged(auth, async u=>{user=u;if(!u){$("loginView").classList.remove("hidden");$("appView").classList.add("hidden");return}$("loginView").classList.add("hidden");$("appView").classList.remove("hidden");$("clientEmail").textContent=u.email;await loadData()});
+async function loadData(){
+ const coachUid=localStorage.getItem("coachUid")||$("coachUid").value.trim();
+ if(!coachUid){showNoClient();return}
+ const email=(user.email||"").toLowerCase().trim();
+ const snap=await getDocs(query(collection(db,"users",coachUid,"clienti"),where("email","==",email)));
+ if(snap.empty){showNoClient();return}
+ cliente={id:snap.docs[0].id,...snap.docs[0].data()};
+ const evSnap=await getDocs(query(collection(db,"users",coachUid,"eventi"),where("clienteId","==",cliente.id)));
+ eventi=evSnap.docs.map(d=>({id:d.id,...d.data()}));
+ const chSnap=await getDocs(query(collection(db,"users",coachUid,"checkPro"),where("clienteId","==",cliente.id)));
+ checkPro=chSnap.docs.map(d=>({id:d.id,...d.data()}));
+ render();
+}
+function showNoClient(){$("noClient").classList.remove("hidden");$("clientArea").classList.add("hidden")}
+function render(){
+ $("noClient").classList.add("hidden");$("clientArea").classList.remove("hidden");
+ $("nomeCliente").textContent=(cliente.nome||"")+" "+(cliente.cognome||"");
+ $("servizioCliente").textContent=(cliente.servizio||"")+" · "+(cliente.modalitaPrenotazione||"");
+ const residuo=Math.max(0,(cliente.dovuto||0)-(cliente.pagato||0));
+ $("statoBadge").textContent=cliente.stato==="inattivo"?"Inattivo":"Attivo"; $("statoBadge").className="badge "+(cliente.stato==="inattivo"?"bad":"ok");
+ $("lezioniBadge").textContent=(cliente.lezioniResidue||0)+" residue su "+(cliente.lezioniTotali||0);
+ $("saldoBadge").textContent=residuo>0?"Residuo €"+residuo:"Saldo OK"; $("saldoBadge").className="badge "+(residuo>0?"bad":"ok");
+ $("kLezioni").textContent=cliente.lezioniResidue||0; $("kScadenza").textContent=fmt(cliente.scadenza); $("kCert").textContent=fmt(cliente.certificatoScadenza);
+ const today=localISO(new Date()), next=eventi.filter(e=>e.data&&e.data>=today).sort((a,b)=>(a.data+a.ora).localeCompare(b.data+b.ora));
+ $("kProssima").textContent=next[0]?fmt(next[0].data):"-";
+ $("listaEventi").innerHTML=next.length?next.slice(0,10).map(e=>`<div class="card"><h3>${e.tipo||"Lezione PT"}</h3><p class="meta">${fmt(e.data)} ore ${e.ora||"-"} · ${e.stato||"Prenotata"}</p></div>`).join(""):`<div class="empty">Nessuna lezione programmata.</div>`;
+ $("listaCheck").innerHTML=checkPro.length?checkPro.slice().sort((a,b)=>(b.data||"").localeCompare(a.data||"")).slice(0,5).map(ch=>`<div class="card"><h3>${fmt(ch.data)}</h3>${ch.peso?`<span class="badge ok">${ch.peso} kg</span>`:""}<p class="meta"><b>Note:</b><br>${(ch.note||"-").replaceAll("\n","<br>")}</p>${ch.messaggio?`<p class="meta"><b>Messaggio:</b><br>${ch.messaggio.replaceAll("\n","<br>")}</p>`:""}</div>`).join(""):`<div class="empty">Nessun check disponibile.</div>`;
+ $("waBtn").href="https://wa.me/"+onlyDigits(cliente.telefono)+"?text="+encodeURIComponent("Ciao, ti scrivo dalla mia area cliente.");
+}
+</script>
+</body>
+</html>

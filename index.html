@@ -34,7 +34,7 @@ textarea{min-height:80px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10p
 </style>
 </head>
 <body>
-<header><img src="logo.jpeg" class="logo"><h1>Gestionale Clienti 7.1 Check Pro</h1><p>Messaggi · Check Pro · Calendar gratuito</p></header>
+<header><img src="logo.jpeg" class="logo"><h1>Gestionale Clienti 7.2 Coach</h1><p>Area Coach · Check Pro · Area Cliente</p></header>
 
 <div id="loginView" class="card" style="max-width:430px;margin:18px auto">
 <h2>🔐 Accesso Coach</h2>
@@ -63,7 +63,7 @@ textarea{min-height:80px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10p
 <main>
 <section id="dashboard" class="section active">
 <div class="card" style="display:flex;justify-content:space-between;align-items:center"><div><b id="userEmail"></b><br><span class="meta">Database cloud Firestore</span></div><button id="logoutBtn" class="btn red">Esci</button></div>
-<div class="grid">
+<div class="card"><h2>📱 Area Cliente</h2><p class="meta">Link da inviare ai clienti:</p><input readonly value="cliente.html"><p class="meta">Link completo: aggiungi <b>/cliente.html</b> alla fine del link del gestionale.</p></div><div class="grid">
 <div class="kpi"><strong id="kClienti">0</strong><span>Clienti attivi</span></div>
 <div class="kpi"><strong id="kInattivi">0</strong><span>Clienti inattivi</span></div>
 <div class="kpi"><strong id="kContatti">0</strong><span>Da contattare</span></div>
