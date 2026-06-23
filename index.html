@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SB Personal Coach Gestionale 6.1.1</title>
+<title>SB Personal Coach Gestionale 6.1.2</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--n:#101827;--g:#d5ad52;--b:#f4f6f8}
@@ -34,7 +34,7 @@ textarea{min-height:80px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10p
 </style>
 </head>
 <body>
-<header><img src="logo.jpeg" class="logo"><h1>Gestionale Clienti 6.1.1 Smart Calendar</h1><p>Hotfix login · Orari fissi automatici · Scalo 24h</p></header>
+<header><img src="logo.jpeg" class="logo"><h1>Gestionale Clienti 6.1.2 Smart Calendar</h1><p>Calendario corretto · Rigenera · Inattivo/Elimina</p></header>
 
 <div id="loginView" class="card" style="max-width:430px;margin:18px auto">
 <h2>🔐 Accesso Coach</h2>
@@ -56,17 +56,18 @@ textarea{min-height:80px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10p
 <button data-tab="rinnovi">Rinnovi</button>
 <button data-tab="backup">Backup</button>
 </nav>
+
 <main>
 <section id="dashboard" class="section active">
 <div class="card" style="display:flex;justify-content:space-between;align-items:center"><div><b id="userEmail"></b><br><span class="meta">Database cloud Firestore</span></div><button id="logoutBtn" class="btn red">Esci</button></div>
 <div class="grid">
 <div class="kpi"><strong id="kClienti">0</strong><span>Clienti attivi</span></div>
+<div class="kpi"><strong id="kInattivi">0</strong><span>Clienti inattivi</span></div>
 <div class="kpi"><strong id="kContatti">0</strong><span>Da contattare</span></div>
 <div class="kpi"><strong id="kLezioniOggi">0</strong><span>Lezioni oggi</span></div>
 <div class="kpi"><strong id="kLezioniDomani">0</strong><span>Lezioni domani</span></div>
 <div class="kpi"><strong id="kIncassi">€0</strong><span>Da incassare</span></div>
 <div class="kpi"><strong id="kQuasiFiniti">0</strong><span>Pacchetti quasi finiti</span></div>
-<div class="kpi"><strong id="kCheck">0</strong><span>Check programmati</span></div>
 <div class="kpi"><strong id="kCert">0</strong><span>Certificati in scadenza</span></div>
 </div>
 <div class="card"><h2>📌 Priorità automatiche</h2><div id="priorita"></div></div>
@@ -82,15 +83,26 @@ textarea{min-height:80px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10p
 <div class="row" id="manualeBox" style="display:none"><div><label>Numero lezioni</label><input id="pacchettoManuale" type="number"></div></div>
 <div class="row"><div><label>Modalità</label><select id="modalitaPrenotazione"><option>Orario fisso</option><option>Prenotazione libera</option></select></div><div><label>Durata lezione</label><select id="durataLezione"><option value="60">60 minuti</option><option value="90">90 minuti</option><option value="30">30 minuti</option><option value="custom">Personalizzata</option></select></div></div>
 <div class="row"><div><label>Durata personalizzata minuti</label><input id="durataCustom" type="number" placeholder="Es. 75"></div><div><label>Data inizio</label><input id="inizio" type="date"></div></div>
+
 <label>Orari fissi automatici</label>
-<div class="daygrid"><div><label>Lunedì</label><input id="slot1" placeholder="09:00"></div><div><label>Martedì</label><input id="slot2" placeholder="18:00"></div><div><label>Mercoledì</label><input id="slot3" placeholder="09:00"></div><div><label>Giovedì</label><input id="slot4" placeholder="18:00"></div><div><label>Venerdì</label><input id="slot5" placeholder="10:00"></div><div><label>Sabato</label><input id="slot6" placeholder=""></div></div>
-<p class="mini">Se il cliente è fisso, compila solo i giorni in cui viene. Gli eventi vengono generati automaticamente.</p>
+<div class="daygrid">
+<div><label>Lunedì</label><input id="slot1" placeholder="09:00"></div>
+<div><label>Martedì</label><input id="slot2" placeholder="18:00"></div>
+<div><label>Mercoledì</label><input id="slot3" placeholder="08:30"></div>
+<div><label>Giovedì</label><input id="slot4" placeholder="18:00"></div>
+<div><label>Venerdì</label><input id="slot5" placeholder="10:00"></div>
+<div><label>Sabato</label><input id="slot6" placeholder=""></div>
+</div>
+<p class="mini">I testi grigi sono esempi. Vengono usati solo i campi compilati davvero.</p>
+
 <div class="row"><div><label>Data certificato medico</label><input id="certificatoData" type="date"></div><div><label>Dovuto €</label><input id="dovuto" type="number"></div></div>
 <div class="row"><div><label>Pagato €</label><input id="pagato" type="number"></div><div><label>Check attivo</label><select id="checkAttivo"><option>No</option><option>Sì</option></select></div></div>
 <div class="row"><div><label>Frequenza check</label><select id="checkFreq"><option value="4">4 settimane</option><option value="5">5 settimane</option><option value="6">6 settimane</option><option value="custom">Personalizzata</option></select></div><div><label>Freq. custom settimane</label><input id="checkFreqCustom" type="number"></div></div>
 <div class="row"><div><label>Ultimo check</label><input id="ultimoCheck" type="date"></div></div>
 <label>Anamnesi / note interne</label><textarea id="anamnesi"></textarea><label>Note</label><textarea id="note"></textarea>
-<button id="saveClientBtn" class="btn primary full">Salva cliente + genera calendario</button><button id="clearBtn" class="btn light full">Pulisci</button></div>
+<button id="saveClientBtn" class="btn primary full">Salva cliente + genera calendario</button>
+<button id="regenBtn" class="btn gold full">Rigenera calendario automatico</button>
+<button id="clearBtn" class="btn light full">Pulisci</button></div>
 <input id="search" placeholder="Cerca cliente..."><div class="filters" id="clientFilters"></div><div id="listaClienti"></div>
 </section>
 
@@ -119,191 +131,218 @@ const auth=getAuth(app);
 const db=getFirestore(app);
 
 let user=null, clienti=[], eventi=[], checks=[], leads=[], rinnovi=[], filtro="Tutti";
+const $=(id)=>document.getElementById(id);
+const status=(msg)=>{$("statusBox").textContent=msg};
 
-const $ = (id)=>document.getElementById(id);
-const status = (msg)=> $("statusBox").textContent = msg;
+$("loginBtn").addEventListener("click", async()=>{try{status("Accesso in corso...");await signInWithEmailAndPassword(auth,$("loginEmail").value.trim(),$("loginPassword").value)}catch(e){status("Errore: "+e.message);alert(e.message)}})
+$("signupBtn").addEventListener("click", async()=>{try{status("Creazione account...");await createUserWithEmailAndPassword(auth,$("loginEmail").value.trim(),$("loginPassword").value)}catch(e){status("Errore: "+e.message);alert(e.message)}})
+$("logoutBtn").addEventListener("click",()=>signOut(auth));
+document.querySelectorAll("nav button").forEach(btn=>btn.addEventListener("click",()=>{document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));$(btn.dataset.tab).classList.add("active");document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));btn.classList.add("active");render()}));
 
-$("loginBtn").addEventListener("click", async ()=>{
-  try{
-    status("Accesso in corso...");
-    await signInWithEmailAndPassword(auth, $("loginEmail").value.trim(), $("loginPassword").value);
-  }catch(e){ status("Errore: " + e.message); alert(e.message); }
-});
-$("signupBtn").addEventListener("click", async ()=>{
-  try{
-    status("Creazione account...");
-    await createUserWithEmailAndPassword(auth, $("loginEmail").value.trim(), $("loginPassword").value);
-  }catch(e){ status("Errore: " + e.message); alert(e.message); }
-});
-$("logoutBtn").addEventListener("click", ()=>signOut(auth));
-
-document.querySelectorAll("nav button").forEach(btn=>{
-  btn.addEventListener("click", ()=>{
-    document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
-    $(btn.dataset.tab).classList.add("active");
-    document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));
-    btn.classList.add("active");
-    render();
-  });
-});
-
-onAuthStateChanged(auth, u=>{
-  user=u;
-  if(!u){ $("loginView").classList.remove("hidden"); $("appView").classList.add("hidden"); return; }
-  $("loginView").classList.add("hidden"); $("appView").classList.remove("hidden");
-  $("userEmail").textContent=u.email;
-  subscribe();
-});
+onAuthStateChanged(auth,u=>{user=u;if(!u){$("loginView").classList.remove("hidden");$("appView").classList.add("hidden");return}$("loginView").classList.add("hidden");$("appView").classList.remove("hidden");$("userEmail").textContent=u.email;subscribe()});
 
 function path(n){return collection(db,"users",user.uid,n)}
 function docPath(n,id){return doc(db,"users",user.uid,n,id)}
 function subscribe(){
-  onSnapshot(path("clienti"),s=>{clienti=s.docs.map(d=>({id:d.id,...d.data()}));render()});
-  onSnapshot(path("eventi"),s=>{eventi=s.docs.map(d=>({id:d.id,...d.data()}));autoScalaLezioni();render()});
-  onSnapshot(path("checks"),s=>{checks=s.docs.map(d=>({id:d.id,...d.data()}));render()});
-  onSnapshot(path("leads"),s=>{leads=s.docs.map(d=>({id:d.id,...d.data()}));render()});
-  onSnapshot(path("rinnovi"),s=>{rinnovi=s.docs.map(d=>({id:d.id,...d.data()}));render()});
+ onSnapshot(path("clienti"),s=>{clienti=s.docs.map(d=>({id:d.id,...d.data()}));render()});
+ onSnapshot(path("eventi"),s=>{eventi=s.docs.map(d=>({id:d.id,...d.data()}));autoScalaLezioni();render()});
+ onSnapshot(path("checks"),s=>{checks=s.docs.map(d=>({id:d.id,...d.data()}));render()});
+ onSnapshot(path("leads"),s=>{leads=s.docs.map(d=>({id:d.id,...d.data()}));render()});
+ onSnapshot(path("rinnovi"),s=>{rinnovi=s.docs.map(d=>({id:d.id,...d.data()}));render()});
 }
 
-function fmt(d){return d?new Date(d).toLocaleDateString("it-IT"):"-"}
-function iso(d){return new Date(d).toISOString().slice(0,10)}
+function pad(n){return String(n).padStart(2,"0")}
+function localISO(date){return date.getFullYear()+"-"+pad(date.getMonth()+1)+"-"+pad(date.getDate())}
+function parseLocalDate(s){const [y,m,d]=String(s||"").split("-").map(Number);return new Date(y,m-1,d)}
+function fmt(d){return d?parseLocalDate(d).toLocaleDateString("it-IT"):"-"}
 function addDays(date,days){let d=new Date(date);d.setDate(d.getDate()+days);return d}
-function addMonths(date,m){let d=new Date(date);d.setMonth(d.getMonth()+m);return d}
-function daysLeft(date){if(!date)return 999;let o=new Date();o.setHours(0,0,0,0);let s=new Date(date);s.setHours(0,0,0,0);return Math.ceil((s-o)/86400000)}
+function addMonthsStr(dateStr,m){let d=parseLocalDate(dateStr);d.setMonth(d.getMonth()+m);return localISO(d)}
+function daysLeft(date){if(!date)return 999;let o=new Date();o.setHours(0,0,0,0);let s=parseLocalDate(date);s.setHours(0,0,0,0);return Math.ceil((s-o)/86400000)}
 function pack(){return $("pacchetto").value==="manuale"?Number($("pacchettoManuale").value||0):Number($("pacchetto").value)}
-function calcExpiry(start,lessons,freq){return lessons&&start?iso(addDays(start,Math.ceil((lessons/freq)*7))):""}
-function nextCheckObj(o){if(o.checkAttivo!=="Sì"||!o.ultimoCheck)return "";let w=o.checkFreq==="custom"?Number(o.checkFreqCustom||0):Number(o.checkFreq||0);return w?iso(addDays(o.ultimoCheck,w*7)):""}
+function calcExpiry(start,lessons,freq){return lessons&&start?localISO(addDays(parseLocalDate(start),Math.ceil((lessons/freq)*7))):""}
+function nextCheckObj(o){if(o.checkAttivo!=="Sì"||!o.ultimoCheck)return "";let w=o.checkFreq==="custom"?Number(o.checkFreqCustom||0):Number(o.checkFreq||0);return w?localISO(addDays(parseLocalDate(o.ultimoCheck),w*7)):""}
 function lessonDuration(){return $("durataLezione").value==="custom"?Number($("durataCustom").value||60):Number($("durataLezione").value)}
-function fixedSlots(){return [1,2,3,4,5,6].map(d=>({day:d,time:$("slot"+d).value.trim()})).filter(s=>s.time&&/^\d{1,2}:\d{2}$/.test(s.time)).map(s=>({day:s.day,time:s.time.padStart(5,"0")}))}
 
-$("pacchetto").addEventListener("change", ()=>$("manualeBox").style.display=$("pacchetto").value==="manuale"?"grid":"none");
-$("search").addEventListener("input", render);
-$("clearBtn").addEventListener("click", pulisciForm);
-$("saveClientBtn").addEventListener("click", salvaCliente);
-$("saveEventBtn").addEventListener("click", salvaEventoManuale);
-$("saveCheckBtn").addEventListener("click", salvaCheck);
-$("saveLeadBtn").addEventListener("click", salvaLead);
-$("backupBtn").addEventListener("click", exportDB);
+function normalizeTime(t){
+ t=String(t||"").trim();
+ if(!t)return "";
+ const m=t.match(/^(\d{1,2}):(\d{2})$/);
+ if(!m)return "";
+ const h=Number(m[1]), min=Number(m[2]);
+ if(h<0||h>23||min<0||min>59)return "";
+ return pad(h)+":"+pad(min);
+}
+function fixedSlots(){
+ return [1,2,3,4,5,6].map(d=>({day:d,time:normalizeTime($("slot"+d).value)})).filter(s=>s.time);
+}
+
+$("pacchetto").addEventListener("change",()=>$("manualeBox").style.display=$("pacchetto").value==="manuale"?"grid":"none");
+$("search").addEventListener("input",render);
+$("clearBtn").addEventListener("click",pulisciForm);
+$("saveClientBtn").addEventListener("click",salvaCliente);
+$("regenBtn").addEventListener("click",rigeneraCalendarioCliente);
+$("saveEventBtn").addEventListener("click",salvaEventoManuale);
+$("saveCheckBtn").addEventListener("click",salvaCheck);
+$("saveLeadBtn").addEventListener("click",salvaLead);
+$("backupBtn").addEventListener("click",exportDB);
 
 [$("inizio"),$("calData"),$("checkData")].forEach(x=>x.valueAsDate=new Date());
 
 function pulisciForm(){
-  ["editId","nome","cognome","emailCliente","telefono","dataNascita","pacchettoManuale","dovuto","pagato","note","anamnesi","certificatoData","ultimoCheck","checkFreqCustom","durataCustom","slot1","slot2","slot3","slot4","slot5","slot6"].forEach(id=>$(id).value="");
-  $("inizio").valueAsDate=new Date(); $("pacchetto").value="12"; $("frequenza").value="2"; $("manualeBox").style.display="none";
+ ["editId","nome","cognome","emailCliente","telefono","dataNascita","pacchettoManuale","dovuto","pagato","note","anamnesi","certificatoData","ultimoCheck","checkFreqCustom","durataCustom","slot1","slot2","slot3","slot4","slot5","slot6"].forEach(id=>$(id).value="");
+ $("inizio").valueAsDate=new Date();$("pacchetto").value="12";$("frequenza").value="2";$("manualeBox").style.display="none";
+}
+
+async function deleteAutoEvents(clienteId, onlyFuture=true){
+ const snap=await getDocs(query(path("eventi"),where("clienteId","==",clienteId),where("autoGenerato","==",true)));
+ const today=localISO(new Date());
+ const jobs=[];
+ snap.forEach(d=>{
+   const ev=d.data();
+   if(!onlyFuture || !ev.data || ev.data>=today) jobs.push(deleteDoc(docPath("eventi",d.id)));
+ });
+ await Promise.all(jobs);
 }
 
 async function generateFixedEvents(clienteId,c){
-  if(c.modalitaPrenotazione!=="Orario fisso"||!c.lezioniTotali||!c.inizio)return;
-  const slots=c.slotFissi||[]; if(!slots.length)return;
-  const existing=await getDocs(query(path("eventi"),where("clienteId","==",clienteId),where("autoGenerato","==",true)));
-  if(!existing.empty)return;
-  let count=0, cursor=new Date(c.inizio+"T00:00:00");
-  while(count<c.lezioniTotali && count<150){
-    const dow=cursor.getDay();
-    const slot=slots.find(s=>s.day===dow);
-    if(slot){
-      await addDoc(path("eventi"),{clienteId,clienteNome:c.nome+" "+c.cognome,data:iso(cursor),ora:slot.time,tipo:"Lezione PT",stato:"Prenotata",scalata:false,autoGenerato:true,durata:c.durataMinuti||60,createdAt:serverTimestamp()});
-      count++;
-    }
-    cursor.setDate(cursor.getDate()+1);
-  }
+ if(c.modalitaPrenotazione!=="Orario fisso"||!c.lezioniTotali||!c.inizio)return;
+ const slots=c.slotFissi||[]; if(!slots.length)return;
+ let count=0, cursor=parseLocalDate(c.inizio);
+ while(count<c.lezioniTotali && count<150){
+   const dow=cursor.getDay(); // 0 domenica, 1 lunedì...
+   const slot=slots.find(s=>Number(s.day)===dow);
+   if(slot){
+     await addDoc(path("eventi"),{
+       clienteId, clienteNome:c.nome+" "+c.cognome, data:localISO(cursor), ora:slot.time,
+       tipo:"Lezione PT", stato:"Prenotata", scalata:false, autoGenerato:true, durata:c.durataMinuti||60, createdAt:serverTimestamp()
+     });
+     count++;
+   }
+   cursor.setDate(cursor.getDate()+1);
+ }
 }
 
 async function salvaCliente(){
-  let id=$("editId").value, lez=pack(), freq=Number($("frequenza").value);
-  if(!$("nome").value.trim()||!$("cognome").value.trim()||!$("telefono").value.trim()){alert("Compila nome, cognome e telefono");return}
-  let old=clienti.find(c=>c.id===id);
-  let obj={
-    nome:$("nome").value.trim(), cognome:$("cognome").value.trim(), email:$("emailCliente").value.trim(), telefono:$("telefono").value.trim(),
-    dataNascita:$("dataNascita").value, sesso:$("sesso").value, servizio:$("servizio").value, provenienza:$("provenienza").value,
-    stato:"attivo", lezioniTotali:lez, lezioniFatte:old?old.lezioniFatte||0:0, lezioniResidue:old?Math.max(0,lez-(old.lezioniFatte||0)):lez,
-    frequenza:freq, modalitaPrenotazione:$("modalitaPrenotazione").value, durataMinuti:lessonDuration(), slotFissi:fixedSlots(),
-    inizio:$("inizio").value, scadenza:calcExpiry($("inizio").value,lez,freq),
-    certificatoData:$("certificatoData").value, certificatoScadenza:$("certificatoData").value?iso(addMonths($("certificatoData").value,12)):"",
-    dovuto:Number($("dovuto").value||0), pagato:Number($("pagato").value||0),
-    checkAttivo:$("checkAttivo").value, checkFreq:$("checkFreq").value, checkFreqCustom:$("checkFreqCustom").value,
-    ultimoCheck:$("ultimoCheck").value, prossimoCheck:nextCheckObj({checkAttivo:$("checkAttivo").value,checkFreq:$("checkFreq").value,checkFreqCustom:$("checkFreqCustom").value,ultimoCheck:$("ultimoCheck").value}),
-    note:$("note").value, anamnesi:$("anamnesi").value, updatedAt:serverTimestamp()
-  };
-  let savedId=id;
-  if(id){ await setDoc(docPath("clienti",id),obj,{merge:true}); }
-  else { let ref=await addDoc(path("clienti"),obj); savedId=ref.id; }
-  await generateFixedEvents(savedId,obj);
-  pulisciForm();
+ let id=$("editId").value, lez=pack(), freq=Number($("frequenza").value);
+ if(!$("nome").value.trim()||!$("cognome").value.trim()||!$("telefono").value.trim()){alert("Compila nome, cognome e telefono");return}
+ let old=clienti.find(c=>c.id===id);
+ let obj={
+   nome:$("nome").value.trim(), cognome:$("cognome").value.trim(), email:$("emailCliente").value.trim(), telefono:$("telefono").value.trim(),
+   dataNascita:$("dataNascita").value, sesso:$("sesso").value, servizio:$("servizio").value, provenienza:$("provenienza").value,
+   stato: old?.stato || "attivo", lezioniTotali:lez, lezioniFatte:old?old.lezioniFatte||0:0, lezioniResidue:old?Math.max(0,lez-(old.lezioniFatte||0)):lez,
+   frequenza:freq, modalitaPrenotazione:$("modalitaPrenotazione").value, durataMinuti:lessonDuration(), slotFissi:fixedSlots(),
+   inizio:$("inizio").value, scadenza:calcExpiry($("inizio").value,lez,freq),
+   certificatoData:$("certificatoData").value, certificatoScadenza:$("certificatoData").value?addMonthsStr($("certificatoData").value,12):"",
+   dovuto:Number($("dovuto").value||0), pagato:Number($("pagato").value||0),
+   checkAttivo:$("checkAttivo").value, checkFreq:$("checkFreq").value, checkFreqCustom:$("checkFreqCustom").value,
+   ultimoCheck:$("ultimoCheck").value, prossimoCheck:nextCheckObj({checkAttivo:$("checkAttivo").value,checkFreq:$("checkFreq").value,checkFreqCustom:$("checkFreqCustom").value,ultimoCheck:$("ultimoCheck").value}),
+   note:$("note").value, anamnesi:$("anamnesi").value, updatedAt:serverTimestamp()
+ };
+ let savedId=id;
+ if(id){await setDoc(docPath("clienti",id),obj,{merge:true})}
+ else{let ref=await addDoc(path("clienti"),obj);savedId=ref.id;await generateFixedEvents(savedId,obj)}
+ pulisciForm();
+}
+
+async function rigeneraCalendarioCliente(){
+ const id=$("editId").value;
+ if(!id){alert("Apri prima un cliente con Modifica, poi rigenera il calendario.");return}
+ const c=clienti.find(x=>x.id===id);
+ if(!c){alert("Cliente non trovato.");return}
+ if(!confirm("Rigenerare il calendario automatico futuro di questo cliente? Gli eventi automatici futuri verranno eliminati e ricreati."))return;
+ const updated={...c, slotFissi:fixedSlots(), durataMinuti:lessonDuration(), inizio:$("inizio").value, lezioniTotali:pack(), frequenza:Number($("frequenza").value)};
+ await setDoc(docPath("clienti",id),updated,{merge:true});
+ await deleteAutoEvents(id,true);
+ await generateFixedEvents(id,updated);
+ alert("Calendario rigenerato.");
 }
 
 async function salvaEventoManuale(){
-  if(!$("calCliente").value)return alert("Seleziona cliente");
-  let c=clienti.find(x=>x.id===$("calCliente").value);
-  await addDoc(path("eventi"),{clienteId:c.id,clienteNome:c.nome+" "+c.cognome,data:$("calData").value,ora:$("calOra").value,tipo:$("calTipo").value,stato:$("calStato").value,scalata:false,autoGenerato:false,durata:c.durataMinuti||60,createdAt:serverTimestamp()});
-  $("calOra").value="";
+ if(!$("calCliente").value)return alert("Seleziona cliente");
+ let c=clienti.find(x=>x.id===$("calCliente").value);
+ await addDoc(path("eventi"),{clienteId:c.id,clienteNome:c.nome+" "+c.cognome,data:$("calData").value,ora:normalizeTime($("calOra").value),tipo:$("calTipo").value,stato:$("calStato").value,scalata:false,autoGenerato:false,durata:c.durataMinuti||60,createdAt:serverTimestamp()});
+ $("calOra").value="";
 }
 
 async function autoScalaLezioni(){
-  const now=new Date();
-  for(const ev of eventi){
-    if(ev.scalata||!ev.data||!ev.ora||!ev.clienteId)continue;
-    const dt=new Date(ev.data+"T"+ev.ora);
-    const hours=(dt-now)/36e5;
-    if(hours<=24&&["Prenotata","Occupata"].includes(ev.stato)){
-      const c=clienti.find(x=>x.id===ev.clienteId);
-      if(c&&c.lezioniResidue>0){
-        await setDoc(docPath("clienti",c.id),{lezioniFatte:(c.lezioniFatte||0)+1,lezioniResidue:(c.lezioniResidue||0)-1},{merge:true});
-        await setDoc(docPath("eventi",ev.id),{scalata:true,stato:"Bloccata"},{merge:true});
-      }
-    }
-  }
+ const now=new Date();
+ for(const ev of eventi){
+   if(ev.scalata||!ev.data||!ev.ora||!ev.clienteId)continue;
+   const [y,m,d]=ev.data.split("-").map(Number);
+   const [h,min]=ev.ora.split(":").map(Number);
+   const dt=new Date(y,m-1,d,h,min,0);
+   const hours=(dt-now)/36e5;
+   if(hours<=24&&["Prenotata","Occupata"].includes(ev.stato)){
+     const c=clienti.find(x=>x.id===ev.clienteId);
+     if(c&&c.lezioniResidue>0){
+       await setDoc(docPath("clienti",c.id),{lezioniFatte:(c.lezioniFatte||0)+1,lezioniResidue:(c.lezioniResidue||0)-1},{merge:true});
+       await setDoc(docPath("eventi",ev.id),{scalata:true,stato:"Bloccata"},{merge:true});
+     }
+   }
+ }
 }
 
 async function salvaCheck(){
-  if(!$("checkCliente").value)return alert("Seleziona cliente");
-  let c=clienti.find(x=>x.id===$("checkCliente").value);
-  await addDoc(path("checks"),{clienteId:c.id,clienteNome:c.nome+" "+c.cognome,data:$("checkData").value,peso:0,note:$("checkNote").value,createdAt:serverTimestamp()});
-  await setDoc(docPath("clienti",c.id),{ultimoCheck:$("checkData").value,prossimoCheck:nextCheckObj({...c,ultimoCheck:$("checkData").value})},{merge:true});
-  $("checkNote").value="";
+ if(!$("checkCliente").value)return alert("Seleziona cliente");
+ let c=clienti.find(x=>x.id===$("checkCliente").value);
+ await addDoc(path("checks"),{clienteId:c.id,clienteNome:c.nome+" "+c.cognome,data:$("checkData").value,peso:Number($("checkPeso").value||0),note:$("checkNote").value,createdAt:serverTimestamp()});
+ await setDoc(docPath("clienti",c.id),{ultimoCheck:$("checkData").value,prossimoCheck:nextCheckObj({...c,ultimoCheck:$("checkData").value})},{merge:true});
+ $("checkNote").value="";
 }
-async function salvaLead(){ if(!$("leadNome").value.trim())return; await addDoc(path("leads"),{nome:$("leadNome").value.trim(),telefono:$("leadTelefono").value.trim(),data:iso(new Date()),createdAt:serverTimestamp()}); $("leadNome").value=""; $("leadTelefono").value=""; }
+async function salvaLead(){if(!$("leadNome").value.trim())return;await addDoc(path("leads"),{nome:$("leadNome").value.trim(),telefono:$("leadTelefono").value.trim(),data:localISO(new Date()),createdAt:serverTimestamp()});$("leadNome").value="";$("leadTelefono").value=""}
 
 window.lezione=async(id)=>{let c=clienti.find(x=>x.id===id);if(!c||c.lezioniResidue<=0)return;await setDoc(docPath("clienti",id),{lezioniFatte:(c.lezioniFatte||0)+1,lezioniResidue:(c.lezioniResidue||0)-1},{merge:true})}
 window.restituisci=async(id)=>{let c=clienti.find(x=>x.id===id);if(!c)return;await setDoc(docPath("clienti",id),{lezioniFatte:Math.max(0,(c.lezioniFatte||0)-1),lezioniResidue:(c.lezioniResidue||0)+1},{merge:true})}
-window.rinnova=async(id)=>{let c=clienti.find(x=>x.id===id);if(!c)return;await addDoc(path("rinnovi"),{cliente:c.nome+" "+c.cognome,servizio:c.servizio,pacchetto:c.lezioniTotali,data:iso(new Date()),importo:c.dovuto||0,createdAt:serverTimestamp()});let start=iso(new Date());await setDoc(docPath("clienti",id),{lezioniFatte:0,lezioniResidue:c.lezioniTotali,inizio:start,scadenza:calcExpiry(start,c.lezioniTotali,c.frequenza)},{merge:true})}
-window.inattivo=async(id)=>await setDoc(docPath("clienti",id),{stato:"inattivo"},{merge:true});
-window.editCliente=(id)=>{let c=clienti.find(x=>x.id===id);if(!c)return; $("editId").value=c.id; $("nome").value=c.nome||""; $("cognome").value=c.cognome||""; $("emailCliente").value=c.email||""; $("telefono").value=c.telefono||""; $("dataNascita").value=c.dataNascita||""; $("sesso").value=c.sesso||"Maschio"; $("servizio").value=c.servizio||"Personal Training"; $("provenienza").value=c.provenienza||"Instagram"; $("pacchetto").value=[0,8,10,12,16].includes(c.lezioniTotali)?c.lezioniTotali:"manuale"; $("frequenza").value=c.frequenza||2; $("modalitaPrenotazione").value=c.modalitaPrenotazione||"Orario fisso"; $("inizio").value=c.inizio||""; $("certificatoData").value=c.certificatoData||""; $("dovuto").value=c.dovuto||0; $("pagato").value=c.pagato||0; $("checkAttivo").value=c.checkAttivo||"No"; $("checkFreq").value=c.checkFreq||"4"; $("checkFreqCustom").value=c.checkFreqCustom||""; $("ultimoCheck").value=c.ultimoCheck||""; $("note").value=c.note||""; $("anamnesi").value=c.anamnesi||""; [1,2,3,4,5,6].forEach(d=>$("slot"+d).value=""); (c.slotFissi||[]).forEach(s=>{if($("slot"+s.day))$("slot"+s.day).value=s.time}); window.scrollTo({top:130,behavior:"smooth"}); }
+window.rinnova=async(id)=>{let c=clienti.find(x=>x.id===id);if(!c)return;await addDoc(path("rinnovi"),{cliente:c.nome+" "+c.cognome,servizio:c.servizio,pacchetto:c.lezioniTotali,data:localISO(new Date()),importo:c.dovuto||0,createdAt:serverTimestamp()});let start=localISO(new Date());await setDoc(docPath("clienti",id),{stato:"attivo",lezioniFatte:0,lezioniResidue:c.lezioniTotali,inizio:start,scadenza:calcExpiry(start,c.lezioniTotali,c.frequenza)},{merge:true})}
+window.inattivo=async(id)=>{if(!confirm("Vuoi rendere inattivo questo cliente? Lo storico verrà conservato."))return;await setDoc(docPath("clienti",id),{stato:"inattivo",updatedAt:serverTimestamp()},{merge:true});render()}
+window.riattiva=async(id)=>{await setDoc(docPath("clienti",id),{stato:"attivo",updatedAt:serverTimestamp()},{merge:true});render()}
+window.eliminaCliente=async(id)=>{const c=clienti.find(x=>x.id===id);if(!c)return;if(!confirm("Eliminare definitivamente "+(c.nome||"")+" "+(c.cognome||"")+"? Questa azione non può essere annullata."))return;const evs=await getDocs(query(path("eventi"),where("clienteId","==",id)));const chs=await getDocs(query(path("checks"),where("clienteId","==",id)));await Promise.all([...evs.docs.map(d=>deleteDoc(docPath("eventi",d.id))),...chs.docs.map(d=>deleteDoc(docPath("checks",d.id))),deleteDoc(docPath("clienti",id))]);render()}
+
+window.editCliente=(id)=>{
+ let c=clienti.find(x=>x.id===id);if(!c)return;
+ $("editId").value=c.id;$("nome").value=c.nome||"";$("cognome").value=c.cognome||"";$("emailCliente").value=c.email||"";$("telefono").value=c.telefono||"";$("dataNascita").value=c.dataNascita||"";$("sesso").value=c.sesso||"Maschio";$("servizio").value=c.servizio||"Personal Training";$("provenienza").value=c.provenienza||"Instagram";
+ $("pacchetto").value=[0,8,10,12,16].includes(c.lezioniTotali)?String(c.lezioniTotali):"manuale";if($("pacchetto").value==="manuale"){$("manualeBox").style.display="grid";$("pacchettoManuale").value=c.lezioniTotali||""}else{$("manualeBox").style.display="none"}
+ $("frequenza").value=c.frequenza||2;$("modalitaPrenotazione").value=c.modalitaPrenotazione||"Orario fisso";$("inizio").value=c.inizio||"";$("certificatoData").value=c.certificatoData||"";$("dovuto").value=c.dovuto||0;$("pagato").value=c.pagato||0;$("checkAttivo").value=c.checkAttivo||"No";$("checkFreq").value=c.checkFreq||"4";$("checkFreqCustom").value=c.checkFreqCustom||"";$("ultimoCheck").value=c.ultimoCheck||"";$("note").value=c.note||"";$("anamnesi").value=c.anamnesi||"";
+ [1,2,3,4,5,6].forEach(d=>$("slot"+d).value="");
+ (c.slotFissi||[]).forEach(s=>{if($("slot"+s.day))$("slot"+s.day).value=s.time});
+ $("durataLezione").value=[30,60,90].includes(Number(c.durataMinuti))?String(c.durataMinuti):"custom";$("durataCustom").value=[30,60,90].includes(Number(c.durataMinuti))?"":(c.durataMinuti||"");
+ window.scrollTo({top:130,behavior:"smooth"});
+}
 window.eventoEffettuato=async(id)=>await setDoc(docPath("eventi",id),{stato:"Effettuata"},{merge:true});
 window.eventoPerso=async(id)=>await setDoc(docPath("eventi",id),{stato:"Assente"},{merge:true});
 window.eventoRecuperata=async(id)=>await setDoc(docPath("eventi",id),{stato:"Recuperata"},{merge:true});
 window.eventoAnnullata=async(id)=>await setDoc(docPath("eventi",id),{stato:"Annullata"},{merge:true});
-window.delEvento=async(id)=>await deleteDoc(docPath("eventi",id));
+window.delEvento=async(id)=>{if(confirm("Eliminare evento?"))await deleteDoc(docPath("eventi",id))};
 
 function wa(c){return `https://wa.me/${String(c.telefono||"").replace(/\D/g,"")}?text=${encodeURIComponent("Ciao "+(c.nome||"")+", ti scrivo per aggiornarti sul tuo percorso.")}`}
 function contacts(){return clienti.filter(c=>c.stato!=="inattivo"&&(daysLeft(c.scadenza)<=7||((c.lezioniResidue||0)<=3&&c.lezioniTotali>0)||Math.max(0,(c.dovuto||0)-(c.pagato||0))>0||daysLeft(c.certificatoScadenza)<=30||(c.checkAttivo==="Sì"&&daysLeft(c.prossimoCheck)<=7)))}
 function statusClient(c){if(c.stato==="inattivo")return["info","Inattivo"];if(daysLeft(c.scadenza)<0&&c.lezioniTotali>0)return["bad","Scaduto"];if(daysLeft(c.scadenza)<=7&&c.lezioniTotali>0)return["warn","Scadenza 7gg"];return["ok","Attivo"]}
-function card(c){let res=Math.max(0,(c.dovuto||0)-(c.pagato||0)),s=statusClient(c);return `<div class="card"><h3>${c.nome||""} ${c.cognome||""}</h3><p class="meta">${c.servizio||""} · ${c.modalitaPrenotazione||""} · durata ${c.durataMinuti||60} min</p><span class="badge ${s[0]}">${s[1]}</span><span class="badge ${(c.lezioniResidue||0)<=3&&c.lezioniTotali>0?'warn':'ok'}">${c.lezioniResidue||0}/${c.lezioniTotali||0} lezioni</span><span class="badge ${res>0?'bad':'ok'}">${res>0?'Residuo €'+res:'Pagato'}</span><p class="meta">Scadenza pacchetto: ${fmt(c.scadenza)} · Certificato: ${fmt(c.certificatoScadenza)} · Check: ${fmt(c.prossimoCheck)}</p><a class="btn green full" href="${wa(c)}" target="_blank">💬 WhatsApp</a><div class="actions"><button class="btn light" onclick="lezione('${c.id}')">+ Lezione</button><button class="btn light" onclick="restituisci('${c.id}')">Restituisci</button><button class="btn gold" onclick="rinnova('${c.id}')">Rinnova</button><button class="btn light" onclick="editCliente('${c.id}')">Modifica</button><button class="btn red" onclick="inattivo('${c.id}')">Inattivo</button></div></div>`}
+function slotText(c){return (c.slotFissi||[]).map(s=>["Dom","Lun","Mar","Mer","Gio","Ven","Sab"][s.day]+" "+s.time).join(", ")}
+function card(c){let res=Math.max(0,(c.dovuto||0)-(c.pagato||0)),s=statusClient(c);let inactive=c.stato==="inattivo";return `<div class="card"><h3>${c.nome||""} ${c.cognome||""}</h3><p class="meta">${c.servizio||""} · ${c.modalitaPrenotazione||""} · durata ${c.durataMinuti||60} min<br>${slotText(c)}</p><span class="badge ${s[0]}">${s[1]}</span><span class="badge ${(c.lezioniResidue||0)<=3&&c.lezioniTotali>0?'warn':'ok'}">${c.lezioniResidue||0}/${c.lezioniTotali||0} lezioni</span><span class="badge ${res>0?'bad':'ok'}">${res>0?'Residuo €'+res:'Pagato'}</span><p class="meta">Scadenza pacchetto: ${fmt(c.scadenza)} · Certificato: ${fmt(c.certificatoScadenza)} · Check: ${fmt(c.prossimoCheck)}</p><a class="btn green full" href="${wa(c)}" target="_blank">💬 WhatsApp</a><div class="actions"><button class="btn light" onclick="lezione('${c.id}')">+ Lezione</button><button class="btn light" onclick="restituisci('${c.id}')">Restituisci</button><button class="btn gold" onclick="rinnova('${c.id}')">Rinnova</button><button class="btn light" onclick="editCliente('${c.id}')">Modifica</button>${inactive?`<button class="btn gold" onclick="riattiva('${c.id}')">Riattiva</button>`:`<button class="btn red" onclick="inattivo('${c.id}')">Inattivo</button>`}<button class="btn red" onclick="eliminaCliente('${c.id}')">Elimina cliente</button></div></div>`}
 
 function render(){
-  let opts=clienti.map(c=>`<option value="${c.id}">${c.nome||""} ${c.cognome||""}</option>`).join("");
-  $("checkCliente").innerHTML=opts; $("calCliente").innerHTML=opts;
-  let active=clienti.filter(c=>c.stato!=="inattivo"), dc=contacts(), today=iso(new Date()), tomorrow=iso(addDays(new Date(),1));
-  $("kClienti").textContent=active.length; $("kContatti").textContent=dc.length;
-  $("kLezioniOggi").textContent=eventi.filter(e=>e.data===today).length; $("kLezioniDomani").textContent=eventi.filter(e=>e.data===tomorrow).length;
-  $("kIncassi").textContent="€"+clienti.reduce((s,c)=>s+Math.max(0,(c.dovuto||0)-(c.pagato||0)),0);
-  $("kQuasiFiniti").textContent=active.filter(c=>(c.lezioniResidue||0)<=3&&c.lezioniTotali>0).length;
-  $("kCheck").textContent=active.filter(c=>c.checkAttivo==="Sì"&&daysLeft(c.prossimoCheck)<=7).length;
-  $("kCert").textContent=active.filter(c=>daysLeft(c.certificatoScadenza)<=30).length;
-  $("priorita").innerHTML=dc.length?dc.slice(0,8).map(c=>`<p><b>${c.nome} ${c.cognome||""}</b><br><span class="meta">${c.lezioniResidue||0}/${c.lezioniTotali||0} lezioni · residuo €${Math.max(0,(c.dovuto||0)-(c.pagato||0))}</span></p>`).join(""):`<div class="empty">Nessuna priorità.</div>`;
-  const filters=["Tutti","Personal Training","Coaching Online","Nutrizione","Preparazione Gara","Small Group","Da contattare"];
-  $("clientFilters").innerHTML=filters.map(f=>`<button class="${filtro===f?'active':''}" onclick="setFiltro('${f}')">${f}</button>`).join("");
-  let q=($("search").value||"").toLowerCase(); let list=clienti.filter(c=>((c.nome||"")+" "+(c.cognome||"")+" "+(c.servizio||"")).toLowerCase().includes(q));
-  if(filtro!=="Tutti"){ if(filtro==="Da contattare")list=dc; else list=list.filter(c=>c.servizio===filtro); }
-  $("listaClienti").innerHTML=list.length?list.map(card).join(""):`<div class="empty">Nessun cliente.</div>`;
-  $("listaContatti").innerHTML=dc.length?dc.map(card).join(""):`<div class="empty">Nessun cliente da contattare.</div>`;
-  $("listaEventi").innerHTML=eventi.length?eventi.slice().filter(e=>!e.data||e.data>=today).sort((a,b)=>(a.data+a.ora).localeCompare(b.data+b.ora)).map(e=>`<div class="card"><b>${e.tipo}</b> · <span class="badge ${e.stato==='Bloccata'?'black':e.stato==='Assente'?'bad':e.stato==='Effettuata'?'ok':'warn'}">${e.stato}</span><p class="meta">${e.clienteNome||""} · ${fmt(e.data)} ore ${e.ora||"-"} · ${e.durata||60} min ${e.scalata?'· scalata':''} ${e.autoGenerato?'· auto':''}</p><div class="actions"><button class="btn light" onclick="eventoEffettuato('${e.id}')">Effettuata</button><button class="btn red" onclick="eventoPerso('${e.id}')">Assente</button><button class="btn light" onclick="eventoRecuperata('${e.id}')">Recuperata</button><button class="btn light" onclick="eventoAnnullata('${e.id}')">Annullata</button><button class="btn red" onclick="delEvento('${e.id}')">Elimina</button></div></div>`).join(""):`<div class="empty">Nessun evento.</div>`;
-  $("listaCheck").innerHTML=checks.length?checks.map(ch=>`<div class="card"><h3>${ch.clienteNome}</h3><p class="meta">${fmt(ch.data)} · ${ch.note||""}</p></div>`).join(""):`<div class="empty">Nessun check.</div>`;
-  $("listaLead").innerHTML=leads.length?leads.map(l=>`<div class="card"><h3>${l.nome}</h3><p class="meta">${l.telefono||""}</p></div>`).join(""):`<div class="empty">Nessun lead.</div>`;
-  $("listaRinnovi").innerHTML=rinnovi.length?rinnovi.map(r=>`<p><b>${r.cliente}</b> · ${r.pacchetto} lezioni<br><span class="meta">${fmt(r.data)} · €${r.importo||0}</span></p>`).join(""):`<div class="empty">Nessun rinnovo.</div>`;
+ const opts=clienti.map(c=>`<option value="${c.id}">${c.nome||""} ${c.cognome||""}</option>`).join("");
+ $("checkCliente").innerHTML=opts;$("calCliente").innerHTML=opts;
+ const active=clienti.filter(c=>c.stato!=="inattivo"), inactive=clienti.filter(c=>c.stato==="inattivo"), dc=contacts(), today=localISO(new Date()), tomorrow=localISO(addDays(new Date(),1));
+ $("kClienti").textContent=active.length;$("kInattivi").textContent=inactive.length;$("kContatti").textContent=dc.length;
+ $("kLezioniOggi").textContent=eventi.filter(e=>e.data===today).length;$("kLezioniDomani").textContent=eventi.filter(e=>e.data===tomorrow).length;
+ $("kIncassi").textContent="€"+active.reduce((s,c)=>s+Math.max(0,(c.dovuto||0)-(c.pagato||0)),0);
+ $("kQuasiFiniti").textContent=active.filter(c=>(c.lezioniResidue||0)<=3&&c.lezioniTotali>0).length;
+ $("kCert").textContent=active.filter(c=>daysLeft(c.certificatoScadenza)<=30).length;
+ $("priorita").innerHTML=dc.length?dc.slice(0,8).map(c=>`<p><b>${c.nome} ${c.cognome||""}</b><br><span class="meta">${c.lezioniResidue||0}/${c.lezioniTotali||0} lezioni · residuo €${Math.max(0,(c.dovuto||0)-(c.pagato||0))}</span></p>`).join(""):`<div class="empty">Nessuna priorità.</div>`;
+ const filters=["Tutti","Attivi","Inattivi","Personal Training","Coaching Online","Nutrizione","Preparazione Gara","Small Group","Da contattare"];
+ $("clientFilters").innerHTML=filters.map(f=>`<button class="${filtro===f?'active':''}" onclick="setFiltro('${f}')">${f}</button>`).join("");
+ let q=($("search").value||"").toLowerCase();let list=clienti.filter(c=>((c.nome||"")+" "+(c.cognome||"")+" "+(c.servizio||"")).toLowerCase().includes(q));
+ if(filtro==="Attivi")list=active; else if(filtro==="Inattivi")list=inactive; else if(filtro==="Da contattare")list=dc; else if(filtro!=="Tutti")list=list.filter(c=>c.servizio===filtro);
+ $("listaClienti").innerHTML=list.length?list.map(card).join(""):`<div class="empty">Nessun cliente.</div>`;
+ $("listaContatti").innerHTML=dc.length?dc.map(card).join(""):`<div class="empty">Nessun cliente da contattare.</div>`;
+ $("listaEventi").innerHTML=eventi.length?eventi.slice().filter(e=>!e.data||e.data>=today).sort((a,b)=>(a.data+a.ora).localeCompare(b.data+b.ora)).map(e=>`<div class="card"><b>${e.tipo}</b> · <span class="badge ${e.stato==='Bloccata'?'black':e.stato==='Assente'?'bad':e.stato==='Effettuata'?'ok':'warn'}">${e.stato}</span><p class="meta">${e.clienteNome||""} · ${fmt(e.data)} ore ${e.ora||"-"} · ${e.durata||60} min ${e.scalata?'· scalata':''} ${e.autoGenerato?'· auto':''}</p><div class="actions"><button class="btn light" onclick="eventoEffettuato('${e.id}')">Effettuata</button><button class="btn red" onclick="eventoPerso('${e.id}')">Assente</button><button class="btn light" onclick="eventoRecuperata('${e.id}')">Recuperata</button><button class="btn light" onclick="eventoAnnullata('${e.id}')">Annullata</button><button class="btn red" onclick="delEvento('${e.id}')">Elimina</button></div></div>`).join(""):`<div class="empty">Nessun evento.</div>`;
+ $("listaCheck").innerHTML=checks.length?checks.map(ch=>`<div class="card"><h3>${ch.clienteNome}</h3><p class="meta">${fmt(ch.data)} · ${ch.note||""}</p></div>`).join(""):`<div class="empty">Nessun check.</div>`;
+ $("listaLead").innerHTML=leads.length?leads.map(l=>`<div class="card"><h3>${l.nome}</h3><p class="meta">${l.telefono||""}</p></div>`).join(""):`<div class="empty">Nessun lead.</div>`;
+ $("listaRinnovi").innerHTML=rinnovi.length?rinnovi.map(r=>`<p><b>${r.cliente}</b> · ${r.pacchetto} lezioni<br><span class="meta">${fmt(r.data)} · €${r.importo||0}</span></p>`).join(""):`<div class="empty">Nessun rinnovo.</div>`;
 }
 window.setFiltro=(f)=>{filtro=f;render()}
-function exportDB(){let blob=new Blob([JSON.stringify({clienti,eventi,checks,leads,rinnovi,exported:new Date().toISOString()},null,2)],{type:"application/json"});let a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="backup_sb_coach_6_1_1.json";a.click()}
+function exportDB(){let blob=new Blob([JSON.stringify({clienti,eventi,checks,leads,rinnovi,exported:new Date().toISOString()},null,2)],{type:"application/json"});let a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="backup_sb_coach_6_1_2.json";a.click()}
 </script>
 </body>
 </html>

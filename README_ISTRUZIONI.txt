@@ -1,6 +1,14 @@
-SB PERSONAL COACH GESTIONALE 6.1.1 HOTFIX
+SB PERSONAL COACH GESTIONALE 6.1.2 HOTFIX CALENDARIO
 
-Questa versione corregge il blocco del login della 6.1.
+Correzioni:
+- Giorni/orari fissi automatici corretti.
+- I campi vuoti non generano più eventi.
+- Le date vengono calcolate sul giorno reale della settimana.
+- Aggiunto pulsante Rigenera calendario automatico.
+- Sistemato tasto Inattivo.
+- Aggiunto tasto Riattiva.
+- Aggiunto tasto Elimina cliente con conferma.
+- Eliminando un cliente vengono eliminati anche eventi e check collegati.
 
 Carica su GitHub:
 - index.html
@@ -9,15 +17,9 @@ Carica su GitHub:
 - logo.jpeg
 - README_ISTRUZIONI.txt
 
-Dopo il caricamento:
-1. Apri il gestionale
-2. Ricarica la pagina
-3. Accedi con l'account coach già creato
-
-Funzioni incluse:
-- Login Firebase corretto
-- Clienti
-- Orari fissi automatici
-- Generazione eventi calendario
-- Scalo automatico a 24h
-- Dashboard smart
+Test consigliato:
+crea un cliente fittizio con data inizio 23/06/2026, lunedì 09:00, mercoledì 08:30, venerdì 10:00.
+Il calendario deve creare:
+24/06/2026 08:30
+26/06/2026 10:00
+29/06/2026 09:00
