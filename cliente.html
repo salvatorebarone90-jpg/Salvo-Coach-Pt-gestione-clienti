@@ -1,3 +1,179 @@
-<!doctype html><html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Area Cliente</title><link rel="manifest" href="manifest.json"><style>:root{--n:#101827;--g:#d5ad52;--b:#f4f6f8}*{box-sizing:border-box}body{margin:0;background:var(--b);font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Arial;color:#111827}header{background:linear-gradient(145deg,#101827,#1b2434);border-bottom:4px solid var(--g);padding:20px 12px;position:sticky;top:0;z-index:9}.logo{display:block;width:210px;max-width:72%;margin:0 auto 8px}h1{margin:0;text-align:center;color:white;font-size:20px}header p{text-align:center;color:#d1d5db;margin:6px 0 0;font-size:13px}main{max-width:760px;margin:auto;padding:12px}.card{background:white;border-radius:18px;padding:16px;margin:12px 0;box-shadow:0 4px 14px #0001}h2{font-size:19px;color:var(--n);margin:0 0 12px}h3{margin:0;color:var(--n)}.btn{border:0;border-radius:13px;padding:13px 14px;font-size:15px;font-weight:900;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:7px}.full{width:100%;margin-top:10px}.green{background:#25D366;color:white}.badge{display:inline-block;border-radius:999px;padding:7px 10px;font-size:12px;font-weight:900;margin:5px 4px 2px 0}.ok{background:#dcfce7;color:#166534}.bad{background:#fee2e2;color:#991b1b}.meta{font-size:14px;color:#6b7280;line-height:1.45;margin:7px 0}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.kpi{background:white;border-radius:16px;padding:14px;border-top:4px solid var(--g);box-shadow:0 4px 14px #0001}.kpi strong{display:block;font-size:26px;color:var(--n)}.kpi span{font-size:12px;color:#6b7280;font-weight:800}.empty{text-align:center;color:#6b7280;padding:20px 6px}.hidden{display:none!important}</style></head><body><header><img src="logo.jpeg" class="logo"><h1>Area Cliente</h1><p>Lezioni · Check · Scadenze · Comunicazioni</p></header><main><div id="loading" class="card"><h2>Caricamento...</h2><p class="meta">Sto recuperando la tua scheda cliente.</p></div><div id="errorBox" class="card hidden"><h2>⚠️ Link non valido</h2><p class="meta">Richiedi un nuovo link al coach.</p></div><div id="clientArea" class="hidden"><div class="card"><h2 id="nomeCliente">Cliente</h2><p class="meta" id="servizioCliente"></p><span id="statoBadge" class="badge ok">Attivo</span><span id="lezioniBadge" class="badge ok">0 residue</span><span id="saldoBadge" class="badge ok">Saldo OK</span></div><div class="grid"><div class="kpi"><strong id="kLezioni">0</strong><span>Lezioni residue</span></div><div class="kpi"><strong id="kProssima">-</strong><span>Prossima lezione</span></div><div class="kpi"><strong id="kScadenza">-</strong><span>Scadenza pacchetto</span></div><div class="kpi"><strong id="kCert">-</strong><span>Certificato</span></div></div><div class="card"><h2>📅 Prossime lezioni</h2><div id="listaEventi"></div></div><div class="card"><h2>📋 Ultimi check / note</h2><div id="listaCheck"></div></div><div class="card"><h2>💬 Contatta il coach</h2><a id="waBtn" class="btn green full" target="_blank">Scrivi su WhatsApp</a></div></div></main><script type="module">
-import { firebaseConfig } from "./firebase-config.js";import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";import { getFirestore, collectionGroup, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";const app=initializeApp(firebaseConfig),db=getFirestore(app);let cliente=null,eventi=[],checkPro=[];const $=id=>document.getElementById(id);function pad(n){return String(n).padStart(2,"0")}function localISO(date){return date.getFullYear()+"-"+pad(date.getMonth()+1)+"-"+pad(date.getDate())}function parseLocalDate(s){const [y,m,d]=String(s||"").split("-").map(Number);return new Date(y,m-1,d,12,0,0)}function fmt(d){return d?parseLocalDate(d).toLocaleDateString("it-IT"):"-"}function onlyDigits(s){return String(s||"").replace(/\D/g,"")}function showError(){$("loading").classList.add("hidden");$("errorBox").classList.remove("hidden");$("clientArea").classList.add("hidden")}async function load(){const id=new URLSearchParams(location.search).get("id");if(!id){showError();return}const cs=await getDocs(query(collectionGroup(db,"clienti"),where("__name__","==",id)));if(cs.empty){showError();return}cliente={id:cs.docs[0].id,...cs.docs[0].data()};const es=await getDocs(query(collectionGroup(db,"eventi"),where("clienteId","==",id)));eventi=es.docs.map(d=>({id:d.id,...d.data()}));const ch=await getDocs(query(collectionGroup(db,"checkPro"),where("clienteId","==",id)));checkPro=ch.docs.map(d=>({id:d.id,...d.data()}));render()}function render(){$("loading").classList.add("hidden");$("clientArea").classList.remove("hidden");$("nomeCliente").textContent=(cliente.nome||"")+" "+(cliente.cognome||"");$("servizioCliente").textContent=(cliente.servizio||"")+" · "+(cliente.modalitaPrenotazione||"");const residuo=Math.max(0,(cliente.dovuto||0)-(cliente.pagato||0));$("statoBadge").textContent=cliente.stato==="inattivo"?"Inattivo":"Attivo";$("statoBadge").className="badge "+(cliente.stato==="inattivo"?"bad":"ok");$("lezioniBadge").textContent=(cliente.lezioniResidue||0)+" residue su "+(cliente.lezioniTotali||0);$("saldoBadge").textContent=residuo>0?"Residuo €"+residuo:"Saldo OK";$("saldoBadge").className="badge "+(residuo>0?"bad":"ok");$("kLezioni").textContent=cliente.lezioniResidue||0;$("kScadenza").textContent=fmt(cliente.scadenza);$("kCert").textContent=fmt(cliente.certificatoScadenza);const today=localISO(new Date()),next=eventi.filter(e=>e.data&&e.data>=today).sort((a,b)=>(a.data+a.ora).localeCompare(b.data+b.ora));$("kProssima").textContent=next[0]?fmt(next[0].data):"-";$("listaEventi").innerHTML=next.length?next.slice(0,10).map(e=>`<div class="card"><h3>${e.tipo||"Lezione PT"}</h3><p class="meta">${fmt(e.data)} ore ${e.ora||"-"} · ${e.stato||"Prenotata"}</p></div>`).join(""):`<div class="empty">Nessuna lezione programmata.</div>`;$("listaCheck").innerHTML=checkPro.length?checkPro.slice().sort((a,b)=>(b.data||"").localeCompare(a.data||"")).slice(0,5).map(ch=>`<div class="card"><h3>${fmt(ch.data)}</h3>${ch.peso?`<span class="badge ok">${ch.peso} kg</span>`:""}<p class="meta"><b>Note:</b><br>${(ch.note||"-").replaceAll("\n","<br>")}</p>${ch.messaggio?`<p class="meta"><b>Messaggio:</b><br>${ch.messaggio.replaceAll("\n","<br>")}</p>`:""}</div>`).join(""):`<div class="empty">Nessun check disponibile.</div>`;$("waBtn").href="https://wa.me/"+onlyDigits(cliente.telefono)+"?text="+encodeURIComponent("Ciao, ti scrivo dalla mia area cliente.")}load().catch(e=>{console.error(e);showError()});
-</script></body></html>
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Area Cliente</title>
+<link rel="manifest" href="manifest.json">
+<style>
+:root{--n:#101827;--g:#d5ad52;--b:#f4f6f8}
+*{box-sizing:border-box}
+body{margin:0;background:var(--b);font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Arial;color:#111827}
+header{background:linear-gradient(145deg,#101827,#1b2434);border-bottom:4px solid var(--g);padding:20px 12px;position:sticky;top:0;z-index:9}
+.logo{display:block;width:210px;max-width:72%;margin:0 auto 8px}
+h1{margin:0;text-align:center;color:white;font-size:20px}
+header p{text-align:center;color:#d1d5db;margin:6px 0 0;font-size:13px}
+main{max-width:760px;margin:auto;padding:12px}
+.card{background:white;border-radius:18px;padding:16px;margin:12px 0;box-shadow:0 4px 14px #0001}
+h2{font-size:19px;color:var(--n);margin:0 0 12px}
+h3{margin:0;color:var(--n)}
+.btn{border:0;border-radius:13px;padding:13px 14px;font-size:15px;font-weight:900;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:7px}
+.full{width:100%;margin-top:10px}
+.green{background:#25D366;color:white}
+.badge{display:inline-block;border-radius:999px;padding:7px 10px;font-size:12px;font-weight:900;margin:5px 4px 2px 0}
+.ok{background:#dcfce7;color:#166534}
+.bad{background:#fee2e2;color:#991b1b}
+.meta{font-size:14px;color:#6b7280;line-height:1.45;margin:7px 0}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.kpi{background:white;border-radius:16px;padding:14px;border-top:4px solid var(--g);box-shadow:0 4px 14px #0001}
+.kpi strong{display:block;font-size:26px;color:var(--n)}
+.kpi span{font-size:12px;color:#6b7280;font-weight:800}
+.empty{text-align:center;color:#6b7280;padding:20px 6px}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<header>
+<img src="logo.jpeg" class="logo">
+<h1>Area Cliente</h1>
+<p>Lezioni · Check · Scadenze · Comunicazioni</p>
+</header>
+
+<main>
+<div id="loading" class="card">
+<h2>Caricamento...</h2>
+<p class="meta">Sto recuperando la tua scheda cliente.</p>
+</div>
+
+<div id="errorBox" class="card hidden">
+<h2>⚠️ Link non valido</h2>
+<p class="meta" id="errorMsg">Richiedi un nuovo link al coach.</p>
+</div>
+
+<div id="clientArea" class="hidden">
+<div class="card">
+<h2 id="nomeCliente">Cliente</h2>
+<p class="meta" id="servizioCliente"></p>
+<span id="statoBadge" class="badge ok">Attivo</span>
+<span id="lezioniBadge" class="badge ok">0 residue</span>
+<span id="saldoBadge" class="badge ok">Saldo OK</span>
+</div>
+
+<div class="grid">
+<div class="kpi"><strong id="kLezioni">0</strong><span>Lezioni residue</span></div>
+<div class="kpi"><strong id="kProssima">-</strong><span>Prossima lezione</span></div>
+<div class="kpi"><strong id="kScadenza">-</strong><span>Scadenza pacchetto</span></div>
+<div class="kpi"><strong id="kCert">-</strong><span>Certificato</span></div>
+</div>
+
+<div class="card"><h2>📅 Prossime lezioni</h2><div id="listaEventi"></div></div>
+<div class="card"><h2>📋 Ultimi check / note</h2><div id="listaCheck"></div></div>
+<div class="card"><h2>💬 Contatta il coach</h2><a id="waBtn" class="btn green full" target="_blank">Scrivi su WhatsApp</a></div>
+</div>
+</main>
+
+<script type="module">
+import { firebaseConfig } from "./firebase-config.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import { getFirestore, doc, getDoc, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+const COACH_UID = "2Oiruc1vW6e0Mo432j6oLSo2sAV2";
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+let cliente = null, eventi = [], checkPro = [];
+const $ = id => document.getElementById(id);
+
+function pad(n){return String(n).padStart(2,"0")}
+function localISO(date){return date.getFullYear()+"-"+pad(date.getMonth()+1)+"-"+pad(date.getDate())}
+function parseLocalDate(s){const [y,m,d]=String(s||"").split("-").map(Number);return new Date(y,m-1,d,12,0,0)}
+function fmt(d){return d ? parseLocalDate(d).toLocaleDateString("it-IT") : "-"}
+function onlyDigits(s){return String(s||"").replace(/\D/g,"")}
+
+function showError(msg){
+  $("loading").classList.add("hidden");
+  $("errorBox").classList.remove("hidden");
+  $("clientArea").classList.add("hidden");
+  if(msg) $("errorMsg").textContent = msg;
+}
+
+async function load(){
+  const id = new URLSearchParams(location.search).get("id");
+  if(!id){ showError("Il link non contiene il codice cliente."); return; }
+
+  const clienteRef = doc(db, "users", COACH_UID, "clienti", id);
+  const clienteSnap = await getDoc(clienteRef);
+
+  if(!clienteSnap.exists()){
+    showError("Scheda cliente non trovata. Richiedi un nuovo link al coach.");
+    return;
+  }
+
+  cliente = { id: clienteSnap.id, ...clienteSnap.data() };
+
+  const evSnap = await getDocs(query(
+    collection(db, "users", COACH_UID, "eventi"),
+    where("clienteId", "==", id)
+  ));
+  eventi = evSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+  let chSnap;
+  try{
+    chSnap = await getDocs(query(
+      collection(db, "users", COACH_UID, "checkPro"),
+      where("clienteId", "==", id)
+    ));
+    checkPro = chSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+  }catch(e){
+    checkPro = [];
+  }
+
+  render();
+}
+
+function render(){
+  $("loading").classList.add("hidden");
+  $("clientArea").classList.remove("hidden");
+
+  $("nomeCliente").textContent = (cliente.nome||"") + " " + (cliente.cognome||"");
+  $("servizioCliente").textContent = (cliente.servizio||"") + " · " + (cliente.modalitaPrenotazione||"");
+
+  const residuo = Math.max(0, (cliente.dovuto||0) - (cliente.pagato||0));
+
+  $("statoBadge").textContent = cliente.stato === "inattivo" ? "Inattivo" : "Attivo";
+  $("statoBadge").className = "badge " + (cliente.stato === "inattivo" ? "bad" : "ok");
+
+  $("lezioniBadge").textContent = (cliente.lezioniResidue||0) + " residue su " + (cliente.lezioniTotali||0);
+
+  $("saldoBadge").textContent = residuo > 0 ? "Residuo €" + residuo : "Saldo OK";
+  $("saldoBadge").className = "badge " + (residuo > 0 ? "bad" : "ok");
+
+  $("kLezioni").textContent = cliente.lezioniResidue || 0;
+  $("kScadenza").textContent = fmt(cliente.scadenza);
+  $("kCert").textContent = fmt(cliente.certificatoScadenza);
+
+  const today = localISO(new Date());
+  const next = eventi
+    .filter(e => e.data && e.data >= today)
+    .sort((a,b) => (a.data+a.ora).localeCompare(b.data+b.ora));
+
+  $("kProssima").textContent = next[0] ? fmt(next[0].data) : "-";
+
+  $("listaEventi").innerHTML = next.length
+    ? next.slice(0,10).map(e => `<div class="card"><h3>${e.tipo||"Lezione PT"}</h3><p class="meta">${fmt(e.data)} ore ${e.ora||"-"} · ${e.stato||"Prenotata"}</p></div>`).join("")
+    : `<div class="empty">Nessuna lezione programmata.</div>`;
+
+  $("listaCheck").innerHTML = checkPro.length
+    ? checkPro.slice().sort((a,b)=>(b.data||"").localeCompare(a.data||"")).slice(0,5).map(ch => `<div class="card"><h3>${fmt(ch.data)}</h3>${ch.peso?`<span class="badge ok">${ch.peso} kg</span>`:""}<p class="meta"><b>Note:</b><br>${(ch.note||"-").replaceAll("\\n","<br>")}</p>${ch.messaggio?`<p class="meta"><b>Messaggio:</b><br>${ch.messaggio.replaceAll("\\n","<br>")}</p>`:""}</div>`).join("")
+    : `<div class="empty">Nessun check disponibile.</div>`;
+
+  $("waBtn").href = "https://wa.me/" + onlyDigits(cliente.telefono) + "?text=" + encodeURIComponent("Ciao, ti scrivo dalla mia area cliente.");
+}
+
+load().catch(e => {
+  console.error(e);
+  showError("Errore di lettura Firebase. Controlla le regole Firestore oppure richiedi un nuovo link.");
+});
+</script>
+</body>
+</html>
