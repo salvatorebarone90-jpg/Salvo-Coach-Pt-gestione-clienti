@@ -1,25 +1,19 @@
-SB PERSONAL COACH GESTIONALE 6.1.2 HOTFIX CALENDARIO
+SB PERSONAL COACH GESTIONALE 6.1.3 HOTFIX GIORNI
 
 Correzioni:
-- Giorni/orari fissi automatici corretti.
-- I campi vuoti non generano più eventi.
-- Le date vengono calcolate sul giorno reale della settimana.
-- Aggiunto pulsante Rigenera calendario automatico.
-- Sistemato tasto Inattivo.
-- Aggiunto tasto Riattiva.
-- Aggiunto tasto Elimina cliente con conferma.
-- Eliminando un cliente vengono eliminati anche eventi e check collegati.
+- Corretto il calcolo dei giorni settimana.
+- Rigenera calendario elimina TUTTI gli eventi automatici vecchi e li ricrea.
+- Durante rigenerazione puoi ripristinare le lezioni residue.
+- Aggiunto tasto "Ripristina lezioni residue".
+- Visualizzazione più chiara: "X residue su Y".
 
-Carica su GitHub:
-- index.html
-- firebase-config.js
-- manifest.json
-- logo.jpeg
-- README_ISTRUZIONI.txt
+Dopo il caricamento:
+1. Apri il cliente con Modifica.
+2. Controlla gli orari fissi.
+3. Premi "Rigenera calendario automatico".
+4. Alla domanda sulle lezioni residue, premi OK se vuoi tornare a 12/12.
 
-Test consigliato:
-crea un cliente fittizio con data inizio 23/06/2026, lunedì 09:00, mercoledì 08:30, venerdì 10:00.
-Il calendario deve creare:
-24/06/2026 08:30
-26/06/2026 10:00
-29/06/2026 09:00
+Test atteso con data inizio 23/06/2026:
+- Mercoledì 24/06/2026 ore 07:00 o 08:30
+- Venerdì 26/06/2026 ore 10:00
+- Lunedì 29/06/2026 ore 09:00

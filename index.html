@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SB Personal Coach Gestionale 6.1.2</title>
+<title>SB Personal Coach Gestionale 6.1.3</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--n:#101827;--g:#d5ad52;--b:#f4f6f8}
@@ -34,7 +34,7 @@ textarea{min-height:80px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10p
 </style>
 </head>
 <body>
-<header><img src="logo.jpeg" class="logo"><h1>Gestionale Clienti 6.1.2 Smart Calendar</h1><p>Calendario corretto · Rigenera · Inattivo/Elimina</p></header>
+<header><img src="logo.jpeg" class="logo"><h1>Gestionale Clienti 6.1.3 Smart Calendar</h1><p>Giorni corretti · Rigenera pulito · Reset lezioni</p></header>
 
 <div id="loginView" class="card" style="max-width:430px;margin:18px auto">
 <h2>🔐 Accesso Coach</h2>
@@ -102,6 +102,7 @@ textarea{min-height:80px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10p
 <label>Anamnesi / note interne</label><textarea id="anamnesi"></textarea><label>Note</label><textarea id="note"></textarea>
 <button id="saveClientBtn" class="btn primary full">Salva cliente + genera calendario</button>
 <button id="regenBtn" class="btn gold full">Rigenera calendario automatico</button>
+<button id="resetLessonsBtn" class="btn light full">Ripristina lezioni residue</button>
 <button id="clearBtn" class="btn light full">Pulisci</button></div>
 <input id="search" placeholder="Cerca cliente..."><div class="filters" id="clientFilters"></div><div id="listaClienti"></div>
 </section>
@@ -152,12 +153,15 @@ function subscribe(){
 }
 
 function pad(n){return String(n).padStart(2,"0")}
+function parts(dateStr){const [y,m,d]=String(dateStr||"").split("-").map(Number);return {y,m,d}}
+function makeDate(p){return new Date(p.y,p.m-1,p.d,12,0,0)}
 function localISO(date){return date.getFullYear()+"-"+pad(date.getMonth()+1)+"-"+pad(date.getDate())}
-function parseLocalDate(s){const [y,m,d]=String(s||"").split("-").map(Number);return new Date(y,m-1,d)}
+function parseLocalDate(s){return makeDate(parts(s))}
 function fmt(d){return d?parseLocalDate(d).toLocaleDateString("it-IT"):"-"}
 function addDays(date,days){let d=new Date(date);d.setDate(d.getDate()+days);return d}
 function addMonthsStr(dateStr,m){let d=parseLocalDate(dateStr);d.setMonth(d.getMonth()+m);return localISO(d)}
-function daysLeft(date){if(!date)return 999;let o=new Date();o.setHours(0,0,0,0);let s=parseLocalDate(date);s.setHours(0,0,0,0);return Math.ceil((s-o)/86400000)}
+function dayOfWeekISO(dateStr){return parseLocalDate(dateStr).getDay()}
+function daysLeft(date){if(!date)return 999;let o=new Date();o.setHours(12,0,0,0);let s=parseLocalDate(date);return Math.ceil((s-o)/86400000)}
 function pack(){return $("pacchetto").value==="manuale"?Number($("pacchettoManuale").value||0):Number($("pacchetto").value)}
 function calcExpiry(start,lessons,freq){return lessons&&start?localISO(addDays(parseLocalDate(start),Math.ceil((lessons/freq)*7))):""}
 function nextCheckObj(o){if(o.checkAttivo!=="Sì"||!o.ultimoCheck)return "";let w=o.checkFreq==="custom"?Number(o.checkFreqCustom||0):Number(o.checkFreq||0);return w?localISO(addDays(parseLocalDate(o.ultimoCheck),w*7)):""}
@@ -181,6 +185,7 @@ $("search").addEventListener("input",render);
 $("clearBtn").addEventListener("click",pulisciForm);
 $("saveClientBtn").addEventListener("click",salvaCliente);
 $("regenBtn").addEventListener("click",rigeneraCalendarioCliente);
+$("resetLessonsBtn").addEventListener("click",ripristinaLezioniResidue);
 $("saveEventBtn").addEventListener("click",salvaEventoManuale);
 $("saveCheckBtn").addEventListener("click",salvaCheck);
 $("saveLeadBtn").addEventListener("click",salvaLead);
@@ -206,19 +211,32 @@ async function deleteAutoEvents(clienteId, onlyFuture=true){
 
 async function generateFixedEvents(clienteId,c){
  if(c.modalitaPrenotazione!=="Orario fisso"||!c.lezioniTotali||!c.inizio)return;
- const slots=c.slotFissi||[]; if(!slots.length)return;
- let count=0, cursor=parseLocalDate(c.inizio);
- while(count<c.lezioniTotali && count<150){
-   const dow=cursor.getDay(); // 0 domenica, 1 lunedì...
-   const slot=slots.find(s=>Number(s.day)===dow);
+ const slots=(c.slotFissi||[]).map(s=>({day:Number(s.day),time:normalizeTime(s.time)})).filter(s=>s.time&&s.day>=1&&s.day<=6);
+ if(!slots.length)return;
+ let count=0;
+ let cursor=parseLocalDate(c.inizio);
+ let guard=0;
+ while(count<c.lezioniTotali && guard<365){
+   const currentISO=localISO(cursor);
+   const dow=dayOfWeekISO(currentISO);
+   const slot=slots.find(s=>s.day===dow);
    if(slot){
      await addDoc(path("eventi"),{
-       clienteId, clienteNome:c.nome+" "+c.cognome, data:localISO(cursor), ora:slot.time,
-       tipo:"Lezione PT", stato:"Prenotata", scalata:false, autoGenerato:true, durata:c.durataMinuti||60, createdAt:serverTimestamp()
+       clienteId,
+       clienteNome:(c.nome||"")+" "+(c.cognome||""),
+       data:currentISO,
+       ora:slot.time,
+       tipo:"Lezione PT",
+       stato:"Prenotata",
+       scalata:false,
+       autoGenerato:true,
+       durata:c.durataMinuti||60,
+       createdAt:serverTimestamp()
      });
      count++;
    }
-   cursor.setDate(cursor.getDate()+1);
+   cursor=addDays(cursor,1);
+   guard++;
  }
 }
 
@@ -249,12 +267,34 @@ async function rigeneraCalendarioCliente(){
  if(!id){alert("Apri prima un cliente con Modifica, poi rigenera il calendario.");return}
  const c=clienti.find(x=>x.id===id);
  if(!c){alert("Cliente non trovato.");return}
- if(!confirm("Rigenerare il calendario automatico futuro di questo cliente? Gli eventi automatici futuri verranno eliminati e ricreati."))return;
- const updated={...c, slotFissi:fixedSlots(), durataMinuti:lessonDuration(), inizio:$("inizio").value, lezioniTotali:pack(), frequenza:Number($("frequenza").value)};
+ if(!confirm("Rigenerare il calendario automatico di questo cliente? Verranno eliminati TUTTI gli eventi automatici collegati e ricreati con i giorni corretti."))return;
+ const reset=confirm("Vuoi anche ripristinare le lezioni residue al totale del pacchetto? Consigliato se il calendario precedente aveva scalato lezioni per errore.");
+ const lez=pack();
+ const updated={
+   ...c,
+   slotFissi:fixedSlots(),
+   durataMinuti:lessonDuration(),
+   inizio:$("inizio").value,
+   lezioniTotali:lez,
+   frequenza:Number($("frequenza").value),
+   scadenza:calcExpiry($("inizio").value,lez,Number($("frequenza").value)),
+   ...(reset?{lezioniFatte:0,lezioniResidue:lez}:{}),
+   updatedAt:serverTimestamp()
+ };
  await setDoc(docPath("clienti",id),updated,{merge:true});
- await deleteAutoEvents(id,true);
+ await deleteAutoEvents(id,false);
  await generateFixedEvents(id,updated);
- alert("Calendario rigenerato.");
+ alert("Calendario rigenerato. Controlla la sezione Calendario.");
+}
+
+async function ripristinaLezioniResidue(){
+ const id=$("editId").value;
+ if(!id){alert("Apri prima un cliente con Modifica.");return}
+ const c=clienti.find(x=>x.id===id);
+ if(!c)return;
+ if(!confirm("Ripristinare le lezioni residue al totale del pacchetto?"))return;
+ await setDoc(docPath("clienti",id),{lezioniFatte:0,lezioniResidue:c.lezioniTotali||0,updatedAt:serverTimestamp()},{merge:true});
+ alert("Lezioni residue ripristinate.");
 }
 
 async function salvaEventoManuale(){
@@ -318,7 +358,7 @@ function wa(c){return `https://wa.me/${String(c.telefono||"").replace(/\D/g,"")}
 function contacts(){return clienti.filter(c=>c.stato!=="inattivo"&&(daysLeft(c.scadenza)<=7||((c.lezioniResidue||0)<=3&&c.lezioniTotali>0)||Math.max(0,(c.dovuto||0)-(c.pagato||0))>0||daysLeft(c.certificatoScadenza)<=30||(c.checkAttivo==="Sì"&&daysLeft(c.prossimoCheck)<=7)))}
 function statusClient(c){if(c.stato==="inattivo")return["info","Inattivo"];if(daysLeft(c.scadenza)<0&&c.lezioniTotali>0)return["bad","Scaduto"];if(daysLeft(c.scadenza)<=7&&c.lezioniTotali>0)return["warn","Scadenza 7gg"];return["ok","Attivo"]}
 function slotText(c){return (c.slotFissi||[]).map(s=>["Dom","Lun","Mar","Mer","Gio","Ven","Sab"][s.day]+" "+s.time).join(", ")}
-function card(c){let res=Math.max(0,(c.dovuto||0)-(c.pagato||0)),s=statusClient(c);let inactive=c.stato==="inattivo";return `<div class="card"><h3>${c.nome||""} ${c.cognome||""}</h3><p class="meta">${c.servizio||""} · ${c.modalitaPrenotazione||""} · durata ${c.durataMinuti||60} min<br>${slotText(c)}</p><span class="badge ${s[0]}">${s[1]}</span><span class="badge ${(c.lezioniResidue||0)<=3&&c.lezioniTotali>0?'warn':'ok'}">${c.lezioniResidue||0}/${c.lezioniTotali||0} lezioni</span><span class="badge ${res>0?'bad':'ok'}">${res>0?'Residuo €'+res:'Pagato'}</span><p class="meta">Scadenza pacchetto: ${fmt(c.scadenza)} · Certificato: ${fmt(c.certificatoScadenza)} · Check: ${fmt(c.prossimoCheck)}</p><a class="btn green full" href="${wa(c)}" target="_blank">💬 WhatsApp</a><div class="actions"><button class="btn light" onclick="lezione('${c.id}')">+ Lezione</button><button class="btn light" onclick="restituisci('${c.id}')">Restituisci</button><button class="btn gold" onclick="rinnova('${c.id}')">Rinnova</button><button class="btn light" onclick="editCliente('${c.id}')">Modifica</button>${inactive?`<button class="btn gold" onclick="riattiva('${c.id}')">Riattiva</button>`:`<button class="btn red" onclick="inattivo('${c.id}')">Inattivo</button>`}<button class="btn red" onclick="eliminaCliente('${c.id}')">Elimina cliente</button></div></div>`}
+function card(c){let res=Math.max(0,(c.dovuto||0)-(c.pagato||0)),s=statusClient(c);let inactive=c.stato==="inattivo";return `<div class="card"><h3>${c.nome||""} ${c.cognome||""}</h3><p class="meta">${c.servizio||""} · ${c.modalitaPrenotazione||""} · durata ${c.durataMinuti||60} min<br>${slotText(c)}</p><span class="badge ${s[0]}">${s[1]}</span><span class="badge ${(c.lezioniResidue||0)<=3&&c.lezioniTotali>0?'warn':'ok'}">${c.lezioniResidue||0} residue su ${c.lezioniTotali||0}</span><span class="badge ${res>0?'bad':'ok'}">${res>0?'Residuo €'+res:'Pagato'}</span><p class="meta">Scadenza pacchetto: ${fmt(c.scadenza)} · Certificato: ${fmt(c.certificatoScadenza)} · Check: ${fmt(c.prossimoCheck)}</p><a class="btn green full" href="${wa(c)}" target="_blank">💬 WhatsApp</a><div class="actions"><button class="btn light" onclick="lezione('${c.id}')">+ Lezione</button><button class="btn light" onclick="restituisci('${c.id}')">Restituisci</button><button class="btn gold" onclick="rinnova('${c.id}')">Rinnova</button><button class="btn light" onclick="editCliente('${c.id}')">Modifica</button>${inactive?`<button class="btn gold" onclick="riattiva('${c.id}')">Riattiva</button>`:`<button class="btn red" onclick="inattivo('${c.id}')">Inattivo</button>`}<button class="btn red" onclick="eliminaCliente('${c.id}')">Elimina cliente</button></div></div>`}
 
 function render(){
  const opts=clienti.map(c=>`<option value="${c.id}">${c.nome||""} ${c.cognome||""}</option>`).join("");
@@ -329,7 +369,7 @@ function render(){
  $("kIncassi").textContent="€"+active.reduce((s,c)=>s+Math.max(0,(c.dovuto||0)-(c.pagato||0)),0);
  $("kQuasiFiniti").textContent=active.filter(c=>(c.lezioniResidue||0)<=3&&c.lezioniTotali>0).length;
  $("kCert").textContent=active.filter(c=>daysLeft(c.certificatoScadenza)<=30).length;
- $("priorita").innerHTML=dc.length?dc.slice(0,8).map(c=>`<p><b>${c.nome} ${c.cognome||""}</b><br><span class="meta">${c.lezioniResidue||0}/${c.lezioniTotali||0} lezioni · residuo €${Math.max(0,(c.dovuto||0)-(c.pagato||0))}</span></p>`).join(""):`<div class="empty">Nessuna priorità.</div>`;
+ $("priorita").innerHTML=dc.length?dc.slice(0,8).map(c=>`<p><b>${c.nome} ${c.cognome||""}</b><br><span class="meta">${c.lezioniResidue||0} residue su ${c.lezioniTotali||0} · residuo €${Math.max(0,(c.dovuto||0)-(c.pagato||0))}</span></p>`).join(""):`<div class="empty">Nessuna priorità.</div>`;
  const filters=["Tutti","Attivi","Inattivi","Personal Training","Coaching Online","Nutrizione","Preparazione Gara","Small Group","Da contattare"];
  $("clientFilters").innerHTML=filters.map(f=>`<button class="${filtro===f?'active':''}" onclick="setFiltro('${f}')">${f}</button>`).join("");
  let q=($("search").value||"").toLowerCase();let list=clienti.filter(c=>((c.nome||"")+" "+(c.cognome||"")+" "+(c.servizio||"")).toLowerCase().includes(q));
