@@ -1,12 +1,10 @@
-SB PERSONAL COACH GESTIONALE 8.0 SMART CALENDAR + LINK CLIENTE DIRETTO
+SB PERSONAL COACH GESTIONALE 8.0.1 HOTFIX LOGIN
 
-Novità:
-- Area cliente senza password, senza UID e senza registrazione.
-- Ogni cliente ha un link personale: cliente.html?id=ID_CLIENTE.
-- Pulsante "Invia accesso cliente" su WhatsApp con link personale.
-- Link generale area cliente copiabile dalla dashboard.
-- Google Calendar gratuito: pulsante per singola lezione + export .ics.
-- Nessun servizio aggiuntivo a pagamento.
+Correzione:
+- Sistemato blocco login causato da funzioni Google Calendar duplicate.
+- Mantiene link cliente diretto senza password.
+- Mantiene pulsante Invia accesso cliente.
+- Mantiene Google Calendar gratuito / export .ics.
 
 Carica su GitHub:
 - index.html
