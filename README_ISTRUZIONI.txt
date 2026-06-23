@@ -1,4 +1,4 @@
-SB PERSONAL COACH GESTIONALE 6.0 PROFESSIONAL
+SB PERSONAL COACH GESTIONALE 6.1 SMART CALENDAR
 
 Carica su GitHub:
 - index.html
@@ -8,14 +8,11 @@ Carica su GitHub:
 - README_ISTRUZIONI.txt
 
 Novità:
-- filtri clienti
-- check attivo sì/no con frequenza 4/5/6 settimane o personalizzata
-- certificato medico annuale automatico
-- calendario con stati e logica 24h
-- pulsante restituisci lezione
-- lead management
-- compleanni del mese
-- dashboard più completa
-- WhatsApp template modificabili
+- Generazione automatica eventi da orari fissi lun/sab quando salvi un nuovo cliente
+- Durata lezione 30/60/90/personalizzata
+- Scalo automatico a -24h
+- Stati lezione: Prenotata, Bloccata, Effettuata, Assente, Recuperata, Annullata
+- Dashboard: Da incassare, Pacchetti quasi finiti, Check programmati
+- Lezioni mostrate come residue/totali
 
-Google Calendar bidirezionale e area cliente avanzata saranno lo step successivo.
+Test: crea un cliente fittizio con 8 lezioni, frequenza 2, orari fissi lunedì e mercoledì. Controlla il Calendario.
