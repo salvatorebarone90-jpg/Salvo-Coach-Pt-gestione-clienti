@@ -1,4 +1,6 @@
-SB PERSONAL COACH GESTIONALE 6.1 SMART CALENDAR
+SB PERSONAL COACH GESTIONALE 6.1.1 HOTFIX
+
+Questa versione corregge il blocco del login della 6.1.
 
 Carica su GitHub:
 - index.html
@@ -7,12 +9,15 @@ Carica su GitHub:
 - logo.jpeg
 - README_ISTRUZIONI.txt
 
-Novità:
-- Generazione automatica eventi da orari fissi lun/sab quando salvi un nuovo cliente
-- Durata lezione 30/60/90/personalizzata
-- Scalo automatico a -24h
-- Stati lezione: Prenotata, Bloccata, Effettuata, Assente, Recuperata, Annullata
-- Dashboard: Da incassare, Pacchetti quasi finiti, Check programmati
-- Lezioni mostrate come residue/totali
+Dopo il caricamento:
+1. Apri il gestionale
+2. Ricarica la pagina
+3. Accedi con l'account coach già creato
 
-Test: crea un cliente fittizio con 8 lezioni, frequenza 2, orari fissi lunedì e mercoledì. Controlla il Calendario.
+Funzioni incluse:
+- Login Firebase corretto
+- Clienti
+- Orari fissi automatici
+- Generazione eventi calendario
+- Scalo automatico a 24h
+- Dashboard smart
