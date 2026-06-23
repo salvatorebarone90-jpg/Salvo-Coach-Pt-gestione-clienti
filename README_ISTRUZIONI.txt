@@ -1,18 +1,10 @@
-SB PERSONAL COACH GESTIONALE 8.2 AREA CLIENTE PREMIUM
+SB PERSONAL COACH GESTIONALE 8.2.1 HOTFIX AREA CLIENTE PREMIUM
 
-Novità:
-- Grafica premium per area cliente.
-- Badge saldo più chiaro: Saldo regolare / Da saldare €.
-- Calendario mensile grafico.
-- Avvisi automatici: certificato in scadenza, pacchetto quasi finito, pacchetto in scadenza.
-- Storico check più professionale.
-- Supporto foto check se presente campo fotoUrl.
-- Sezione documenti PDF pronta:
-  pdfAlimentazione / schedaAlimentareUrl / alimentazioneUrl
-  pdfAllenamento / schedaAllenamentoUrl / allenamentoUrl
-- Regolamento sempre visibile.
-- Accettazione regolamento.
-- Tasto annulla lezione con blocco sotto le 24h.
+Correzione:
+- Risolto blocco su "Caricamento..." dell'Area Cliente Premium.
+- Corretto pulsante "Annulla lezione".
+- Mantenuta grafica premium.
+- Mantenuti calendario mensile, avvisi, saldo chiaro, storico check e area PDF.
 
 Carica su GitHub:
 - index.html

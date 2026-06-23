@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Area Cliente Premium</title>
+<title>Area Cliente Premium 8.2.1</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--n:#101827;--g:#d5ad52;--b:#f4f6f8;--muted:#6b7280;--line:#e5e7eb}
@@ -234,14 +234,17 @@ function render(){
    const dt=parseLocalDate(e.data);
    const day=dt.getDate();
    const mon=dt.toLocaleDateString("it-IT",{month:"short"});
-   return '<div class="lesson"><div class="lesson-top"><div><h3>'+(e.tipo||"Lezione PT")+'</h3><p class="meta">'+fmt(e.data)+' ore '+(e.ora||"-")+' · '+(e.stato||"Prenotata")+'</p></div><div class="datepill"><b>'+day+'</b><span>'+mon+'</span></div></div>'+(canCancel?'<button class="btn red full" onclick="annullaLezione(\\''+e.id+'\\')">Annulla lezione</button>':'<p class="meta"><b>Entro 24h:</b> non annullabile automaticamente.</p>')+'</div>';
+   return '<div class="lesson"><div class="lesson-top"><div><h3>'+(e.tipo||"Lezione PT")+'</h3><p class="meta">'+fmt(e.data)+' ore '+(e.ora||"-")+' · '+(e.stato||"Prenotata")+'</p></div><div class="datepill"><b>'+day+'</b><span>'+mon+'</span></div></div>'+(canCancel?'<button class="btn red full cancelLessonBtn" data-event-id="'+e.id+'">Annulla lezione</button>':'<p class="meta"><b>Entro 24h:</b> non annullabile automaticamente.</p>')+'</div>';
  }).join(""):'<div class="empty">Nessuna lezione programmata.</div>';
+ document.querySelectorAll(".cancelLessonBtn").forEach(btn=>{
+   btn.addEventListener("click",()=>annullaLezione(btn.dataset.eventId));
+ });
  $("listaCheck").innerHTML=checkPro.length?checkPro.slice().sort((a,b)=>(b.data||"").localeCompare(a.data||"")).slice(0,8).map(ch=>{
    return '<div class="check"><h3>'+fmt(ch.data)+'</h3><div>'+(ch.peso?'<span class="badge ok">⚖️ '+ch.peso+' kg</span>':'')+(ch.vita?'<span class="badge info">📏 Vita '+ch.vita+'</span>':'')+(ch.fotoUrl?'<a class="badge warn" href="'+ch.fotoUrl+'" target="_blank">📷 Foto check</a>':'')+'</div><p class="meta"><b>Note coach:</b><br>'+((ch.note||"-").replaceAll("\\n","<br>"))+'</p>'+(ch.messaggio?'<p class="meta"><b>Messaggio:</b><br>'+ch.messaggio.replaceAll("\\n","<br>")+'</p>':'')+'</div>';
  }).join(""):'<div class="empty">Nessun check disponibile.</div>';
  $("waBtn").href="https://wa.me/"+onlyDigits(cliente.telefono)+"?text="+encodeURIComponent("Ciao, ti scrivo dalla mia area cliente.");
 }
-load().catch(e=>{console.error(e);showError("Errore di lettura Firebase. Controlla le regole Firestore oppure richiedi un nuovo link.")});
+load().catch(e=>{console.error(e);showError("Errore di lettura Firebase: "+(e && e.message ? e.message : "controlla le regole Firestore."))});
 </script>
 </body>
 </html>
