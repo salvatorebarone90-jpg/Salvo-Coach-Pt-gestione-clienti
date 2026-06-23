@@ -34,7 +34,7 @@ textarea{min-height:80px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10p
 </style>
 </head>
 <body>
-<header><img src="logo.jpeg" class="logo"><h1>Gestionale Clienti 7.2 Coach</h1><p>Area Coach · Check Pro · Area Cliente</p></header>
+<header><img src="logo.jpeg" class="logo"><h1>Gestionale Clienti 7.3 Coach</h1><p>Link cliente rapido · WhatsApp · Check Pro</p></header>
 
 <div id="loginView" class="card" style="max-width:430px;margin:18px auto">
 <h2>🔐 Accesso Coach</h2>
@@ -63,7 +63,14 @@ textarea{min-height:80px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10p
 <main>
 <section id="dashboard" class="section active">
 <div class="card" style="display:flex;justify-content:space-between;align-items:center"><div><b id="userEmail"></b><br><span class="meta">Database cloud Firestore</span></div><button id="logoutBtn" class="btn red">Esci</button></div>
-<div class="card"><h2>📱 Area Cliente</h2><p class="meta">Link da inviare ai clienti:</p><input readonly value="cliente.html"><p class="meta">Link completo: aggiungi <b>/cliente.html</b> alla fine del link del gestionale.</p></div><div class="grid">
+<div class="card"><h2>📱 Area Cliente</h2><p class="meta">Link da inviare ai clienti:</p><input readonly value="cliente.html"><p class="meta">Link completo: aggiungi <b>/cliente.html</b> alla fine del link del gestionale.</p></div><div class="card">
+<h2>📱 Area Cliente</h2>
+<p class="meta">Link cliente già pronto da copiare e inviare:</p>
+<input id="clientAreaUrl" readonly>
+<button id="copyClientAreaBtn" class="btn gold full">Copia link cliente</button>
+<p id="copyStatus" class="meta"></p>
+</div>
+<div class="grid">
 <div class="kpi"><strong id="kClienti">0</strong><span>Clienti attivi</span></div>
 <div class="kpi"><strong id="kInattivi">0</strong><span>Clienti inattivi</span></div>
 <div class="kpi"><strong id="kContatti">0</strong><span>Da contattare</span></div>
@@ -268,6 +275,7 @@ $("saveEventBtn").addEventListener("click",salvaEventoManuale);
 $("saveCheckBtn").addEventListener("click",salvaCheck);
 $("saveLeadBtn").addEventListener("click",salvaLead);
 $("backupBtn").addEventListener("click",exportDB);
+if($("copyClientAreaBtn"))$("copyClientAreaBtn").addEventListener("click",copyClientAreaLink);
 if($("saveTemplatesBtn"))$("saveTemplatesBtn").addEventListener("click",salvaTemplates);
 if($("resetTemplatesBtn"))$("resetTemplatesBtn").addEventListener("click",resetTemplates);
 if($("saveCheckProBtn"))$("saveCheckProBtn").addEventListener("click",salvaCheckPro);
@@ -582,13 +590,51 @@ function waCheckPro(ch){
  return "https://wa.me/"+phone+"?text="+encodeURIComponent(ch.messaggio||"Ciao, ti aggiorno sul check.");
 }
 
+
+function clientAreaLink(){
+ const base=location.href.split("#")[0].split("?")[0];
+ const root=base.substring(0,base.lastIndexOf("/")+1);
+ return root+"cliente.html";
+}
+async function copyClientAreaLink(){
+ const link=clientAreaLink();
+ try{
+  if(navigator.clipboard&&navigator.clipboard.writeText){await navigator.clipboard.writeText(link);}
+  else{const tmp=document.createElement("input");tmp.value=link;document.body.appendChild(tmp);tmp.select();document.execCommand("copy");tmp.remove();}
+  if($("copyStatus"))$("copyStatus").textContent="Link copiato negli appunti.";
+ }catch(e){
+  if($("copyStatus"))$("copyStatus").textContent=link;
+ }
+}
+function accessoClienteMsg(c){
+ return `Ciao ${c.nome||""},
+
+questa è la tua area cliente personale:
+
+${clientAreaLink()}
+
+Da qui potrai controllare:
+• lezioni residue
+• prossimi appuntamenti
+• check e note
+• scadenza pacchetto/certificato
+
+Accedi usando la stessa email che mi hai comunicato.
+
+Salvatore Barone Personal Coach`;
+}
+function waAccessoCliente(c){
+ return `https://wa.me/${String(c.telefono||"").replace(/\D/g,"")}?text=${encodeURIComponent(accessoClienteMsg(c))}`;
+}
+
 function wa(c){return `https://wa.me/${String(c.telefono||"").replace(/\D/g,"")}?text=${encodeURIComponent(fillTemplate(chooseTemplate(c),c))}`}
 function contacts(){return clienti.filter(c=>c.stato!=="inattivo"&&(daysLeft(c.scadenza)<=7||((c.lezioniResidue||0)<=3&&c.lezioniTotali>0)||Math.max(0,(c.dovuto||0)-(c.pagato||0))>0||daysLeft(c.certificatoScadenza)<=30||(c.checkAttivo==="Sì"&&daysLeft(c.prossimoCheck)<=7)))}
 function statusClient(c){if(c.stato==="inattivo")return["info","Inattivo"];if(daysLeft(c.scadenza)<0&&c.lezioniTotali>0)return["bad","Scaduto"];if(daysLeft(c.scadenza)<=7&&c.lezioniTotali>0)return["warn","Scadenza 7gg"];return["ok","Attivo"]}
 function slotText(c){return (c.slotFissi||[]).map(s=>["Dom","Lun","Mar","Mer","Gio","Ven","Sab"][s.day]+" "+s.time).join(", ")}
-function card(c){let res=Math.max(0,(c.dovuto||0)-(c.pagato||0)),s=statusClient(c);let inactive=c.stato==="inattivo";return `<div class="card"><h3>${c.nome||""} ${c.cognome||""}</h3><p class="meta">${c.servizio||""} · ${c.modalitaPrenotazione||""} · durata ${c.durataMinuti||60} min<br>${slotText(c)}</p><span class="badge ${s[0]}">${s[1]}</span><span class="badge ${(c.lezioniResidue||0)<=3&&c.lezioniTotali>0?'warn':'ok'}">${c.lezioniResidue||0} residue su ${c.lezioniTotali||0}</span><span class="badge ${res>0?'bad':'ok'}">${res>0?'Residuo €'+res:'Pagato'}</span><p class="meta">Scadenza pacchetto: ${fmt(c.scadenza)} · Certificato: ${fmt(c.certificatoScadenza)} · Check: ${fmt(c.prossimoCheck)}</p><a class="btn green full" href="${wa(c)}" target="_blank">💬 WhatsApp</a><div class="actions"><button class="btn light" onclick="lezione('${c.id}')">+ Lezione</button><button class="btn light" onclick="restituisci('${c.id}')">Restituisci</button><button class="btn gold" onclick="rinnova('${c.id}')">Rinnova</button><button class="btn light" onclick="editCliente('${c.id}')">Modifica</button>${inactive?`<button class="btn gold" onclick="riattiva('${c.id}')">Riattiva</button>`:`<button class="btn red" onclick="inattivo('${c.id}')">Inattivo</button>`}<button class="btn red" onclick="eliminaCliente('${c.id}')">Elimina cliente</button></div></div>`}
+function card(c){let res=Math.max(0,(c.dovuto||0)-(c.pagato||0)),s=statusClient(c);let inactive=c.stato==="inattivo";return `<div class="card"><h3>${c.nome||""} ${c.cognome||""}</h3><p class="meta">${c.servizio||""} · ${c.modalitaPrenotazione||""} · durata ${c.durataMinuti||60} min<br>${slotText(c)}</p><span class="badge ${s[0]}">${s[1]}</span><span class="badge ${(c.lezioniResidue||0)<=3&&c.lezioniTotali>0?'warn':'ok'}">${c.lezioniResidue||0} residue su ${c.lezioniTotali||0}</span><span class="badge ${res>0?'bad':'ok'}">${res>0?'Residuo €'+res:'Pagato'}</span><p class="meta">Scadenza pacchetto: ${fmt(c.scadenza)} · Certificato: ${fmt(c.certificatoScadenza)} · Check: ${fmt(c.prossimoCheck)}</p><a class="btn green full" href="${wa(c)}" target="_blank">💬 WhatsApp</a><div class="actions"><button class="btn light" onclick="lezione('${c.id}')">+ Lezione</button><button class="btn light" onclick="restituisci('${c.id}')">Restituisci</button><button class="btn gold" onclick="rinnova('${c.id}')">Rinnova</button><button class="btn light" onclick="editCliente('${c.id}')">Modifica</button>${inactive?`<button class="btn gold" onclick="riattiva('${c.id}')">Riattiva</button>`:`<button class="btn red" onclick="inattivo('${c.id}')">Inattivo</button>`}<a class="btn gold" href="${waAccessoCliente(c)}" target="_blank">Invia accesso cliente</a><button class="btn red" onclick="eliminaCliente('${c.id}')">Elimina cliente</button></div></div>`}
 
 function render(){
+ if($("clientAreaUrl"))$("clientAreaUrl").value=clientAreaLink();
  const opts=clienti.map(c=>`<option value="${c.id}">${c.nome||""} ${c.cognome||""}</option>`).join("");
  $("checkCliente").innerHTML=opts;$("calCliente").innerHTML=opts;if($("proCliente"))$("proCliente").innerHTML=opts;
  const active=clienti.filter(c=>c.stato!=="inattivo"), inactive=clienti.filter(c=>c.stato==="inattivo"), dc=contacts(), today=localISO(new Date()), tomorrow=localISO(addDays(new Date(),1));

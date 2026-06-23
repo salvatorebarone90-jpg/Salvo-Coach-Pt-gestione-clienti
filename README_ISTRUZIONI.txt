@@ -1,15 +1,16 @@
-SB PERSONAL COACH GESTIONALE 7.2 AREA CLIENTE
+SB PERSONAL COACH GESTIONALE 7.3 ACCESSO CLIENTE RAPIDO
 
 Novità:
-- index.html = area coach
-- cliente.html = area cliente
-- Login cliente email/password.
-- Cliente vede solo la scheda collegata alla sua email: lezioni residue, prossime lezioni, scadenze, check/note.
+- Link Area Cliente completo già visibile in dashboard.
+- Tasto "Copia link cliente".
+- Tasto "Invia accesso cliente" dentro ogni scheda cliente.
+- Messaggio WhatsApp già pronto con link e istruzioni.
+- Mantiene Area Coach, Area Cliente, Check Pro e Messaggi.
 
-Nessun servizio aggiuntivo a pagamento.
-
-Link cliente:
-https://salvatorebarone90-jpg.github.io/Salvo-Coach-Pt-gestione-clienti/cliente.html
-
-Nota tecnica:
-Al primo accesso il cliente deve inserire il codice coach Firebase UID, che poi resta salvato nel browser.
+Carica su GitHub:
+- index.html
+- cliente.html
+- firebase-config.js
+- manifest.json
+- logo.jpeg
+- README_ISTRUZIONI.txt
