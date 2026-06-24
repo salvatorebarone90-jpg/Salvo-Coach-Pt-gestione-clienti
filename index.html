@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SB Personal Coach Gestionale 9.3.5</title>
+<title>SB Personal Coach Gestionale 9.3.6</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--n:#101827;--g:#d5ad52;--b:#f4f6f8}
@@ -34,7 +34,7 @@ textarea{min-height:80px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10p
 </style>
 </head>
 <body>
-<header><img src="logo.jpeg" class="logo"><h1>Gestionale Clienti 9.3.5 Coach</h1><p>Hotfix Area Cliente · Stati Lezione</p></header>
+<header><img src="logo.jpeg" class="logo"><h1>Gestionale Clienti 9.3.6 Coach</h1><p>Contatore Manuale · Collaudo</p></header>
 
 <div id="loginView" class="card" style="max-width:430px;margin:18px auto">
 <h2>🔐 Accesso Coach</h2>
@@ -441,17 +441,17 @@ async function salvaEventoManuale(){
 async function autoScalaLezioni(){
  const now=new Date();
  for(const ev of eventi){
-   if(ev.scalata||!ev.data||!ev.ora||!ev.clienteId)continue;
+   if(!ev.data||!ev.ora||!ev.clienteId)continue;
    const [y,m,d]=ev.data.split("-").map(Number);
    const [h,min]=ev.ora.split(":").map(Number);
    const dt=new Date(y,m-1,d,h,min,0);
    const hours=(dt-now)/36e5;
-   if(hours<=24&&["Prenotata","Occupata"].includes(ev.stato)){
-     const c=clienti.find(x=>x.id===ev.clienteId);
-     if(c&&c.lezioniResidue>0){
-       await setDoc(docPath("clienti",c.id),{lezioniFatte:(c.lezioniFatte||0)+1,lezioniResidue:(c.lezioniResidue||0)-1},{merge:true});
-       await setDoc(docPath("eventi",ev.id),{scalata:true,stato:"Bloccata"},{merge:true});
-     }
+   if(hours<=24 && ["Prenotata","Occupata"].includes(ev.stato)){
+     await setDoc(docPath("eventi",ev.id),{
+       stato:"Bloccata",
+       bloccataEntro24h:true,
+       updatedAt:serverTimestamp()
+     },{merge:true});
    }
  }
 }
@@ -488,9 +488,9 @@ async function restituisciCreditoEvento(id, nuovoStato, extra={}){
  if(!ev)return;
  const c = clienti.find(x=>x.id===ev.clienteId);
  const updateEv = {stato:nuovoStato, updatedAt:serverTimestamp(), ...extra};
- if(c && !ev.creditoRestituito && ["Prenotata","Occupata","Bloccata"].includes(ev.stato)){
+ if(c && ev.scalata && !ev.creditoRestituito){
    const nuoveResidue = Math.min(Number(c.lezioniTotali||0), Number(c.lezioniResidue||0)+1);
-   const nuovoFatte = ev.scalata ? Math.max(0, Number(c.lezioniFatte||0)-1) : Number(c.lezioniFatte||0);
+   const nuovoFatte = Math.max(0, Number(c.lezioniFatte||0)-1);
    await setDoc(docPath("clienti",c.id),{lezioniResidue:nuoveResidue,lezioniFatte:nuovoFatte,updatedAt:serverTimestamp()},{merge:true});
    updateEv.creditoRestituito = true;
  }
@@ -501,7 +501,7 @@ async function consumaCreditoEvento(id, nuovoStato){
  const ev = eventi.find(x=>x.id===id);
  if(!ev)return;
  const c = clienti.find(x=>x.id===ev.clienteId);
- if(c && !ev.scalata && ["Prenotata","Occupata"].includes(ev.stato) && (c.lezioniResidue||0)>0){
+ if(c && !ev.scalata && ["Prenotata","Occupata","Bloccata"].includes(ev.stato) && (c.lezioniResidue||0)>0){
    await setDoc(docPath("clienti",c.id),{
      lezioniFatte:Number(c.lezioniFatte||0)+1,
      lezioniResidue:Math.max(0,Number(c.lezioniResidue||0)-1),
@@ -520,7 +520,7 @@ window.eventoAnnullata=async(id)=>await restituisciCreditoEvento(id,"Annullata",
 window.delEvento=async(id)=>{
  const ev=eventi.find(x=>x.id===id);
  if(!confirm("Eliminare evento?"))return;
- if(ev&&ev.clienteId&&!ev.creditoRestituito&&["Prenotata","Occupata","Bloccata"].includes(ev.stato)){
+ if(ev&&ev.clienteId&&ev.scalata&&!ev.creditoRestituito){
    const c=clienti.find(x=>x.id===ev.clienteId);
    if(c){
      await setDoc(docPath("clienti",c.id),{

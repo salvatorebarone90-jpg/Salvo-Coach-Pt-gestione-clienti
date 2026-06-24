@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Area Cliente Premium 9.3.5</title>
+<title>Area Cliente Premium 9.3.6</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--n:#101827;--g:#d5ad52;--b:#f4f6f8;--muted:#6b7280;--line:#e5e7eb}
@@ -222,12 +222,12 @@ async function acceptRules(){
  await setDoc(doc(db,"users",COACH_UID,"clienti",cliente.id),{
    regolamentoAccettato:true,
    regolamentoAccettatoIl:acceptedAt,
-   regolamentoVersione:"9.3.5",
+   regolamentoVersione:"9.3.6",
    updatedAt:serverTimestamp()
  },{merge:true});
  cliente.regolamentoAccettato = true;
  cliente.regolamentoAccettatoIl = acceptedAt;
- cliente.regolamentoVersione = "9.3.5";
+ cliente.regolamentoVersione = "9.3.6";
  alert("Regolamento accettato correttamente.");
  render();
 }
@@ -239,15 +239,16 @@ async function annullaLezione(eventId){
    alert("Questa lezione è entro le 24 ore e non può essere annullata automaticamente. Contatta il coach.");
    return;
  }
- if(!confirm("Vuoi annullare questa lezione? La lezione tornerà disponibile nel pacchetto."))return;
+ if(!confirm("Vuoi annullare questa lezione?"))return;
 
- const nuoveResidue = Math.min(Number(cliente.lezioniTotali||0), Number(cliente.lezioniResidue||0)+1);
- const nuovoFatte = ev.scalata ? Math.max(0, Number(cliente.lezioniFatte||0)-1) : Number(cliente.lezioniFatte||0);
+ const eraScalata = ev.scalata === true;
+ const nuoveResidue = eraScalata ? Math.min(Number(cliente.lezioniTotali||0), Number(cliente.lezioniResidue||0)+1) : Number(cliente.lezioniResidue||0);
+ const nuovoFatte = eraScalata ? Math.max(0, Number(cliente.lezioniFatte||0)-1) : Number(cliente.lezioniFatte||0);
 
  await setDoc(doc(db,"users",COACH_UID,"eventi",eventId),{
    stato:"Annullata dal cliente",
    annullataDaCliente:true,
-   creditoRestituito:true,
+   creditoRestituito:eraScalata,
    annullataIl:new Date().toISOString(),
    updatedAt:serverTimestamp()
  },{merge:true});
@@ -260,12 +261,12 @@ async function annullaLezione(eventId){
 
  ev.stato="Annullata dal cliente";
  ev.annullataDaCliente=true;
- ev.creditoRestituito=true;
+ ev.creditoRestituito=eraScalata;
  cliente.lezioniResidue=nuoveResidue;
  cliente.lezioniFatte=nuovoFatte;
 
  render();
- alert("Lezione annullata correttamente. Il credito è tornato disponibile nel pacchetto.");
+ alert(eraScalata ? "Lezione annullata. Il credito è tornato disponibile nel pacchetto." : "Lezione annullata correttamente.");
 }
 
 async function richiediRecupero(eventId){
@@ -426,7 +427,7 @@ function render(){
  if($("rulesAcceptedText")){
    if(accepted && cliente.regolamentoAccettatoIl){
      const d = new Date(cliente.regolamentoAccettatoIl);
-     $("rulesAcceptedText").innerHTML = "✅ Regolamento accettato il <b>"+d.toLocaleDateString("it-IT")+"</b> alle <b>"+d.toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})+"</b> · Versione "+(cliente.regolamentoVersione||"9.3.5");
+     $("rulesAcceptedText").innerHTML = "✅ Regolamento accettato il <b>"+d.toLocaleDateString("it-IT")+"</b> alle <b>"+d.toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})+"</b> · Versione "+(cliente.regolamentoVersione||"9.3.6");
    } else {
      $("rulesAcceptedText").innerHTML = "⚠️ Regolamento non ancora accettato.";
    }
