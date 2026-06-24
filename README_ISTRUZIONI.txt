@@ -1,10 +1,13 @@
-SB PERSONAL COACH GESTIONALE 8.2.1 HOTFIX AREA CLIENTE PREMIUM
+SB PERSONAL COACH GESTIONALE 9.0 RECUPERI
 
-Correzione:
-- Risolto blocco su "Caricamento..." dell'Area Cliente Premium.
-- Corretto pulsante "Annulla lezione".
-- Mantenuta grafica premium.
-- Mantenuti calendario mensile, avvisi, saldo chiaro, storico check e area PDF.
+Novità:
+- Nuova sezione Coach: Recuperi.
+- Area Cliente: pulsante "Richiedi recupero" sotto ogni lezione.
+- Il cliente può inviare una richiesta recupero con eventuale nota.
+- Il coach vede le richieste in "Recuperi".
+- Il coach può approvare, rifiutare o eliminare le richieste.
+- Backup aggiornato con recuperi.
+- Mantiene Area Cliente Premium 8.2.1.
 
 Carica su GitHub:
 - index.html
@@ -13,3 +16,9 @@ Carica su GitHub:
 - manifest.json
 - logo.jpeg
 - README_ISTRUZIONI.txt
+
+Dopo il caricamento:
+1. Ricarica la dashboard con aggiornamento forzato.
+2. Apri Area Cliente.
+3. Premi "Richiedi recupero" su una lezione.
+4. Torna nella dashboard coach > Recuperi.

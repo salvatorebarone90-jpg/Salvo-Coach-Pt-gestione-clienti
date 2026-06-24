@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SB Personal Coach Gestionale 7.1</title>
+<title>SB Personal Coach Gestionale 9.0</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--n:#101827;--g:#d5ad52;--b:#f4f6f8}
@@ -34,7 +34,7 @@ textarea{min-height:80px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10p
 </style>
 </head>
 <body>
-<header><img src="logo.jpeg" class="logo"><h1>Gestionale Clienti 8.2.1 Coach</h1><p>Hotfix Premium · Area Cliente</p></header>
+<header><img src="logo.jpeg" class="logo"><h1>Gestionale Clienti 9.0 Coach</h1><p>Recuperi · Area Cliente Premium</p></header>
 
 <div id="loginView" class="card" style="max-width:430px;margin:18px auto">
 <h2>🔐 Accesso Coach</h2>
@@ -51,6 +51,7 @@ textarea{min-height:80px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10p
 <button data-tab="clienti">Clienti</button>
 <button data-tab="contatti">Da contattare</button>
 <button data-tab="calendario">Calendario</button>
+<button data-tab="recuperi">Recuperi</button>
 <button data-tab="check">Check</button>
 <button data-tab="lead">Lead</button>
 <button data-tab="rinnovi">Rinnovi</button>
@@ -81,7 +82,7 @@ textarea{min-height:80px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10p
 <div class="kpi"><strong id="kQuasiFiniti">0</strong><span>Pacchetti quasi finiti</span></div>
 <div class="kpi"><strong id="kCert">0</strong><span>Certificati in scadenza</span></div>
 </div>
-<div class="card"><h2>📌 Priorità automatiche</h2><div id="priorita"></div></div>
+<div class="card"><h2>📌 Priorità automatiche</h2><div id="priorita"></div><div id="recuperiAlert" class="meta"></div></div>
 </section>
 
 <section id="clienti" class="section">
@@ -125,6 +126,15 @@ textarea{min-height:80px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10p
 <div class="row"><div><label>Tipo</label><select id="calTipo"><option>Lezione PT</option><option>Check</option><option>Consulenza</option><option>Recupero</option></select></div><div><label>Stato</label><select id="calStato"><option>Prenotata</option><option>Disponibile</option><option>Occupata</option><option>Bloccata</option><option>Effettuata</option><option>Assente</option><option>Recuperata</option><option>Annullata</option></select></div></div>
 <button id="saveEventBtn" class="btn primary full">Salva evento manuale</button></div>
 <div class="card"><h2>🗓️ Prossimi eventi</h2><div id="listaEventi"></div></div></section>
+
+
+<section id="recuperi" class="section">
+<div class="card">
+<h2>🔄 Recuperi lezioni</h2>
+<p class="meta">Qui trovi le richieste di recupero inviate dai clienti dall'Area Cliente.</p>
+<div id="listaRecuperi"></div>
+</div>
+</section>
 
 <section id="check" class="section"><div class="card"><h2>📏 Nuovo check</h2><label>Cliente</label><select id="checkCliente"></select><div class="row"><div><label>Data check</label><input id="checkData" type="date"></div><div><label>Peso kg</label><input id="checkPeso" type="number" step="0.1"></div></div><label>Note</label><textarea id="checkNote"></textarea><button id="saveCheckBtn" class="btn primary full">Salva check</button></div><div id="listaCheck"></div></section>
 <section id="lead" class="section"><div class="card"><h2>🎯 Nuovo lead</h2><div class="row"><div><label>Nome</label><input id="leadNome"></div><div><label>Telefono</label><input id="leadTelefono"></div></div><button id="saveLeadBtn" class="btn primary full">Salva lead</button></div><div id="listaLead"></div></section>
@@ -207,7 +217,7 @@ const app=initializeApp(firebaseConfig);
 const auth=getAuth(app);
 const db=getFirestore(app);
 
-let user=null, clienti=[], eventi=[], checks=[], leads=[], rinnovi=[], filtro="Tutti";
+let user=null, clienti=[], eventi=[], checks=[], leads=[], rinnovi=[], recuperi=[], filtro="Tutti";
 let checkPro=[], templates={};
 const defaultTemplates={
  rinnovo:"Ciao {nome}, ti ricordo che il tuo pacchetto è quasi terminato. Ti restano {lezioniResidue} lezioni. Fammi sapere se vuoi procedere con il rinnovo.",
@@ -234,6 +244,7 @@ function subscribe(){
  onSnapshot(path("checks"),s=>{checks=s.docs.map(d=>({id:d.id,...d.data()}));render()});
  onSnapshot(path("leads"),s=>{leads=s.docs.map(d=>({id:d.id,...d.data()}));render()});
  onSnapshot(path("rinnovi"),s=>{rinnovi=s.docs.map(d=>({id:d.id,...d.data()}));render()});
+ onSnapshot(path("recuperi"),s=>{recuperi=s.docs.map(d=>({id:d.id,...d.data()}));render()});
  onSnapshot(path("checkPro"),s=>{checkPro=s.docs.map(d=>({id:d.id,...d.data()}));render()});
  onSnapshot(doc(db,"users",user.uid,"settings","templates"),s=>{templates=s.exists()?s.data():{...defaultTemplates};render()});
 }
@@ -624,6 +635,49 @@ function statusClient(c){if(c.stato==="inattivo")return["info","Inattivo"];if(da
 function slotText(c){return (c.slotFissi||[]).map(s=>["Dom","Lun","Mar","Mer","Gio","Ven","Sab"][s.day]+" "+s.time).join(", ")}
 function card(c){let res=Math.max(0,(c.dovuto||0)-(c.pagato||0)),s=statusClient(c);let inactive=c.stato==="inattivo";return `<div class="card"><h3>${c.nome||""} ${c.cognome||""}</h3><p class="meta">${c.servizio||""} · ${c.modalitaPrenotazione||""} · durata ${c.durataMinuti||60} min<br>${slotText(c)}</p><span class="badge ${s[0]}">${s[1]}</span><span class="badge ${(c.lezioniResidue||0)<=3&&c.lezioniTotali>0?'warn':'ok'}">${c.lezioniResidue||0} residue su ${c.lezioniTotali||0}</span><span class="badge ${res>0?'bad':'ok'}">${res>0?'Residuo €'+res:'Pagato'}</span><p class="meta">Scadenza pacchetto: ${fmt(c.scadenza)} · Certificato: ${fmt(c.certificatoScadenza)} · Check: ${fmt(c.prossimoCheck)}</p><a class="btn green full" href="${wa(c)}" target="_blank">💬 WhatsApp</a><div class="actions"><button class="btn light" onclick="lezione('${c.id}')">+ Lezione</button><button class="btn light" onclick="restituisci('${c.id}')">Restituisci</button><button class="btn gold" onclick="rinnova('${c.id}')">Rinnova</button><button class="btn light" onclick="editCliente('${c.id}')">Modifica</button>${inactive?`<button class="btn gold" onclick="riattiva('${c.id}')">Riattiva</button>`:`<button class="btn red" onclick="inattivo('${c.id}')">Inattivo</button>`}<a class="btn gold" href="${waAccessoCliente(c)}" target="_blank">Invia accesso cliente</a><button class="btn red" onclick="eliminaCliente('${c.id}')">Elimina cliente</button></div></div>`}
 
+
+function statoRecuperoBadge(stato){
+ const s=String(stato||"in attesa").toLowerCase();
+ if(s.includes("approv")) return "ok";
+ if(s.includes("rifiut")) return "bad";
+ return "warn";
+}
+async function approvaRecupero(id){
+ await setDoc(docPath("recuperi",id),{stato:"approvato",updatedAt:serverTimestamp()},{merge:true});
+ status("Recupero approvato.");
+}
+async function rifiutaRecupero(id){
+ await setDoc(docPath("recuperi",id),{stato:"rifiutato",updatedAt:serverTimestamp()},{merge:true});
+ status("Recupero rifiutato.");
+}
+async function eliminaRecupero(id){
+ if(!confirm("Eliminare questa richiesta di recupero?")) return;
+ await deleteDoc(docPath("recuperi",id));
+ status("Richiesta recupero eliminata.");
+}
+function renderRecuperi(){
+ if(!$("listaRecuperi")) return;
+ const list=recuperi.slice().sort((a,b)=>(b.createdAtText||b.dataRichiesta||"").localeCompare(a.createdAtText||a.dataRichiesta||""));
+ $("listaRecuperi").innerHTML=list.length?list.map(r=>`<div class="card recupero-card">
+  <h3>${r.clienteNome||"Cliente"}</h3>
+  <span class="badge ${statoRecuperoBadge(r.stato)}">${r.stato||"in attesa"}</span>
+  <p class="meta"><b>Lezione:</b> ${fmt(r.dataLezione)} ore ${r.ora||"-"}<br><b>Richiesta:</b> ${fmt(r.dataRichiesta)||"-"}</p>
+  ${r.noteCliente?`<p class="meta"><b>Nota cliente:</b><br>${String(r.noteCliente).replaceAll("\n","<br>")}</p>`:""}
+  <div class="actions">
+    <button class="btn light" onclick="approvaRecupero('${r.id}')">Approva</button>
+    <button class="btn red" onclick="rifiutaRecupero('${r.id}')">Rifiuta</button>
+    <button class="btn red" onclick="eliminaRecupero('${r.id}')">Elimina</button>
+  </div>
+</div>`).join(""):`<div class="empty">Nessuna richiesta recupero.</div>`;
+ if($("recuperiAlert")){
+   const pending=recuperi.filter(r=>String(r.stato||"in attesa").toLowerCase()==="in attesa").length;
+   $("recuperiAlert").innerHTML=pending?`🔄 <b>${pending}</b> recuperi da gestire.`:"";
+ }
+}
+window.approvaRecupero=approvaRecupero;
+window.rifiutaRecupero=rifiutaRecupero;
+window.eliminaRecupero=eliminaRecupero;
+
 function render(){
  if($("clientAreaUrl"))$("clientAreaUrl").value=clientAreaLink();
  const opts=clienti.map(c=>`<option value="${c.id}">${c.nome||""} ${c.cognome||""}</option>`).join("");
@@ -660,9 +714,10 @@ function render(){
  }
 
  $("listaRinnovi").innerHTML=rinnovi.length?rinnovi.map(r=>`<p><b>${r.cliente}</b> · ${r.pacchetto} lezioni<br><span class="meta">${fmt(r.data)} · €${r.importo||0}</span></p>`).join(""):`<div class="empty">Nessun rinnovo.</div>`;
+ renderRecuperi();
 }
 window.setFiltro=(f)=>{filtro=f;render()}
-function exportDB(){let blob=new Blob([JSON.stringify({clienti,eventi,checks,checkPro,leads,rinnovi,templates,exported:new Date().toISOString()},null,2)],{type:"application/json"});let a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="backup_sb_coach_6_1_2.json";a.click()}
+function exportDB(){let blob=new Blob([JSON.stringify({clienti,eventi,checks,checkPro,leads,rinnovi,recuperi,templates,exported:new Date().toISOString()},null,2)],{type:"application/json"});let a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="backup_sb_coach_6_1_2.json";a.click()}
 </script>
 </body>
 </html>
