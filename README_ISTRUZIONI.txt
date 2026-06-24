@@ -1,20 +1,13 @@
-SB PERSONAL COACH GESTIONALE 9.3.3 ANNULLAMENTO CREDITI
+SB PERSONAL COACH GESTIONALE 9.3.4 HOTFIX COACH CREDITI
 
-Correzione principale:
-- Se una lezione viene annullata oltre le 24 ore, il credito torna nel pacchetto.
-- Il contatore aumenta di +1 senza superare il totale del pacchetto.
-- La lezione viene marcata con creditoRestituito:true per evitare doppi conteggi.
-- Nessun recupero automatico: il recupero resta separato e deve passare da richiesta/approvazione coach.
+Correzione:
+- Il pulsante coach "Annullata" restituisce il credito al cliente.
+- Il credito viene restituito una sola volta.
+- "Elimina" restituisce il credito se elimina una lezione attiva/prenotata.
+- "Effettuata" e "Assente" consumano il credito se non era già stato scalato.
 
-Aggiornato:
-- cliente.html
-- index.html
-- manifest.json
-- README_ISTRUZIONI.txt
-
-Test consigliato:
-1. Cliente con 12 lezioni e 10 residue.
-2. Annulla una lezione futura oltre 24h.
-3. Deve diventare 11 residue su 12.
-4. La lezione annullata non deve comparire tra le prossime lezioni.
-5. Il cliente può richiedere recupero separatamente.
+Test:
+1. Cliente 10/12.
+2. Coach clicca "Annullata" su una lezione futura/prenotata.
+3. Deve diventare 11/12.
+4. Ripremendo o eliminando la stessa lezione non deve aggiungere altri crediti.
