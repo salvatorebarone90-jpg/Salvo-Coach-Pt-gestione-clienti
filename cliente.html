@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Area Cliente Premium 9.3.4</title>
+<title>Area Cliente Premium 9.3.5</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--n:#101827;--g:#d5ad52;--b:#f4f6f8;--muted:#6b7280;--line:#e5e7eb}
@@ -222,12 +222,12 @@ async function acceptRules(){
  await setDoc(doc(db,"users",COACH_UID,"clienti",cliente.id),{
    regolamentoAccettato:true,
    regolamentoAccettatoIl:acceptedAt,
-   regolamentoVersione:"9.3.4",
+   regolamentoVersione:"9.3.5",
    updatedAt:serverTimestamp()
  },{merge:true});
  cliente.regolamentoAccettato = true;
  cliente.regolamentoAccettatoIl = acceptedAt;
- cliente.regolamentoVersione = "9.3.4";
+ cliente.regolamentoVersione = "9.3.5";
  alert("Regolamento accettato correttamente.");
  render();
 }
@@ -426,7 +426,7 @@ function render(){
  if($("rulesAcceptedText")){
    if(accepted && cliente.regolamentoAccettatoIl){
      const d = new Date(cliente.regolamentoAccettatoIl);
-     $("rulesAcceptedText").innerHTML = "✅ Regolamento accettato il <b>"+d.toLocaleDateString("it-IT")+"</b> alle <b>"+d.toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})+"</b> · Versione "+(cliente.regolamentoVersione||"9.3.4");
+     $("rulesAcceptedText").innerHTML = "✅ Regolamento accettato il <b>"+d.toLocaleDateString("it-IT")+"</b> alle <b>"+d.toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})+"</b> · Versione "+(cliente.regolamentoVersione||"9.3.5");
    } else {
      $("rulesAcceptedText").innerHTML = "⚠️ Regolamento non ancora accettato.";
    }
@@ -442,7 +442,8 @@ function render(){
  $("heroBadges").innerHTML = activeBadge + '<span class="badge ok">'+(cliente.lezioniResidue||0)+' residue su '+(cliente.lezioniTotali||0)+'</span>' + saldoBadge + rulesBadge;
  $("kLezioni").textContent=cliente.lezioniResidue||0;$("kScadenza").textContent=fmt(cliente.scadenza);$("kCert").textContent=fmt(cliente.certificatoScadenza);
  const today=localISO(new Date());
- const next=eventi.filter(e=>e.data&&e.data>=today&&e.stato!=="Annullata"&&e.stato!=="Annullata dal cliente").sort((a,b)=>(a.data+a.ora).localeCompare(b.data+b.ora));
+ const statiVisibili=["Prenotata","Occupata","Bloccata"];
+ const next=eventi.filter(e=>e.data&&e.data>=today&&statiVisibili.includes(e.stato||"Prenotata")).sort((a,b)=>(a.data+a.ora).localeCompare(b.data+b.ora));
  $("kProssima").textContent=next[0]?shortDate(next[0].data):"-";
  renderAlerts(); renderAvvisiCliente(); renderCalendar(next); renderDocs();
  $("listaEventi").innerHTML=next.length?next.slice(0,10).map(e=>{
