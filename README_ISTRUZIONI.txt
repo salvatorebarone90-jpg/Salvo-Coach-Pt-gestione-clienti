@@ -1,25 +1,10 @@
-SB PERSONAL COACH GESTIONALE 9.3.1 REGOLAMENTO PROFESSIONALE
+SB PERSONAL COACH GESTIONALE 9.3.2 HOTFIX COLLAUDO
 
-Novità:
-- Regolamento definitivo aggiornato.
-- Primo accesso con checkbox obbligatoria:
-  "Dichiaro di aver letto e accettato integralmente il regolamento."
-- Salvataggio su Firebase:
-  regolamentoAccettato: true
-  regolamentoAccettatoIl: data/ora ISO
-  regolamentoVersione: 9.3.1
-- Badge in Area Cliente con data accettazione.
-- Regolamento sempre visibile aggiornato.
-
-Regolamento incluso:
-- Annullamento lezioni 24h
-- Certificato medico
-- Scadenza pacchetto
-- Frequenza 2-4 lezioni settimanali
-- Pagamenti ad inizio percorso senza rateizzazioni
-- Sospensioni non prorogano la scadenza
-- Ritardi
-- Recuperi soggetti ad approvazione
+Correzioni:
+- Regolamento: finché il cliente non accetta, l'Area Cliente resta nascosta.
+- Alert cliente: se il regolamento non è accettato, compare un avviso chiaro.
+- Calendario mensile Area Cliente: corretto bug di evidenziazione venerdì/sabato.
+- Versione regolamento aggiornata a 9.3.2.
 
 Carica su GitHub:
 - index.html
@@ -28,3 +13,10 @@ Carica su GitHub:
 - manifest.json
 - logo.jpeg
 - README_ISTRUZIONI.txt
+
+Test consigliato:
+1. Crea cliente test con regolamento non accettato.
+2. Apri Area Cliente: deve mostrare solo regolamento.
+3. Spunta checkbox e accetta.
+4. Verifica che compaiano dashboard, calendario e lezioni.
+5. Cliente con Lun/Mer/Ven: nel calendario devono evidenziarsi lunedì, mercoledì e venerdì.

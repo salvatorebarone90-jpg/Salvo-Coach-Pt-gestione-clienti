@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Area Cliente Premium 9.3.1</title>
+<title>Area Cliente Premium 9.3.2</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--n:#101827;--g:#d5ad52;--b:#f4f6f8;--muted:#6b7280;--line:#e5e7eb}
@@ -222,12 +222,12 @@ async function acceptRules(){
  await setDoc(doc(db,"users",COACH_UID,"clienti",cliente.id),{
    regolamentoAccettato:true,
    regolamentoAccettatoIl:acceptedAt,
-   regolamentoVersione:"9.3.1",
+   regolamentoVersione:"9.3.2",
    updatedAt:serverTimestamp()
  },{merge:true});
  cliente.regolamentoAccettato = true;
  cliente.regolamentoAccettatoIl = acceptedAt;
- cliente.regolamentoVersione = "9.3.1";
+ cliente.regolamentoVersione = "9.3.2";
  alert("Regolamento accettato correttamente.");
  render();
 }
@@ -278,6 +278,10 @@ $("acceptRulesBtn").addEventListener("click",acceptRules);
 
 function renderAlerts(){
  const alerts=[];
+ if(cliente && cliente.regolamentoAccettato !== true){
+   $("alertsBox").innerHTML='<div class="alert goldA">🟡 Azione richiesta: accettare il regolamento per utilizzare l\'Area Cliente.</div>';
+   return;
+ }
  const certDays=daysLeft(cliente.certificatoScadenza);
  const packDays=daysLeft(cliente.scadenza);
  const residue=Number(cliente.lezioniResidue||0);
@@ -296,13 +300,17 @@ function renderCalendar(next){
  const first=new Date(y,m,1);
  const last=new Date(y,m+1,0).getDate();
  const start=(first.getDay()+6)%7;
- const evDays=new Set(next.filter(e=>e.data).map(e=>parseLocalDate(e.data).getDate()));
+ const evDays=new Set();
+ next.filter(e=>e.data).forEach(e=>{
+   const dt=parseLocalDate(e.data);
+   if(dt.getFullYear()===y && dt.getMonth()===m) evDays.add(dt.getDate());
+ });
  const names=["L","M","M","G","V","S","D"];
  let out=names.map(n=>'<div class="dayh">'+n+'</div>').join("");
  for(let i=0;i<start;i++) out += '<div></div>';
- const today=new Date();
+ const todayDate=new Date();
  for(let d=1;d<=last;d++){
-   const isToday=today.getFullYear()===y&&today.getMonth()===m&&today.getDate()===d;
+   const isToday=todayDate.getFullYear()===y&&todayDate.getMonth()===m&&todayDate.getDate()===d;
    const has=evDays.has(d);
    out += '<div class="day '+(has?'event':'')+' '+(isToday?'today':'')+'">'+d+(has?'<span class="dot"></span>':'')+'</div>';
  }
@@ -387,10 +395,13 @@ function render(){
  $("loading").classList.add("hidden");$("clientArea").classList.remove("hidden");
  const accepted = cliente.regolamentoAccettato === true;
  $("welcomeRegolamento").classList.toggle("hidden",accepted);
+ document.querySelectorAll("#clientArea > .card:not(#welcomeRegolamento), #clientArea > .grid").forEach(el=>{
+   el.classList.toggle("hidden", !accepted);
+ });
  if($("rulesAcceptedText")){
    if(accepted && cliente.regolamentoAccettatoIl){
      const d = new Date(cliente.regolamentoAccettatoIl);
-     $("rulesAcceptedText").innerHTML = "✅ Regolamento accettato il <b>"+d.toLocaleDateString("it-IT")+"</b> alle <b>"+d.toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})+"</b> · Versione "+(cliente.regolamentoVersione||"9.3.1");
+     $("rulesAcceptedText").innerHTML = "✅ Regolamento accettato il <b>"+d.toLocaleDateString("it-IT")+"</b> alle <b>"+d.toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})+"</b> · Versione "+(cliente.regolamentoVersione||"9.3.2");
    } else {
      $("rulesAcceptedText").innerHTML = "⚠️ Regolamento non ancora accettato.";
    }
