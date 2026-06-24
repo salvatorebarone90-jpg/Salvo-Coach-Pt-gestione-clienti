@@ -1,17 +1,25 @@
-SB PERSONAL COACH GESTIONALE 9.3 BACHECA AVVISI + REGOLAMENTO PAGAMENTI
+SB PERSONAL COACH GESTIONALE 9.3.1 REGOLAMENTO PROFESSIONALE
 
 Novità:
-- Nuova sezione Coach: Bacheca.
-- Il coach può pubblicare avvisi visibili in Area Cliente.
-- Tipi avviso: Info, Urgente, Pagamento, Check.
-- Il coach può disattivare o eliminare avvisi.
-- Area Cliente: nuova sezione Bacheca avvisi.
-- Regolamento aggiornato:
-  - pacchetti saldati ad inizio percorso;
-  - pagamenti dilazionati/posticipati/fine percorso non accettati salvo accordi preventivi;
-  - ritardi;
-  - recuperi soggetti ad approvazione;
-  - sospensioni concordate.
+- Regolamento definitivo aggiornato.
+- Primo accesso con checkbox obbligatoria:
+  "Dichiaro di aver letto e accettato integralmente il regolamento."
+- Salvataggio su Firebase:
+  regolamentoAccettato: true
+  regolamentoAccettatoIl: data/ora ISO
+  regolamentoVersione: 9.3.1
+- Badge in Area Cliente con data accettazione.
+- Regolamento sempre visibile aggiornato.
+
+Regolamento incluso:
+- Annullamento lezioni 24h
+- Certificato medico
+- Scadenza pacchetto
+- Frequenza 2-4 lezioni settimanali
+- Pagamenti ad inizio percorso senza rateizzazioni
+- Sospensioni non prorogano la scadenza
+- Ritardi
+- Recuperi soggetti ad approvazione
 
 Carica su GitHub:
 - index.html

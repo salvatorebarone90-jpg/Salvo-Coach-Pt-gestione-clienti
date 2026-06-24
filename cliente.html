@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Area Cliente Premium 9.3</title>
+<title>Area Cliente Premium 9.3.1</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--n:#101827;--g:#d5ad52;--b:#f4f6f8;--muted:#6b7280;--line:#e5e7eb}
@@ -30,7 +30,7 @@ h3{margin:0;color:var(--n);font-size:18px}
 .kpi strong{display:block;font-size:27px;color:var(--n)}
 .kpi span{font-size:12px;color:#6b7280;font-weight:900;text-transform:uppercase}
 .empty{text-align:center;color:#6b7280;padding:22px 6px}.hidden{display:none!important}
-.rule{background:#fff8eb;border:1px solid #f1d49b;border-radius:16px;padding:14px;margin:10px 0;color:#7c2d12;font-size:14px;line-height:1.5}
+.rule{background:#fff8eb;border:1px solid #f1d49b;border-radius:16px;padding:14px;margin:10px 0;color:#7c2d12;font-size:14px;line-height:1.5}.rule h3{margin:14px 0 6px;color:#7c2d12;font-size:16px}.rule p{margin:0 0 10px}.acceptBox{display:flex;gap:10px;align-items:flex-start;background:#f8fafc;border:1px solid #e2e8f0;border-radius:16px;padding:13px;margin-top:12px}.acceptBox input{width:22px;height:22px;margin-top:2px}.acceptBox label{font-size:14px;line-height:1.4;color:#111827;font-weight:800}
 .alert{border-radius:18px;padding:14px;margin:10px 0;font-weight:800;font-size:14px;line-height:1.4}
 .redA{background:#fee2e2;color:#991b1b}.goldA{background:#fef3c7;color:#92400e}.greenA{background:#dcfce7;color:#166534}
 .lesson{border:1px solid var(--line);border-radius:20px;padding:16px;margin:12px 0;background:linear-gradient(180deg,#fff,#f9fafb)}
@@ -61,20 +61,40 @@ h3{margin:0;color:var(--n);font-size:18px}
 <div id="clientArea" class="hidden">
 <div id="welcomeRegolamento" class="card hidden">
 <h2>📋 Regolamento</h2>
-<p class="meta">Prima di utilizzare l'area cliente prendi visione del regolamento.</p>
-<div class="rule"><ul>
-<li>Le lezioni possono essere annullate solo con almeno 24 ore di anticipo.</li>
-<li>Le lezioni annullate sotto le 24 ore vengono considerate effettuate/persa disponibilità.</li>
-<li>Il pacchetto ha una scadenza e va utilizzato entro il periodo indicato.</li>
-<li>I pacchetti devono essere saldati ad inizio percorso.</li>
-<li>Pagamenti dilazionati, posticipati o a fine percorso non vengono accettati, salvo accordi preventivi approvati dal coach.</li>
-<li>Eventuali sospensioni devono essere concordate preventivamente con il coach.</li>
-<li>In caso di ritardo, la lezione terminerà comunque all'orario stabilito.</li>
-<li>Le richieste di recupero sono soggette alla disponibilità e approvazione del coach.</li>
-<li>Il certificato medico deve essere sempre valido.</li>
-<li>Le comunicazioni operative devono avvenire tramite i canali indicati dal coach.</li>
-</ul></div>
-<button id="acceptRulesBtn" class="btn gold full">Ho letto e accetto il regolamento</button>
+<p class="meta">Per proseguire è necessario leggere e accettare il regolamento del percorso.</p>
+
+<div class="rule">
+<h3>📅 Annullamento lezioni</h3>
+<p>Le lezioni possono essere annullate esclusivamente con almeno <b>24 ore di anticipo</b>. In caso contrario la lezione verrà considerata effettuata.</p>
+
+<h3>🩺 Certificato medico</h3>
+<p>Il certificato medico deve essere sempre valido e aggiornato per tutta la durata del percorso.</p>
+
+<h3>🎯 Pacchetto lezioni</h3>
+<p>Le lezioni devono essere utilizzate entro la data di scadenza indicata nella scheda cliente. Le lezioni non utilizzate entro tale data saranno considerate perse.</p>
+
+<h3>📈 Frequenza delle lezioni</h3>
+<p>I pacchetti Personal Training prevedono una frequenza compresa tra <b>2 e 4 lezioni settimanali</b>. La frequenza concordata al momento dell'acquisto rimane valida per tutta la durata del pacchetto e non comporta proroghe della scadenza. Le lezioni non utilizzate entro la data indicata saranno considerate perse.</p>
+
+<h3>💳 Pagamenti</h3>
+<p>Il saldo del pacchetto è richiesto prima dell'inizio del percorso. <b>Non sono previste rateizzazioni, pagamenti posticipati o saldi a fine percorso.</b></p>
+
+<h3>⏸️ Sospensione del percorso</h3>
+<p>Eventuali assenze, vacanze o interruzioni personali non prorogano automaticamente la scadenza del pacchetto.</p>
+
+<h3>⏰ Ritardi</h3>
+<p>In caso di ritardo del cliente, la lezione terminerà comunque all'orario previsto per non compromettere gli appuntamenti successivi.</p>
+
+<h3>🔄 Recuperi</h3>
+<p>Le richieste di recupero sono soggette alla disponibilità e all'approvazione del coach e non sono garantite.</p>
+</div>
+
+<div class="acceptBox">
+<input id="rulesCheck" type="checkbox">
+<label for="rulesCheck">Dichiaro di aver letto e accettato integralmente il regolamento.</label>
+</div>
+<p class="meta" id="rulesAcceptInfo">L'accettazione verrà registrata con data, ora e versione del regolamento.</p>
+<button id="acceptRulesBtn" class="btn gold full">Accetto e continua</button>
 </div>
 
 <div class="card premium">
@@ -112,8 +132,33 @@ h3{margin:0;color:var(--n);font-size:18px}
 <div id="docsEmpty" class="empty">Nessun PDF collegato al momento.</div>
 </div>
 
-<div class="card"><h2>📋 Regolamento sempre visibile</h2><div class="rule"><b>Regola annullamento:</b><br>Le lezioni possono essere annullate solo con almeno <b>24 ore di anticipo</b>. Sotto le 24 ore la lezione non è più annullabile automaticamente e resta conteggiata secondo il regolamento del pacchetto.<br><br><b>Certificato medico:</b><br>Il certificato ha validità annuale e deve essere mantenuto aggiornato.<br><br><b>Pacchetto lezioni:</b><br>Le lezioni vanno utilizzate entro la scadenza indicata nella scheda cliente. Le lezioni non utilizzate entro la scadenza vengono considerate decadute, salvo accordi diversi.<br><br><b>Pagamenti:</b><br>I pacchetti devono essere saldati ad inizio percorso. Pagamenti dilazionati, posticipati o a fine percorso non vengono accettati, salvo accordi preventivi approvati dal coach.<br><br><b>Ritardi:</b><br>In caso di ritardo, la lezione terminerà comunque all'orario stabilito per non compromettere gli appuntamenti successivi.<br><br><b>Recuperi:</b><br>Le richieste di recupero sono soggette alla disponibilità e approvazione del coach.</div></div>
+<div class="card"><h2>📋 Regolamento sempre visibile</h2>
+<div class="rule">
+<h3>📅 Annullamento lezioni</h3>
+<p>Le lezioni possono essere annullate esclusivamente con almeno <b>24 ore di anticipo</b>. In caso contrario la lezione verrà considerata effettuata.</p>
 
+<h3>🩺 Certificato medico</h3>
+<p>Il certificato medico deve essere sempre valido e aggiornato per tutta la durata del percorso.</p>
+
+<h3>🎯 Pacchetto lezioni</h3>
+<p>Le lezioni devono essere utilizzate entro la data di scadenza indicata nella scheda cliente. Le lezioni non utilizzate entro tale data saranno considerate perse.</p>
+
+<h3>📈 Frequenza delle lezioni</h3>
+<p>I pacchetti Personal Training prevedono una frequenza compresa tra <b>2 e 4 lezioni settimanali</b>. La frequenza concordata al momento dell'acquisto rimane valida per tutta la durata del pacchetto e non comporta proroghe della scadenza. Le lezioni non utilizzate entro la data indicata saranno considerate perse.</p>
+
+<h3>💳 Pagamenti</h3>
+<p>Il saldo del pacchetto è richiesto prima dell'inizio del percorso. <b>Non sono previste rateizzazioni, pagamenti posticipati o saldi a fine percorso.</b></p>
+
+<h3>⏸️ Sospensione del percorso</h3>
+<p>Eventuali assenze, vacanze o interruzioni personali non prorogano automaticamente la scadenza del pacchetto.</p>
+
+<h3>⏰ Ritardi</h3>
+<p>In caso di ritardo del cliente, la lezione terminerà comunque all'orario previsto per non compromettere gli appuntamenti successivi.</p>
+
+<h3>🔄 Recuperi</h3>
+<p>Le richieste di recupero sono soggette alla disponibilità e all'approvazione del coach e non sono garantite.</p>
+</div>
+<p class="meta" id="rulesAcceptedText"></p></div>
 <div class="card"><h2>💬 Contatta il coach</h2><a id="waBtn" class="btn green full" target="_blank">Scrivi su WhatsApp</a></div>
 </div>
 </main>
@@ -169,8 +214,21 @@ async function load(){
 
 async function acceptRules(){
  if(!cliente)return;
- await setDoc(doc(db,"users",COACH_UID,"clienti",cliente.id),{regolamentoAccettato:true,regolamentoAccettatoIl:new Date().toISOString(),updatedAt:serverTimestamp()},{merge:true});
+ if(!$("rulesCheck") || !$("rulesCheck").checked){
+   alert("Per continuare devi spuntare la casella di accettazione del regolamento.");
+   return;
+ }
+ const acceptedAt = new Date().toISOString();
+ await setDoc(doc(db,"users",COACH_UID,"clienti",cliente.id),{
+   regolamentoAccettato:true,
+   regolamentoAccettatoIl:acceptedAt,
+   regolamentoVersione:"9.3.1",
+   updatedAt:serverTimestamp()
+ },{merge:true});
  cliente.regolamentoAccettato = true;
+ cliente.regolamentoAccettatoIl = acceptedAt;
+ cliente.regolamentoVersione = "9.3.1";
+ alert("Regolamento accettato correttamente.");
  render();
 }
 
@@ -329,12 +387,21 @@ function render(){
  $("loading").classList.add("hidden");$("clientArea").classList.remove("hidden");
  const accepted = cliente.regolamentoAccettato === true;
  $("welcomeRegolamento").classList.toggle("hidden",accepted);
+ if($("rulesAcceptedText")){
+   if(accepted && cliente.regolamentoAccettatoIl){
+     const d = new Date(cliente.regolamentoAccettatoIl);
+     $("rulesAcceptedText").innerHTML = "✅ Regolamento accettato il <b>"+d.toLocaleDateString("it-IT")+"</b> alle <b>"+d.toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})+"</b> · Versione "+(cliente.regolamentoVersione||"9.3.1");
+   } else {
+     $("rulesAcceptedText").innerHTML = "⚠️ Regolamento non ancora accettato.";
+   }
+ }
  const nome=(cliente.nome||"Cliente").trim();
  $("welcomeName").textContent = "Benvenuto " + nome + " 👋";
  $("servizioCliente").textContent=(cliente.servizio||"")+" · "+(cliente.modalitaPrenotazione||"");
  const residuo=Math.max(0,(cliente.dovuto||0)-(cliente.pagato||0));
  const saldoBadge = residuo>0 ? '<span class="badge bad">🔴 Da saldare €'+residuo+'</span>' : '<span class="badge ok">🟢 Saldo regolare</span>';
- const rulesBadge = accepted ? '<span class="badge ok">📋 Regolamento accettato</span>' : '<span class="badge warn">📋 Regolamento da accettare</span>';
+ const rulesDate = cliente.regolamentoAccettatoIl ? new Date(cliente.regolamentoAccettatoIl).toLocaleDateString("it-IT") : "";
+ const rulesBadge = accepted ? '<span class="badge ok">📋 Regolamento accettato'+(rulesDate?' il '+rulesDate:'')+'</span>' : '<span class="badge warn">📋 Regolamento da accettare</span>';
  const activeBadge = cliente.stato==="inattivo" ? '<span class="badge bad">Inattivo</span>' : '<span class="badge ok">Attivo</span>';
  $("heroBadges").innerHTML = activeBadge + '<span class="badge ok">'+(cliente.lezioniResidue||0)+' residue su '+(cliente.lezioniTotali||0)+'</span>' + saldoBadge + rulesBadge;
  $("kLezioni").textContent=cliente.lezioniResidue||0;$("kScadenza").textContent=fmt(cliente.scadenza);$("kCert").textContent=fmt(cliente.certificatoScadenza);
