@@ -1,11 +1,12 @@
-SB PERSONAL COACH GESTIONALE 9.1 RECUPERI CLIENTE
+SB PERSONAL COACH GESTIONALE 9.2 RECUPERI INTELLIGENTI
 
 Novità:
-- Area Cliente: sezione "Le mie richieste recupero".
-- Il cliente vede lo stato della richiesta: In attesa / Approvato / Rifiutato.
-- Se il recupero è già stato richiesto, il pulsante diventa "Recupero già richiesto".
-- Evita richieste duplicate sulla stessa lezione.
-- Mantiene sezione coach "Recuperi" con Approva / Rifiuta / Elimina.
+- Area Cliente: stato recupero direttamente sotto ogni lezione.
+- Se una richiesta è in attesa, il cliente vede "Recupero in attesa".
+- Se approvata, vede "Recupero approvato".
+- Se rifiutata, può inviare una nuova richiesta.
+- Riepilogo recuperi nella parte alta dell'Area Cliente.
+- Mantiene sezione Coach "Recuperi" con Approva / Rifiuta / Elimina.
 
 Carica su GitHub:
 - index.html

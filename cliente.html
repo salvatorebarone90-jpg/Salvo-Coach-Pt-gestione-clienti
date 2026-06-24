@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Area Cliente Premium 9.1</title>
+<title>Area Cliente Premium 9.2</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--n:#101827;--g:#d5ad52;--b:#f4f6f8;--muted:#6b7280;--line:#e5e7eb}
@@ -91,7 +91,7 @@ h3{margin:0;color:var(--n);font-size:18px}
 
 <div class="card"><h2>📌 Prossime lezioni</h2><p class="meta">Puoi annullare una lezione solo se mancano più di 24 ore.</p><div id="listaEventi"></div></div>
 
-<div class="card"><h2>🔄 Le mie richieste recupero</h2><p class="meta">Qui puoi vedere se il coach ha approvato o rifiutato le richieste.</p><div id="listaRecuperiCliente"></div></div>
+<div class="card"><h2>🔄 Le mie richieste recupero</h2><p class="meta">Qui puoi monitorare lo stato delle richieste inviate al coach.</p><div id="listaRecuperiCliente"></div></div>
 
 <div class="card"><h2>📊 Storico check</h2><div id="listaCheck"></div></div>
 
@@ -176,8 +176,9 @@ async function annullaLezione(eventId){
 async function richiediRecupero(eventId){
  const ev = eventi.find(x=>x.id===eventId);
  if(!ev)return;
- if(recuperoGiaRichiesto(eventId)){
-   alert("Hai già inviato una richiesta di recupero per questa lezione.");
+ const recEsistente = recuperoPerEvento(eventId);
+ if(recEsistente && String(recEsistente.stato||"in attesa").toLowerCase()!=="rifiutato"){
+   alert("Hai già una richiesta di recupero per questa lezione.");
    return;
  }
  const nota = prompt("Vuoi aggiungere una nota per il coach?") || "";
@@ -215,7 +216,7 @@ function renderAlerts(){
  if(residue<=2) alerts.push('<div class="alert goldA">🔔 Pacchetto quasi terminato: restano '+residue+' lezioni.</div>');
  if(packDays<=7) alerts.push('<div class="alert goldA">🔔 Pacchetto in scadenza tra '+packDays+' giorni.</div>');
  if(!alerts.length) alerts.push('<div class="alert greenA">🟢 Tutto regolare: pacchetto e scadenze sotto controllo.</div>');
- $("alertsBox").innerHTML=alerts.join("");
+ $("alertsBox").innerHTML=renderRecuperiSummary()+alerts.join("");
 }
 
 function renderCalendar(next){
@@ -260,6 +261,30 @@ function statoRecuperoLabel(stato){
 function recuperoGiaRichiesto(eventId){
  return recuperi.some(r=>r.eventoId===eventId && String(r.stato||"in attesa").toLowerCase()!=="rifiutato");
 }
+function recuperoPerEvento(eventId){
+ const list = recuperi.filter(r=>r.eventoId===eventId)
+   .sort((a,b)=>(b.createdAtText||b.dataRichiesta||"").localeCompare(a.createdAtText||a.dataRichiesta||""));
+ return list[0] || null;
+}
+function statoRecuperoInline(r){
+ if(!r) return "";
+ const st = statoRecuperoLabel(r.stato);
+ let extra = "";
+ if(r.dataRecupero || r.oraRecupero){
+   extra = "<br><b>Recupero programmato:</b> "+(r.dataRecupero?fmt(r.dataRecupero):"-")+" ore "+(r.oraRecupero||"-");
+ }
+ return '<div class="rule" style="margin-top:10px"><b>'+st.txt+'</b>'+extra+'</div>';
+}
+function renderRecuperiSummary(){
+ const attesa = recuperi.filter(r=>String(r.stato||"in attesa").toLowerCase()==="in attesa").length;
+ const approvati = recuperi.filter(r=>String(r.stato||"").toLowerCase().includes("approv")).length;
+ const rifiutati = recuperi.filter(r=>String(r.stato||"").toLowerCase().includes("rifiut")).length;
+ let msg = "";
+ if(attesa) msg += '<div class="alert goldA">🔄 Hai '+attesa+' richiesta/e recupero in attesa.</div>';
+ if(approvati) msg += '<div class="alert greenA">🟢 Hai '+approvati+' recupero/i approvato/i.</div>';
+ if(rifiutati) msg += '<div class="alert redA">🔴 Hai '+rifiutati+' recupero/i rifiutato/i.</div>';
+ return msg;
+}
 function renderRecuperiCliente(){
  if(!$("listaRecuperiCliente")) return;
  const list=recuperi.slice().sort((a,b)=>(b.createdAtText||b.dataRichiesta||"").localeCompare(a.createdAtText||a.dataRichiesta||""));
@@ -291,7 +316,7 @@ function render(){
    const dt=parseLocalDate(e.data);
    const day=dt.getDate();
    const mon=dt.toLocaleDateString("it-IT",{month:"short"});
-   return '<div class="lesson"><div class="lesson-top"><div><h3>'+(e.tipo||"Lezione PT")+'</h3><p class="meta">'+fmt(e.data)+' ore '+(e.ora||"-")+' · '+(e.stato||"Prenotata")+'</p></div><div class="datepill"><b>'+day+'</b><span>'+mon+'</span></div></div>'+(canCancel?'<button class="btn red full cancelLessonBtn" data-event-id="'+e.id+'">Annulla lezione</button>':'<p class="meta"><b>Entro 24h:</b> non annullabile automaticamente.</p>')+(recuperoGiaRichiesto(e.id)?'<button class="btn light full" disabled>🔄 Recupero già richiesto</button>':'<button class="btn gold full recuperoLessonBtn" data-event-id="'+e.id+'">🔄 Richiedi recupero</button>')+'</div>';
+   return '<div class="lesson"><div class="lesson-top"><div><h3>'+(e.tipo||"Lezione PT")+'</h3><p class="meta">'+fmt(e.data)+' ore '+(e.ora||"-")+' · '+(e.stato||"Prenotata")+'</p></div><div class="datepill"><b>'+day+'</b><span>'+mon+'</span></div></div>'+(canCancel?'<button class="btn red full cancelLessonBtn" data-event-id="'+e.id+'">Annulla lezione</button>':'<p class="meta"><b>Entro 24h:</b> non annullabile automaticamente.</p>')+(recuperoPerEvento(e.id)?statoRecuperoInline(recuperoPerEvento(e.id)):'<button class="btn gold full recuperoLessonBtn" data-event-id="'+e.id+'">🔄 Richiedi recupero</button>')+'</div>';
  }).join(""):'<div class="empty">Nessuna lezione programmata.</div>';
  document.querySelectorAll(".cancelLessonBtn").forEach(btn=>{
    btn.addEventListener("click",()=>annullaLezione(btn.dataset.eventId));
