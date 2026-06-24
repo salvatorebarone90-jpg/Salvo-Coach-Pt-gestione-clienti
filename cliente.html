@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Area Cliente Premium 9.2</title>
+<title>Area Cliente Premium 9.3</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--n:#101827;--g:#d5ad52;--b:#f4f6f8;--muted:#6b7280;--line:#e5e7eb}
@@ -66,6 +66,11 @@ h3{margin:0;color:var(--n);font-size:18px}
 <li>Le lezioni possono essere annullate solo con almeno 24 ore di anticipo.</li>
 <li>Le lezioni annullate sotto le 24 ore vengono considerate effettuate/persa disponibilità.</li>
 <li>Il pacchetto ha una scadenza e va utilizzato entro il periodo indicato.</li>
+<li>I pacchetti devono essere saldati ad inizio percorso.</li>
+<li>Pagamenti dilazionati, posticipati o a fine percorso non vengono accettati, salvo accordi preventivi approvati dal coach.</li>
+<li>Eventuali sospensioni devono essere concordate preventivamente con il coach.</li>
+<li>In caso di ritardo, la lezione terminerà comunque all'orario stabilito.</li>
+<li>Le richieste di recupero sono soggette alla disponibilità e approvazione del coach.</li>
 <li>Il certificato medico deve essere sempre valido.</li>
 <li>Le comunicazioni operative devono avvenire tramite i canali indicati dal coach.</li>
 </ul></div>
@@ -79,6 +84,8 @@ h3{margin:0;color:var(--n);font-size:18px}
 </div>
 
 <div id="alertsBox"></div>
+
+<div class="card" id="bachecaClienteCard"><h2>📢 Bacheca avvisi</h2><div id="listaAvvisiCliente"></div></div>
 
 <div class="grid">
 <div class="kpi"><strong id="kLezioni">0</strong><span>Lezioni residue</span></div>
@@ -105,7 +112,7 @@ h3{margin:0;color:var(--n);font-size:18px}
 <div id="docsEmpty" class="empty">Nessun PDF collegato al momento.</div>
 </div>
 
-<div class="card"><h2>📋 Regolamento sempre visibile</h2><div class="rule"><b>Regola annullamento:</b><br>Le lezioni possono essere annullate solo con almeno <b>24 ore di anticipo</b>. Sotto le 24 ore la lezione non è più annullabile automaticamente e resta conteggiata secondo il regolamento del pacchetto.<br><br><b>Certificato medico:</b><br>Il certificato ha validità annuale e deve essere mantenuto aggiornato.<br><br><b>Pacchetto lezioni:</b><br>Le lezioni vanno utilizzate entro la scadenza indicata nella scheda cliente.</div></div>
+<div class="card"><h2>📋 Regolamento sempre visibile</h2><div class="rule"><b>Regola annullamento:</b><br>Le lezioni possono essere annullate solo con almeno <b>24 ore di anticipo</b>. Sotto le 24 ore la lezione non è più annullabile automaticamente e resta conteggiata secondo il regolamento del pacchetto.<br><br><b>Certificato medico:</b><br>Il certificato ha validità annuale e deve essere mantenuto aggiornato.<br><br><b>Pacchetto lezioni:</b><br>Le lezioni vanno utilizzate entro la scadenza indicata nella scheda cliente. Le lezioni non utilizzate entro la scadenza vengono considerate decadute, salvo accordi diversi.<br><br><b>Pagamenti:</b><br>I pacchetti devono essere saldati ad inizio percorso. Pagamenti dilazionati, posticipati o a fine percorso non vengono accettati, salvo accordi preventivi approvati dal coach.<br><br><b>Ritardi:</b><br>In caso di ritardo, la lezione terminerà comunque all'orario stabilito per non compromettere gli appuntamenti successivi.<br><br><b>Recuperi:</b><br>Le richieste di recupero sono soggette alla disponibilità e approvazione del coach.</div></div>
 
 <div class="card"><h2>💬 Contatta il coach</h2><a id="waBtn" class="btn green full" target="_blank">Scrivi su WhatsApp</a></div>
 </div>
@@ -119,7 +126,7 @@ import { getFirestore, doc, getDoc, setDoc, addDoc, collection, getDocs, query, 
 const COACH_UID = "2Oiruc1vW6e0Mo432j6oLSo2sAV2";
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-let cliente = null, eventi = [], checkPro = [], recuperi = [];
+let cliente = null, eventi = [], checkPro = [], recuperi = [], avvisi = [];
 const $ = id => document.getElementById(id);
 
 function pad(n){return String(n).padStart(2,"0")}
@@ -151,6 +158,11 @@ async function load(){
   const recSnap = await getDocs(query(collection(db,"users",COACH_UID,"recuperi"),where("clienteId","==",id)));
   recuperi = recSnap.docs.map(d=>({id:d.id,...d.data()}));
  }catch(e){recuperi=[]}
+
+ try{
+  const avSnap = await getDocs(query(collection(db,"users",COACH_UID,"avvisi"),where("attivo","==",true)));
+  avvisi = avSnap.docs.map(d=>({id:d.id,...d.data()}));
+ }catch(e){avvisi=[]}
 
  render();
 }
@@ -294,6 +306,25 @@ function renderRecuperiCliente(){
  }).join(""):'<div class="empty">Nessuna richiesta recupero inviata.</div>';
 }
 
+
+function badgeAvvisoCliente(tipo){
+ const t=String(tipo||"info").toLowerCase();
+ if(t==="urgente") return "bad";
+ if(t==="pagamento") return "warn";
+ if(t==="check") return "ok";
+ return "info";
+}
+function renderAvvisiCliente(){
+ if(!$("listaAvvisiCliente")) return;
+ const list=avvisi.slice().sort((a,b)=>(b.createdAtText||"").localeCompare(a.createdAtText||""));
+ $("bachecaClienteCard").classList.toggle("hidden", list.length===0);
+ $("listaAvvisiCliente").innerHTML=list.length?list.map(a=>`<div class="check">
+  <h3>${a.titolo||"Avviso"}</h3>
+  <span class="badge ${badgeAvvisoCliente(a.tipo)}">${a.tipo||"info"}</span>
+  <p class="meta">${String(a.messaggio||"").replaceAll("\\n","<br>")}</p>
+</div>`).join(""):`<div class="empty">Nessun avviso disponibile.</div>`;
+}
+
 function render(){
  $("loading").classList.add("hidden");$("clientArea").classList.remove("hidden");
  const accepted = cliente.regolamentoAccettato === true;
@@ -310,7 +341,7 @@ function render(){
  const today=localISO(new Date());
  const next=eventi.filter(e=>e.data&&e.data>=today&&e.stato!=="Annullata"&&e.stato!=="Annullata dal cliente").sort((a,b)=>(a.data+a.ora).localeCompare(b.data+b.ora));
  $("kProssima").textContent=next[0]?shortDate(next[0].data):"-";
- renderAlerts(); renderCalendar(next); renderDocs();
+ renderAlerts(); renderAvvisiCliente(); renderCalendar(next); renderDocs();
  $("listaEventi").innerHTML=next.length?next.slice(0,10).map(e=>{
    const canCancel=hoursToEvent(e)>=24;
    const dt=parseLocalDate(e.data);

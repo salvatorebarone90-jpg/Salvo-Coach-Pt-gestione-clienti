@@ -1,12 +1,17 @@
-SB PERSONAL COACH GESTIONALE 9.2 RECUPERI INTELLIGENTI
+SB PERSONAL COACH GESTIONALE 9.3 BACHECA AVVISI + REGOLAMENTO PAGAMENTI
 
 Novità:
-- Area Cliente: stato recupero direttamente sotto ogni lezione.
-- Se una richiesta è in attesa, il cliente vede "Recupero in attesa".
-- Se approvata, vede "Recupero approvato".
-- Se rifiutata, può inviare una nuova richiesta.
-- Riepilogo recuperi nella parte alta dell'Area Cliente.
-- Mantiene sezione Coach "Recuperi" con Approva / Rifiuta / Elimina.
+- Nuova sezione Coach: Bacheca.
+- Il coach può pubblicare avvisi visibili in Area Cliente.
+- Tipi avviso: Info, Urgente, Pagamento, Check.
+- Il coach può disattivare o eliminare avvisi.
+- Area Cliente: nuova sezione Bacheca avvisi.
+- Regolamento aggiornato:
+  - pacchetti saldati ad inizio percorso;
+  - pagamenti dilazionati/posticipati/fine percorso non accettati salvo accordi preventivi;
+  - ritardi;
+  - recuperi soggetti ad approvazione;
+  - sospensioni concordate.
 
 Carica su GitHub:
 - index.html

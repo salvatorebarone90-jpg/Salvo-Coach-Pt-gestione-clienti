@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SB Personal Coach Gestionale 9.2</title>
+<title>SB Personal Coach Gestionale 9.3</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--n:#101827;--g:#d5ad52;--b:#f4f6f8}
@@ -34,7 +34,7 @@ textarea{min-height:80px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10p
 </style>
 </head>
 <body>
-<header><img src="logo.jpeg" class="logo"><h1>Gestionale Clienti 9.2 Coach</h1><p>Recuperi Intelligenti · Area Premium</p></header>
+<header><img src="logo.jpeg" class="logo"><h1>Gestionale Clienti 9.3 Coach</h1><p>Bacheca Avvisi · Regolamento</p></header>
 
 <div id="loginView" class="card" style="max-width:430px;margin:18px auto">
 <h2>🔐 Accesso Coach</h2>
@@ -62,6 +62,35 @@ textarea{min-height:80px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10p
 </nav>
 
 <main>
+
+<section id="bacheca" class="section">
+<div class="card">
+<h2>📢 Bacheca avvisi</h2>
+<p class="meta">Crea comunicazioni visibili nell'Area Cliente. Ideale per chiusure, check, pagamenti, variazioni orari e comunicazioni generali.</p>
+
+<label>Titolo avviso</label>
+<input id="avvisoTitolo" placeholder="Es. Chiusura estiva">
+
+<label>Messaggio</label>
+<textarea id="avvisoMessaggio" rows="5" placeholder="Scrivi qui il messaggio per i clienti..."></textarea>
+
+<label>Priorità</label>
+<select id="avvisoTipo">
+<option value="info">Info</option>
+<option value="urgente">Urgente</option>
+<option value="pagamento">Pagamento</option>
+<option value="check">Check</option>
+</select>
+
+<button class="btn gold full" onclick="salvaAvviso()">Pubblica avviso</button>
+</div>
+
+<div class="card">
+<h2>📌 Avvisi pubblicati</h2>
+<div id="listaAvvisiCoach"></div>
+</div>
+</section>
+
 <section id="dashboard" class="section active">
 <div class="card" style="display:flex;justify-content:space-between;align-items:center"><div><b id="userEmail"></b><br><span class="meta">Database cloud Firestore</span></div><button id="logoutBtn" class="btn red">Esci</button></div>
 <div class="card">
@@ -217,7 +246,7 @@ const app=initializeApp(firebaseConfig);
 const auth=getAuth(app);
 const db=getFirestore(app);
 
-let user=null, clienti=[], eventi=[], checks=[], leads=[], rinnovi=[], recuperi=[], filtro="Tutti";
+let user=null, clienti=[], eventi=[], checks=[], leads=[], rinnovi=[], recuperi=[], avvisi=[], filtro="Tutti";
 let checkPro=[], templates={};
 const defaultTemplates={
  rinnovo:"Ciao {nome}, ti ricordo che il tuo pacchetto è quasi terminato. Ti restano {lezioniResidue} lezioni. Fammi sapere se vuoi procedere con il rinnovo.",
@@ -245,6 +274,7 @@ function subscribe(){
  onSnapshot(path("leads"),s=>{leads=s.docs.map(d=>({id:d.id,...d.data()}));render()});
  onSnapshot(path("rinnovi"),s=>{rinnovi=s.docs.map(d=>({id:d.id,...d.data()}));render()});
  onSnapshot(path("recuperi"),s=>{recuperi=s.docs.map(d=>({id:d.id,...d.data()}));render()});
+ onSnapshot(path("avvisi"),s=>{avvisi=s.docs.map(d=>({id:d.id,...d.data()}));render()});
  onSnapshot(path("checkPro"),s=>{checkPro=s.docs.map(d=>({id:d.id,...d.data()}));render()});
  onSnapshot(doc(db,"users",user.uid,"settings","templates"),s=>{templates=s.exists()?s.data():{...defaultTemplates};render()});
 }
@@ -678,6 +708,59 @@ window.approvaRecupero=approvaRecupero;
 window.rifiutaRecupero=rifiutaRecupero;
 window.eliminaRecupero=eliminaRecupero;
 
+
+function badgeAvviso(tipo){
+ const t=String(tipo||"info").toLowerCase();
+ if(t==="urgente") return "bad";
+ if(t==="pagamento") return "warn";
+ if(t==="check") return "ok";
+ return "info";
+}
+async function salvaAvviso(){
+ const titolo=$("avvisoTitolo").value.trim();
+ const messaggio=$("avvisoMessaggio").value.trim();
+ const tipo=$("avvisoTipo").value;
+ if(!titolo || !messaggio){status("Inserisci titolo e messaggio."); return;}
+ await addDoc(path("avvisi"),{
+   titolo,
+   messaggio,
+   tipo,
+   attivo:true,
+   data:today(),
+   createdAtText:new Date().toISOString(),
+   createdAt:serverTimestamp()
+ });
+ $("avvisoTitolo").value="";
+ $("avvisoMessaggio").value="";
+ status("Avviso pubblicato.");
+}
+async function disattivaAvviso(id){
+ await setDoc(docPath("avvisi",id),{attivo:false,updatedAt:serverTimestamp()},{merge:true});
+ status("Avviso disattivato.");
+}
+async function eliminaAvviso(id){
+ if(!confirm("Eliminare questo avviso?")) return;
+ await deleteDoc(docPath("avvisi",id));
+ status("Avviso eliminato.");
+}
+function renderAvvisiCoach(){
+ if(!$("listaAvvisiCoach")) return;
+ const list=avvisi.slice().sort((a,b)=>(b.createdAtText||"").localeCompare(a.createdAtText||""));
+ $("listaAvvisiCoach").innerHTML=list.length?list.map(a=>`<div class="card">
+  <h3>${a.titolo||"Avviso"}</h3>
+  <span class="badge ${badgeAvviso(a.tipo)}">${a.tipo||"info"}</span>
+  <span class="badge ${a.attivo===false?"bad":"ok"}">${a.attivo===false?"non attivo":"attivo"}</span>
+  <p class="meta">${String(a.messaggio||"").replaceAll("\\n","<br>")}</p>
+  <div class="actions">
+    <button class="btn light" onclick="disattivaAvviso('${a.id}')">Disattiva</button>
+    <button class="btn red" onclick="eliminaAvviso('${a.id}')">Elimina</button>
+  </div>
+</div>`).join(""):`<div class="empty">Nessun avviso pubblicato.</div>`;
+}
+window.salvaAvviso=salvaAvviso;
+window.disattivaAvviso=disattivaAvviso;
+window.eliminaAvviso=eliminaAvviso;
+
 function render(){
  if($("clientAreaUrl"))$("clientAreaUrl").value=clientAreaLink();
  const opts=clienti.map(c=>`<option value="${c.id}">${c.nome||""} ${c.cognome||""}</option>`).join("");
@@ -715,9 +798,10 @@ function render(){
 
  $("listaRinnovi").innerHTML=rinnovi.length?rinnovi.map(r=>`<p><b>${r.cliente}</b> · ${r.pacchetto} lezioni<br><span class="meta">${fmt(r.data)} · €${r.importo||0}</span></p>`).join(""):`<div class="empty">Nessun rinnovo.</div>`;
  renderRecuperi();
+ renderAvvisiCoach();
 }
 window.setFiltro=(f)=>{filtro=f;render()}
-function exportDB(){let blob=new Blob([JSON.stringify({clienti,eventi,checks,checkPro,leads,rinnovi,recuperi,templates,exported:new Date().toISOString()},null,2)],{type:"application/json"});let a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="backup_sb_coach_6_1_2.json";a.click()}
+function exportDB(){let blob=new Blob([JSON.stringify({clienti,eventi,checks,checkPro,leads,rinnovi,recuperi,avvisi,templates,exported:new Date().toISOString()},null,2)],{type:"application/json"});let a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="backup_sb_coach_6_1_2.json";a.click()}
 </script>
 </body>
 </html>
