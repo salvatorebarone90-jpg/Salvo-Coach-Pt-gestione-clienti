@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SB Personal Coach Gestionale 9.3.2</title>
+<title>SB Personal Coach Gestionale 9.3.3</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--n:#101827;--g:#d5ad52;--b:#f4f6f8}
@@ -34,7 +34,7 @@ textarea{min-height:80px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10p
 </style>
 </head>
 <body>
-<header><img src="logo.jpeg" class="logo"><h1>Gestionale Clienti 9.3.2 Coach</h1><p>Hotfix Regolamento · Calendario</p></header>
+<header><img src="logo.jpeg" class="logo"><h1>Gestionale Clienti 9.3.3 Coach</h1><p>Annullamento Crediti · Collaudo</p></header>
 
 <div id="loginView" class="card" style="max-width:430px;margin:18px auto">
 <h2>🔐 Accesso Coach</h2>
@@ -485,11 +485,23 @@ window.editCliente=(id)=>{
 window.eventoEffettuato=async(id)=>await setDoc(docPath("eventi",id),{stato:"Effettuata"},{merge:true});
 window.eventoPerso=async(id)=>await setDoc(docPath("eventi",id),{stato:"Assente"},{merge:true});
 window.eventoRecuperata=async(id)=>await setDoc(docPath("eventi",id),{stato:"Recuperata"},{merge:true});
-window.eventoAnnullata=async(id)=>await setDoc(docPath("eventi",id),{stato:"Annullata"},{merge:true});
+window.eventoAnnullata=async(id)=>{
+ const ev=eventi.find(x=>x.id===id);
+ if(!ev)return;
+ const c=clienti.find(x=>x.id===ev.clienteId);
+ const updateEv={stato:"Annullata",annullataDaCoach:true,annullataIl:new Date().toISOString(),updatedAt:serverTimestamp()};
+ if(c && !ev.creditoRestituito){
+   const nuoveResidue=Math.min(Number(c.lezioniTotali||0),Number(c.lezioniResidue||0)+1);
+   const nuovoFatte=ev.scalata?Math.max(0,Number(c.lezioniFatte||0)-1):Number(c.lezioniFatte||0);
+   await setDoc(docPath("clienti",c.id),{lezioniResidue:nuoveResidue,lezioniFatte:nuovoFatte,updatedAt:serverTimestamp()},{merge:true});
+   updateEv.creditoRestituito=true;
+ }
+ await setDoc(docPath("eventi",id),updateEv,{merge:true});
+};
 window.delEvento=async(id)=>{
  const ev=eventi.find(x=>x.id===id);
  if(!confirm("Eliminare evento?"))return;
- if(ev&&ev.scalata&&ev.clienteId){
+ if(ev&&ev.scalata&&ev.clienteId&&!ev.creditoRestituito){
    const c=clienti.find(x=>x.id===ev.clienteId);
    if(c){
      await setDoc(docPath("clienti",c.id),{

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Area Cliente Premium 9.3.2</title>
+<title>Area Cliente Premium 9.3.3</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--n:#101827;--g:#d5ad52;--b:#f4f6f8;--muted:#6b7280;--line:#e5e7eb}
@@ -222,12 +222,12 @@ async function acceptRules(){
  await setDoc(doc(db,"users",COACH_UID,"clienti",cliente.id),{
    regolamentoAccettato:true,
    regolamentoAccettatoIl:acceptedAt,
-   regolamentoVersione:"9.3.2",
+   regolamentoVersione:"9.3.3",
    updatedAt:serverTimestamp()
  },{merge:true});
  cliente.regolamentoAccettato = true;
  cliente.regolamentoAccettatoIl = acceptedAt;
- cliente.regolamentoVersione = "9.3.2";
+ cliente.regolamentoVersione = "9.3.3";
  alert("Regolamento accettato correttamente.");
  render();
 }
@@ -235,12 +235,37 @@ async function acceptRules(){
 async function annullaLezione(eventId){
  const ev = eventi.find(x=>x.id===eventId);
  if(!ev)return;
- if(hoursToEvent(ev)<24){alert("Questa lezione è entro le 24 ore e non può essere annullata automaticamente. Contatta il coach.");return}
- if(!confirm("Vuoi annullare questa lezione?"))return;
- await setDoc(doc(db,"users",COACH_UID,"eventi",eventId),{stato:"Annullata dal cliente",annullataDaCliente:true,annullataIl:new Date().toISOString(),updatedAt:serverTimestamp()},{merge:true});
- ev.stato="Annullata dal cliente"; ev.annullataDaCliente=true;
+ if(hoursToEvent(ev)<24){
+   alert("Questa lezione è entro le 24 ore e non può essere annullata automaticamente. Contatta il coach.");
+   return;
+ }
+ if(!confirm("Vuoi annullare questa lezione? La lezione tornerà disponibile nel pacchetto."))return;
+
+ const nuoveResidue = Math.min(Number(cliente.lezioniTotali||0), Number(cliente.lezioniResidue||0)+1);
+ const nuovoFatte = ev.scalata ? Math.max(0, Number(cliente.lezioniFatte||0)-1) : Number(cliente.lezioniFatte||0);
+
+ await setDoc(doc(db,"users",COACH_UID,"eventi",eventId),{
+   stato:"Annullata dal cliente",
+   annullataDaCliente:true,
+   creditoRestituito:true,
+   annullataIl:new Date().toISOString(),
+   updatedAt:serverTimestamp()
+ },{merge:true});
+
+ await setDoc(doc(db,"users",COACH_UID,"clienti",cliente.id),{
+   lezioniResidue:nuoveResidue,
+   lezioniFatte:nuovoFatte,
+   updatedAt:serverTimestamp()
+ },{merge:true});
+
+ ev.stato="Annullata dal cliente";
+ ev.annullataDaCliente=true;
+ ev.creditoRestituito=true;
+ cliente.lezioniResidue=nuoveResidue;
+ cliente.lezioniFatte=nuovoFatte;
+
  render();
- alert("Lezione annullata correttamente.");
+ alert("Lezione annullata correttamente. Il credito è tornato disponibile nel pacchetto.");
 }
 
 async function richiediRecupero(eventId){
@@ -401,7 +426,7 @@ function render(){
  if($("rulesAcceptedText")){
    if(accepted && cliente.regolamentoAccettatoIl){
      const d = new Date(cliente.regolamentoAccettatoIl);
-     $("rulesAcceptedText").innerHTML = "✅ Regolamento accettato il <b>"+d.toLocaleDateString("it-IT")+"</b> alle <b>"+d.toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})+"</b> · Versione "+(cliente.regolamentoVersione||"9.3.2");
+     $("rulesAcceptedText").innerHTML = "✅ Regolamento accettato il <b>"+d.toLocaleDateString("it-IT")+"</b> alle <b>"+d.toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})+"</b> · Versione "+(cliente.regolamentoVersione||"9.3.3");
    } else {
      $("rulesAcceptedText").innerHTML = "⚠️ Regolamento non ancora accettato.";
    }

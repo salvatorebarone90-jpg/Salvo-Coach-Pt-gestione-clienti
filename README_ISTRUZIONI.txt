@@ -1,22 +1,20 @@
-SB PERSONAL COACH GESTIONALE 9.3.2 HOTFIX COLLAUDO
+SB PERSONAL COACH GESTIONALE 9.3.3 ANNULLAMENTO CREDITI
 
-Correzioni:
-- Regolamento: finché il cliente non accetta, l'Area Cliente resta nascosta.
-- Alert cliente: se il regolamento non è accettato, compare un avviso chiaro.
-- Calendario mensile Area Cliente: corretto bug di evidenziazione venerdì/sabato.
-- Versione regolamento aggiornata a 9.3.2.
+Correzione principale:
+- Se una lezione viene annullata oltre le 24 ore, il credito torna nel pacchetto.
+- Il contatore aumenta di +1 senza superare il totale del pacchetto.
+- La lezione viene marcata con creditoRestituito:true per evitare doppi conteggi.
+- Nessun recupero automatico: il recupero resta separato e deve passare da richiesta/approvazione coach.
 
-Carica su GitHub:
-- index.html
+Aggiornato:
 - cliente.html
-- firebase-config.js
+- index.html
 - manifest.json
-- logo.jpeg
 - README_ISTRUZIONI.txt
 
 Test consigliato:
-1. Crea cliente test con regolamento non accettato.
-2. Apri Area Cliente: deve mostrare solo regolamento.
-3. Spunta checkbox e accetta.
-4. Verifica che compaiano dashboard, calendario e lezioni.
-5. Cliente con Lun/Mer/Ven: nel calendario devono evidenziarsi lunedì, mercoledì e venerdì.
+1. Cliente con 12 lezioni e 10 residue.
+2. Annulla una lezione futura oltre 24h.
+3. Deve diventare 11 residue su 12.
+4. La lezione annullata non deve comparire tra le prossime lezioni.
+5. Il cliente può richiedere recupero separatamente.
