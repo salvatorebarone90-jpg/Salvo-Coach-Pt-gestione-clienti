@@ -1,13 +1,11 @@
-SB PERSONAL COACH GESTIONALE 9.0 RECUPERI
+SB PERSONAL COACH GESTIONALE 9.1 RECUPERI CLIENTE
 
 Novità:
-- Nuova sezione Coach: Recuperi.
-- Area Cliente: pulsante "Richiedi recupero" sotto ogni lezione.
-- Il cliente può inviare una richiesta recupero con eventuale nota.
-- Il coach vede le richieste in "Recuperi".
-- Il coach può approvare, rifiutare o eliminare le richieste.
-- Backup aggiornato con recuperi.
-- Mantiene Area Cliente Premium 8.2.1.
+- Area Cliente: sezione "Le mie richieste recupero".
+- Il cliente vede lo stato della richiesta: In attesa / Approvato / Rifiutato.
+- Se il recupero è già stato richiesto, il pulsante diventa "Recupero già richiesto".
+- Evita richieste duplicate sulla stessa lezione.
+- Mantiene sezione coach "Recuperi" con Approva / Rifiuta / Elimina.
 
 Carica su GitHub:
 - index.html
@@ -16,9 +14,3 @@ Carica su GitHub:
 - manifest.json
 - logo.jpeg
 - README_ISTRUZIONI.txt
-
-Dopo il caricamento:
-1. Ricarica la dashboard con aggiornamento forzato.
-2. Apri Area Cliente.
-3. Premi "Richiedi recupero" su una lezione.
-4. Torna nella dashboard coach > Recuperi.
