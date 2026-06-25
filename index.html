@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SB Personal Coach Gestionale 10.0 RC4</title>
+<title>SB Personal Coach Gestionale 10.0 RC5</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--n:#101827;--g:#d5ad52;--b:#f4f6f8}
@@ -34,7 +34,7 @@ textarea{min-height:80px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10p
 </style>
 </head>
 <body>
-<header><img src="logo.jpeg" class="logo"><h1>Gestionale Clienti 10.0 RC4 Coach</h1><p>Smart Counter · Ricalcolo RC4</p></header>
+<header><img src="logo.jpeg" class="logo"><h1>Gestionale Clienti 10.0 RC5 Coach</h1><p>Gestione Cliente Sicura · RC5</p></header>
 
 <div id="loginView" class="card" style="max-width:430px;margin:18px auto">
 <h2>🔐 Accesso Coach</h2>
@@ -192,7 +192,7 @@ textarea{min-height:80px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10p
 <div class="row"><div><label>Frequenza check</label><select id="checkFreq"><option value="4">4 settimane</option><option value="5">5 settimane</option><option value="6">6 settimane</option><option value="custom">Personalizzata</option></select></div><div><label>Freq. custom settimane</label><input id="checkFreqCustom" type="number"></div></div>
 <div class="row"><div><label>Ultimo check</label><input id="ultimoCheck" type="date"></div></div>
 <label>Anamnesi / note interne</label><textarea id="anamnesi"></textarea><label>Note</label><textarea id="note"></textarea>
-<button id="saveClientBtn" class="btn primary full">Salva cliente + genera calendario</button>
+<button id="saveClientBtn" class="btn primary full">Crea cliente + genera calendario</button>
 <button id="regenBtn" class="btn gold full">Rigenera calendario automatico</button>
 <button id="resetLessonsBtn" class="btn light full">Ripristina lezioni residue</button>
 <button id="clearBtn" class="btn light full">Pulisci</button></div>
@@ -297,6 +297,8 @@ const app=initializeApp(firebaseConfig);
 const auth=getAuth(app);
 const db=getFirestore(app);
 
+let clienteOriginaleForm=null;
+window.__skipAutoGenerateCalendar=false;
 let user=null, clienti=[], eventi=[], checks=[], leads=[], rinnovi=[], recuperi=[], avvisi=[], pagamenti=[], auditLogs=[], filtro="Tutti";
 let checkPro=[], templates={};
 const defaultTemplates={
@@ -479,6 +481,7 @@ async function ripristinaLezioniResidue(){
  if(!id){alert("Apri prima un cliente con Modifica.");return}
  const c=clienti.find(x=>x.id===id);
  if(!c)return;
+ clienteOriginaleForm={...c};
  if(!confirm("Ripristinare le lezioni residue al totale del pacchetto?"))return;
  await setDoc(docPath("clienti",id),{lezioniFatte:0,lezioniResidue:c.lezioniTotali||0,updatedAt:serverTimestamp()},{merge:true});
  alert("Lezioni residue ripristinate.");
@@ -896,6 +899,95 @@ async function ricalcolaTuttiContatori(){
 }
 window.ricalcolaContatoreCliente=ricalcolaContatoreCliente;
 window.ricalcolaTuttiContatori=ricalcolaTuttiContatori;
+
+
+function campiCalendarioDaClienteForm(){
+ return {
+   frequenza:Number($("frequenza")?.value||0),
+   giorni:String($("giorni")?.value||"").trim(),
+   orari:String($("orari")?.value||"").trim(),
+   durata:Number($("durata")?.value||60),
+   inizio:String($("inizio")?.value||""),
+   fine:String($("fine")?.value||"")
+ };
+}
+
+async function rigeneraCalendarioDaPulsante(){
+ const id=$("clienteId")?.value;
+ if(!id){status("Prima salva il cliente.");return}
+ if(!confirm("Rigenerare il calendario automatico? Verranno eliminate solo le lezioni future non storiche. Le lezioni effettuate/assenti/recuperate/annullate rimarranno intatte."))return;
+ await backupCalendarioCliente(id);
+ await eliminaLezioniFutureNonStoriche(id);
+ await rigeneraCalendarioAutomatico(id,true);
+ await ricalcolaContatoreCliente(id);
+ status("Calendario futuro rigenerato.");
+}
+window.rigeneraCalendarioDaPulsante=rigeneraCalendarioDaPulsante;
+
+function calendarioCambiato(){
+ if(!clienteOriginaleForm)return false;
+ const now=campiCalendarioDaClienteForm();
+ const old={
+   frequenza:Number(clienteOriginaleForm.frequenza||0),
+   giorni:String(clienteOriginaleForm.giorni||"").trim(),
+   orari:String(clienteOriginaleForm.orari||"").trim(),
+   durata:Number(clienteOriginaleForm.durata||60),
+   inizio:String(clienteOriginaleForm.inizio||""),
+   fine:String(clienteOriginaleForm.fine||"")
+ };
+ return JSON.stringify(now)!==JSON.stringify(old);
+}
+function clienteInModifica(){
+ return Boolean($("clienteId")?.value);
+}
+function aggiornaTestoPulsanteCliente(){
+ const b=$("btnSalvaCliente");
+ if(!b)return;
+ b.textContent=clienteInModifica() ? "💾 Salva modifiche" : "Crea cliente + genera calendario";
+ const br=$("btnRigeneraCalendario");
+ if(br)br.style.display=clienteInModifica() ? "block" : "none";
+}
+async function backupCalendarioCliente(clienteId){
+ const evs=eventi.filter(e=>e.clienteId===clienteId);
+ await addDoc(path("calendarBackups"),{
+   clienteId,
+   createdAtText:new Date().toISOString(),
+   createdAt:serverTimestamp(),
+   eventi:evs
+ });
+}
+function statoStoricoLezione(stato){
+ return ["Effettuata","Assente","Recuperata","Annullata","Annullata dal cliente"].includes(stato);
+}
+async function eliminaLezioniFutureNonStoriche(clienteId){
+ const today=localISO(new Date());
+ const fut=eventi.filter(e=>e.clienteId===clienteId && e.data>=today && !statoStoricoLezione(e.stato||"Prenotata"));
+ for(const ev of fut){
+   await deleteDoc(docPath("eventi",ev.id));
+ }
+}
+async function salvaClienteSicuro(){
+ const isEdit=clienteInModifica();
+ const changed=isEdit && calendarioCambiato();
+ if(isEdit && changed){
+   if(!confirm("Hai modificato giorni/orari/frequenza/durata o date. Le lezioni future verranno rigenerate, mentre storico e contatore resteranno invariati. Procedere?"))return;
+ }
+ window.__skipAutoGenerateCalendar=isEdit;
+ await salvaCliente();
+ window.__skipAutoGenerateCalendar=false;
+ const id=$("clienteId")?.value;
+ if(isEdit && changed && id){
+   await backupCalendarioCliente(id);
+   await eliminaLezioniFutureNonStoriche(id);
+   await rigeneraCalendarioAutomatico(id,true);
+   await ricalcolaContatoreCliente(id);
+   status("Modifiche salvate e calendario futuro aggiornato.");
+ }else if(isEdit){
+   status("Modifiche salvate senza rigenerare il calendario.");
+ }
+}
+window.salvaClienteSicuro=salvaClienteSicuro;
+window.aggiornaTestoPulsanteCliente=aggiornaTestoPulsanteCliente;
 
 function euro(n){return "€"+Number(n||0).toLocaleString("it-IT",{minimumFractionDigits:0,maximumFractionDigits:2})}
 function meseKey(d){return String(d||"").slice(0,7)}
