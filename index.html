@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SB Personal Coach Gestionale 10.0 RC9</title>
+<title>SB Personal Coach Gestionale 10.0 RC10</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--n:#101827;--g:#d5ad52;--b:#f4f6f8}
@@ -34,7 +34,7 @@ textarea{min-height:80px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10p
 </style>
 </head>
 <body>
-<header><img src="logo.jpeg" class="logo"><h1>Gestionale Clienti 10.0 RC9 Coach</h1><p>Menu Fix · Contabilità RC9</p></header>
+<header><img src="logo.jpeg" class="logo"><h1>Gestionale Clienti 10.0 RC10 Coach</h1><p>Da contattare · Contabilità RC10</p></header>
 
 <div id="loginView" class="card" style="max-width:430px;margin:18px auto">
 <h2>🔐 Accesso Coach</h2>
@@ -143,48 +143,37 @@ textarea{min-height:80px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10p
 </section>
 
 
+
 <section id="contabilita" class="section">
-<div class="card">
-<h2>💰 Contabilità mensile</h2>
-<p class="meta">Riepilogo entrate da rinnovi e pagamenti registrati.</p>
-<div class="row">
-<div>
-<label>Mese</label>
-<input id="contMese" type="month">
-</div>
-<div>
-<label>Filtro servizio</label>
-<select id="contServizio">
-<option value="">Tutti</option>
-<option>Personal Training</option>
-<option>Coaching Online</option>
-<option>Nutrizione</option>
-<option>BIA</option>
-<option>Plicometria</option>
-<option>Preparazione gara</option>
-<option>Altro</option>
-</select>
-</div>
-</div>
-<button class="btn gold full" onclick="renderContabilita()">Aggiorna contabilità</button>
-</div>
+  <div class="card">
+    <h2>💰 Contabilità mensile</h2>
+    <p class="meta">Riepilogo economico reale: incassato, da incassare e valore pacchetti attivi.</p>
+    <label>Mese</label>
+    <input id="contMese" type="month">
+    <button class="btn gold full" onclick="renderContabilitaRC10()">Aggiorna contabilità</button>
+  </div>
 
-<div class="grid">
-<div class="kpi"><strong id="contOggi">€0</strong><span>Oggi</span></div>
-<div class="kpi"><strong id="contMeseTot">€0</strong><span>Mese selezionato</span></div>
-<div class="kpi"><strong id="contAnno">€0</strong><span>Anno</span></div>
-<div class="kpi"><strong id="contTotale">€0</strong><span>Totale storico</span></div>
-</div>
+  <div class="grid">
+    <div class="kpi"><strong id="contIncassato">€0</strong><span>Incassato mese</span></div>
+    <div class="kpi"><strong id="contDaIncassare">€0</strong><span>Da incassare</span></div>
+    <div class="kpi"><strong id="contValorePacchetti">€0</strong><span>Valore pacchetti</span></div>
+    <div class="kpi"><strong id="contTotaleStorico">€0</strong><span>Totale storico</span></div>
+  </div>
 
-<div class="card">
-<h2>📊 Entrate per servizio</h2>
-<div id="contPerServizio"></div>
-</div>
+  <div class="card">
+    <h2>📌 Clienti con residuo</h2>
+    <div id="contClientiResiduo"></div>
+  </div>
 
-<div class="card">
-<h2>🧾 Movimenti del mese</h2>
-<div id="contMovimenti"></div>
-</div>
+  <div class="card">
+    <h2>📦 Pacchetti attivi</h2>
+    <div id="contPacchettiAttivi"></div>
+  </div>
+
+  <div class="card">
+    <h2>🧾 Movimenti registrati</h2>
+    <div id="contMovimenti"></div>
+  </div>
 </section>
 
 <section id="dashboard" class="section active">
@@ -1461,7 +1450,143 @@ window.renderContabilitaRC9=renderContabilitaRC9;
 window.renderContabilita=renderContabilitaRC9;
 window.renderDaContattareRC9=renderDaContattareRC9;
 window.renderRinnoviRC9=renderRinnoviRC9;
-setInterval(()=>{try{renderDaContattareRC9();renderRinnoviRC9();renderContabilitaRC9()}catch(e){}},700);
+
+
+
+function euroRC10(n){
+ return "€"+Number(n||0).toLocaleString("it-IT",{minimumFractionDigits:0,maximumFractionDigits:2});
+}
+function nomeClienteRC10(c){
+ return ((c.nome||"")+" "+(c.cognome||"")).trim();
+}
+function clienteNomeByIdRC10(id){
+ const c=(clienti||[]).find(x=>x.id===id);
+ return c?nomeClienteRC10(c):"Cliente";
+}
+function valoreClienteRC10(c){
+ return Number(c.dovuto||c.importoPacchetto||c.prezzo||c.costo||0);
+}
+function pagatoClienteRC10(c){
+ return Number(c.pagato||0);
+}
+function residuoClienteRC10(c){
+ return Math.max(0, valoreClienteRC10(c)-pagatoClienteRC10(c));
+}
+function clientiDaContattareRC10(){
+ const marked=(clienti||[]).filter(c=>c.daContattare||c.contattare||c.status==="da_contattare");
+ if(marked.length)return marked;
+ return (clienti||[]).filter(c=>c.stato!=="inattivo" && residuoClienteRC10(c)>0);
+}
+function renderDaContattareRC10(){
+ const sec=document.getElementById("dacontattare")||document.getElementById("da-contattare")||document.getElementById("contattare");
+ if(!sec)return;
+ const arr=clientiDaContattareRC10();
+ sec.innerHTML=`<div class="card"><h2>💬 Da contattare</h2>${
+   arr.length?arr.map(c=>`<div class="card">
+     <h2>${nomeClienteRC10(c)}</h2>
+     <p class="meta">${c.tipo||""}${residuoClienteRC10(c)>0?` · Residuo ${euroRC10(residuoClienteRC10(c))}`:""}</p>
+     <button class="btn whatsapp full" onclick="wa('${c.whatsapp||c.telefono||""}')">💬 WhatsApp</button>
+   </div>`).join(""):'<div class="empty">Nessun cliente da contattare.</div>'
+ }</div>`;
+}
+async function eliminaRinnovoRC10(id){
+ const r=(rinnovi||[]).find(x=>x.id===id);
+ if(!r)return;
+ if(!confirm("Vuoi eliminare questo rinnovo?"))return;
+ await deleteDoc(docPath("rinnovi",id));
+ try{await audit("rinnovo","Rinnovo eliminato",{rinnovoId:id,clienteId:r.clienteId||"",importo:Number(r.importo||r.prezzo||r.costo||0)})}catch(e){}
+ status("Rinnovo eliminato.");
+}
+window.eliminaRinnovoRC10=eliminaRinnovoRC10;
+window.eliminaRinnovoRC9=eliminaRinnovoRC10;
+function renderRinnoviRC10(){
+ const sec=document.getElementById("rinnovi");
+ if(!sec)return;
+ const list=(rinnovi||[]).slice().sort((a,b)=>(b.data||b.createdAtText||"").localeCompare(a.data||a.createdAtText||""));
+ const body=list.length?list.map(r=>{
+   const nome=r.clienteNome||r.nomeCliente||r.nome||clienteNomeByIdRC10(r.clienteId);
+   const lez=r.lezioni||r.lezioniTotali||r.numeroLezioni||"";
+   const imp=Number(r.importo||r.prezzo||r.costo||0);
+   const data=r.data||String(r.createdAtText||"").slice(0,10)||"";
+   return `<div class="check" style="position:relative;padding-right:58px">
+      <button class="btn red" style="position:absolute;right:10px;top:10px;width:auto;padding:6px 10px" onclick="eliminaRinnovoRC10('${r.id}')">✕</button>
+      <h3>${nome}</h3>
+      <p class="meta">${lez?lez+" lezioni · ":""}${data?fmt(data)+" · ":""}${euroRC10(imp)}</p>
+   </div>`;
+ }).join(""):`<div class="empty">Nessun rinnovo registrato.</div>`;
+ sec.innerHTML=`<div class="card"><h2>🔁 Storico rinnovi</h2>${body}</div>`;
+}
+function movimentiRegistratiRC10(){
+ const rn=(rinnovi||[]).map(r=>({
+   tipo:"rinnovo",
+   id:r.id,
+   data:r.data||String(r.createdAtText||"").slice(0,10)||"",
+   mese:String(r.data||String(r.createdAtText||"").slice(0,10)||"").slice(0,7),
+   nome:r.clienteNome||r.nomeCliente||r.nome||clienteNomeByIdRC10(r.clienteId),
+   importo:Number(r.importo||r.prezzo||r.costo||0),
+   desc:"Rinnovo"
+ }));
+ const pg=(pagamenti||[]).map(p=>({
+   tipo:"pagamento",
+   id:p.id,
+   data:p.data||String(p.createdAtText||"").slice(0,10)||"",
+   mese:p.mese||String(p.data||"").slice(0,7),
+   nome:p.clienteNome||clienteNomeByIdRC10(p.clienteId),
+   importo:Number(p.importo||0),
+   desc:p.note||p.metodo||"Pagamento"
+ }));
+ return [...rn,...pg].filter(m=>m.importo>0);
+}
+function renderContabilitaRC10(){
+ const box=document.getElementById("contMovimenti");
+ if(!box)return;
+ const now=new Date();
+ if($("contMese")&&!$("contMese").value){
+   $("contMese").value=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0");
+ }
+ const mese=$("contMese")?.value||"";
+ const mov=movimentiRegistratiRC10();
+ const movMese=mov.filter(m=>m.mese===mese);
+ const sum=a=>a.reduce((s,m)=>s+Number(m.importo||0),0);
+
+ const clientiAttivi=(clienti||[]).filter(c=>c.stato!=="inattivo");
+ const valorePacchetti=clientiAttivi.reduce((s,c)=>s+valoreClienteRC10(c),0);
+ const daIncassare=clientiAttivi.reduce((s,c)=>s+residuoClienteRC10(c),0);
+ const incassatoMese=sum(movMese);
+ const totaleStorico=sum(mov);
+
+ if($("contIncassato"))$("contIncassato").textContent=euroRC10(incassatoMese);
+ if($("contDaIncassare"))$("contDaIncassare").textContent=euroRC10(daIncassare);
+ if($("contValorePacchetti"))$("contValorePacchetti").textContent=euroRC10(valorePacchetti);
+ if($("contTotaleStorico"))$("contTotaleStorico").textContent=euroRC10(totaleStorico);
+
+ const conResiduo=clientiAttivi.filter(c=>residuoClienteRC10(c)>0).sort((a,b)=>residuoClienteRC10(b)-residuoClienteRC10(a));
+ if($("contClientiResiduo")){
+   $("contClientiResiduo").innerHTML=conResiduo.length?conResiduo.map(c=>`<div class="check">
+     <h3>${nomeClienteRC10(c)}</h3>
+     <p class="meta">${c.tipo||""} · Dovuto ${euroRC10(valoreClienteRC10(c))} · Pagato ${euroRC10(pagatoClienteRC10(c))}</p>
+     <span class="badge bad">Residuo ${euroRC10(residuoClienteRC10(c))}</span>
+   </div>`).join(""):`<div class="empty">Nessun residuo aperto.</div>`;
+ }
+ if($("contPacchettiAttivi")){
+   $("contPacchettiAttivi").innerHTML=clientiAttivi.length?clientiAttivi.map(c=>`<div class="check">
+     <h3>${nomeClienteRC10(c)}</h3>
+     <p class="meta">${c.tipo||""} · ${c.lezioniTotali||0} lezioni · ${c.lezioniResidue||0} residue</p>
+     <span class="badge ok">${euroRC10(valoreClienteRC10(c))}</span>
+   </div>`).join(""):`<div class="empty">Nessun pacchetto attivo.</div>`;
+ }
+ box.innerHTML=movMese.length?movMese.sort((a,b)=>(b.data||"").localeCompare(a.data||"")).map(m=>`<div class="check" style="position:relative;padding-right:58px">
+   ${m.tipo==="rinnovo"?`<button class="btn red" style="position:absolute;right:10px;top:10px;width:auto;padding:6px 10px" onclick="eliminaRinnovoRC10('${m.id}')">✕</button>`:""}
+   <h3>${m.nome}</h3>
+   <p class="meta">${fmt(m.data)} · ${m.desc}</p>
+   <span class="badge ok">${euroRC10(m.importo)}</span>
+ </div>`).join(""):`<div class="empty">Nessun movimento registrato nel mese.</div>`;
+}
+window.renderDaContattareRC10=renderDaContattareRC10;
+window.renderRinnoviRC10=renderRinnoviRC10;
+window.renderContabilitaRC10=renderContabilitaRC10;
+window.renderContabilita=renderContabilitaRC10;
+setInterval(()=>{try{renderDaContattareRC10();renderRinnoviRC10();renderContabilitaRC10()}catch(e){}},500);
 
 </script>
 </body>
