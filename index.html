@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SB Personal Coach Gestionale 9.3.6</title>
+<title>SB Personal Coach Gestionale 10.0 RC</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--n:#101827;--g:#d5ad52;--b:#f4f6f8}
@@ -34,7 +34,7 @@ textarea{min-height:80px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10p
 </style>
 </head>
 <body>
-<header><img src="logo.jpeg" class="logo"><h1>Gestionale Clienti 9.3.6 Coach</h1><p>Contatore Manuale · Collaudo</p></header>
+<header><img src="logo.jpeg" class="logo"><h1>Gestionale Clienti 10.0 RC Coach</h1><p>Smart Coach Edition · RC</p></header>
 
 <div id="loginView" class="card" style="max-width:430px;margin:18px auto">
 <h2>🔐 Accesso Coach</h2>
@@ -91,7 +91,58 @@ textarea{min-height:80px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10p
 </div>
 </section>
 
+
+<section id="notifiche" class="section">
+<div class="card">
+<h2>🔔 Centro Notifiche</h2>
+<p class="meta">Tutte le azioni che richiedono attenzione: lezioni da confermare, saldi, certificati, recuperi e check.</p>
+<div id="listaNotifiche"></div>
+</div>
+</section>
+
+<section id="economia" class="section">
+<div class="card">
+<h2>💰 Centro Economico</h2>
+<p class="meta">Registra entrate, controlla incassi mensili e saldi ancora aperti.</p>
+
+<div class="row">
+<div><label>Cliente</label><select id="pagCliente"></select></div>
+<div><label>Data pagamento</label><input id="pagData" type="date"></div>
+</div>
+
+<div class="row">
+<div><label>Importo incassato €</label><input id="pagImporto" type="number" step="0.01" placeholder="Es. 150"></div>
+<div><label>Metodo</label><select id="pagMetodo"><option>Bonifico</option><option>Contanti</option><option>Carta</option><option>PayPal</option><option>Altro</option></select></div>
+</div>
+
+<label>Note</label>
+<textarea id="pagNote" rows="3" placeholder="Es. Acconto, saldo, rinnovo..."></textarea>
+<button class="btn gold full" onclick="salvaPagamento()">Registra pagamento</button>
+</div>
+
+<div class="grid">
+<div class="kpi"><strong id="kIncassoOggi">€0</strong><span>Incassato oggi</span></div>
+<div class="kpi"><strong id="kIncassoMese">€0</strong><span>Incassato mese</span></div>
+<div class="kpi"><strong id="kIncassoAnno">€0</strong><span>Incassato anno</span></div>
+<div class="kpi"><strong id="kDaIncassareEco">€0</strong><span>Da incassare</span></div>
+</div>
+
+<div class="card"><h2>📅 Filtro mese</h2><input id="ecoMese" type="month"><button class="btn light full" onclick="renderEconomia()">Aggiorna filtro</button></div>
+<div class="card"><h2>📊 Incassi per mese</h2><div id="graficoMesi"></div></div>
+<div class="card"><h2>📌 Saldi aperti</h2><div id="listaDaIncassareEco"></div></div>
+<div class="card"><h2>🧾 Storico pagamenti</h2><div id="listaPagamenti"></div></div>
+</section>
+
+<section id="audit" class="section">
+<div class="card">
+<h2>🧾 Audit Log</h2>
+<p class="meta">Registro attività automatico: pagamenti, lezioni, annullamenti e modifiche importanti.</p>
+<div id="listaAudit"></div>
+</div>
+</section>
+
 <section id="dashboard" class="section active">
+<div class="card premium" id="smartCoachBox"><h2>👋 Smart Coach</h2><div id="smartCoachSummary"></div></div>
 <div class="card" style="display:flex;justify-content:space-between;align-items:center"><div><b id="userEmail"></b><br><span class="meta">Database cloud Firestore</span></div><button id="logoutBtn" class="btn red">Esci</button></div>
 <div class="card">
 <h2>📱 Area Cliente</h2>
@@ -246,7 +297,7 @@ const app=initializeApp(firebaseConfig);
 const auth=getAuth(app);
 const db=getFirestore(app);
 
-let user=null, clienti=[], eventi=[], checks=[], leads=[], rinnovi=[], recuperi=[], avvisi=[], filtro="Tutti";
+let user=null, clienti=[], eventi=[], checks=[], leads=[], rinnovi=[], recuperi=[], avvisi=[], pagamenti=[], auditLogs=[], filtro="Tutti";
 let checkPro=[], templates={};
 const defaultTemplates={
  rinnovo:"Ciao {nome}, ti ricordo che il tuo pacchetto è quasi terminato. Ti restano {lezioniResidue} lezioni. Fammi sapere se vuoi procedere con il rinnovo.",
@@ -275,6 +326,8 @@ function subscribe(){
  onSnapshot(path("rinnovi"),s=>{rinnovi=s.docs.map(d=>({id:d.id,...d.data()}));render()});
  onSnapshot(path("recuperi"),s=>{recuperi=s.docs.map(d=>({id:d.id,...d.data()}));render()});
  onSnapshot(path("avvisi"),s=>{avvisi=s.docs.map(d=>({id:d.id,...d.data()}));render()});
+ onSnapshot(path("pagamenti"),s=>{pagamenti=s.docs.map(d=>({id:d.id,...d.data()}));render()});
+ onSnapshot(path("auditLogs"),s=>{auditLogs=s.docs.map(d=>({id:d.id,...d.data()}));render()});
  onSnapshot(path("checkPro"),s=>{checkPro=s.docs.map(d=>({id:d.id,...d.data()}));render()});
  onSnapshot(doc(db,"users",user.uid,"settings","templates"),s=>{templates=s.exists()?s.data():{...defaultTemplates};render()});
 }
@@ -442,16 +495,16 @@ async function autoScalaLezioni(){
  const now=new Date();
  for(const ev of eventi){
    if(!ev.data||!ev.ora||!ev.clienteId)continue;
-   const [y,m,d]=ev.data.split("-").map(Number);
-   const [h,min]=ev.ora.split(":").map(Number);
-   const dt=new Date(y,m-1,d,h,min,0);
+   const dt=parseEventDateTime(ev);
+   if(!dt)continue;
+   const end=new Date(dt.getTime()+Number(ev.durata||60)*60000);
+   const confirmAfter=new Date(end.getTime()+2*60*60000);
    const hours=(dt-now)/36e5;
    if(hours<=24 && ["Prenotata","Occupata"].includes(ev.stato)){
-     await setDoc(docPath("eventi",ev.id),{
-       stato:"Bloccata",
-       bloccataEntro24h:true,
-       updatedAt:serverTimestamp()
-     },{merge:true});
+     await setDoc(docPath("eventi",ev.id),{stato:"Bloccata",bloccataEntro24h:true,updatedAt:serverTimestamp()},{merge:true});
+   }
+   if(now>=confirmAfter && ["Prenotata","Occupata","Bloccata"].includes(ev.stato)){
+     await setDoc(docPath("eventi",ev.id),{stato:"Da confermare",updatedAt:serverTimestamp()},{merge:true});
    }
  }
 }
@@ -792,6 +845,130 @@ window.salvaAvviso=salvaAvviso;
 window.disattivaAvviso=disattivaAvviso;
 window.eliminaAvviso=eliminaAvviso;
 
+
+function euro(n){return "€"+Number(n||0).toLocaleString("it-IT",{minimumFractionDigits:0,maximumFractionDigits:2})}
+function meseKey(d){return String(d||"").slice(0,7)}
+function todayISO(){return localISO(new Date())}
+function clienteNomeById(id){const c=clienti.find(x=>x.id===id);return c?(c.nome||"")+" "+(c.cognome||""):"Cliente"}
+function parseEventDateTime(ev){
+ if(!ev.data)return null;
+ const [y,m,d]=String(ev.data).split("-").map(Number);
+ let h=9,mi=0;
+ if(ev.ora&&String(ev.ora).includes(":")){const p=String(ev.ora).split(":").map(Number);h=p[0]||0;mi=p[1]||0}
+ return new Date(y,m-1,d,h,mi,0);
+}
+function lezioniDaConfermare(){
+ const now=new Date();
+ return eventi.filter(ev=>{
+   const dt=parseEventDateTime(ev);
+   if(!dt || !["Prenotata","Bloccata","Occupata","Da confermare"].includes(ev.stato||"Prenotata"))return false;
+   const end=new Date(dt.getTime()+Number(ev.durata||60)*60000);
+   const confirmAfter=new Date(end.getTime()+2*60*60000);
+   return ev.stato==="Da confermare" || now>=confirmAfter;
+ });
+}
+async function aggiornaDaConfermare(){
+ const list=lezioniDaConfermare().filter(ev=>ev.stato!=="Da confermare");
+ for(const ev of list){
+   await setDoc(docPath("eventi",ev.id),{stato:"Da confermare",updatedAt:serverTimestamp()},{merge:true});
+ }
+}
+async function audit(tipo,descrizione,extra={}){
+ try{await addDoc(path("auditLogs"),{tipo,descrizione,data:todayISO(),createdAtText:new Date().toISOString(),createdAt:serverTimestamp(),...extra})}catch(e){console.warn("audit",e)}
+}
+async function confermaEffettuata(id){await consumaCreditoEvento(id,"Effettuata");await audit("lezione","Lezione confermata come effettuata",{eventoId:id});}
+async function confermaAssente(id){await consumaCreditoEvento(id,"Assente");await audit("lezione","Lezione confermata come assente",{eventoId:id});}
+async function confermaTutteEffettuate(){
+ const list=lezioniDaConfermare();
+ if(!list.length)return status("Nessuna lezione da confermare.");
+ if(!confirm("Confermare tutte le lezioni come effettuate?"))return;
+ for(const ev of list){await consumaCreditoEvento(ev.id,"Effettuata");}
+ await audit("lezioni","Confermate tutte le lezioni da confermare",{totale:list.length});
+ status("Lezioni confermate.");
+}
+function renderSmartCoach(){
+ if(!$("smartCoachSummary"))return;
+ const oggi=todayISO();
+ const lezOggi=eventi.filter(e=>e.data===oggi && !["Annullata","Annullata dal cliente"].includes(e.stato)).length;
+ const daConf=lezioniDaConfermare().length;
+ const daInc=clienti.reduce((s,c)=>s+Math.max(0,Number(c.dovuto||0)-Number(c.pagato||0)),0);
+ const cert=clienti.filter(c=>daysLeft(c.certificatoScadenza)<=30).length;
+ const rec=recuperi.filter(r=>String(r.stato||"in attesa").toLowerCase()==="in attesa").length;
+ $("smartCoachSummary").innerHTML=`<div class="grid">
+  <div class="kpi"><strong>${lezOggi}</strong><span>Lezioni oggi</span></div>
+  <div class="kpi"><strong>${daConf}</strong><span>Da confermare</span></div>
+  <div class="kpi"><strong>${euro(daInc)}</strong><span>Da incassare</span></div>
+  <div class="kpi"><strong>${cert}</strong><span>Certificati</span></div>
+ </div>
+ <p class="meta">🔄 Recuperi in attesa: <b>${rec}</b></p>
+ ${daConf?'<button class="btn gold full" onclick="showTab(\\'notifiche\\')">Apri lezioni da confermare</button>':""}`;
+}
+function renderNotifiche(){
+ if(!$("listaNotifiche"))return;
+ const parts=[];
+ const daConf=lezioniDaConfermare();
+ if(daConf.length){
+   parts.push(`<div class="card"><h2>⏳ Lezioni da confermare</h2><button class="btn gold full" onclick="confermaTutteEffettuate()">Conferma tutte come effettuate</button>${daConf.map(ev=>`<div class="check"><h3>${ev.clienteNome||clienteNomeById(ev.clienteId)}</h3><p class="meta">${fmt(ev.data)} ore ${ev.ora||"-"} · ${ev.stato||"Da confermare"}</p><div class="actions"><button class="btn light" onclick="confermaEffettuata('${ev.id}')">Effettuata</button><button class="btn red" onclick="confermaAssente('${ev.id}')">Assente</button></div></div>`).join("")}</div>`);
+ }
+ const saldi=clienti.map(c=>({c,res:Math.max(0,Number(c.dovuto||0)-Number(c.pagato||0))})).filter(x=>x.res>0).sort((a,b)=>b.res-a.res);
+ if(saldi.length)parts.push(`<div class="card"><h2>💰 Saldi aperti</h2>${saldi.slice(0,10).map(x=>`<p><b>${(x.c.nome||"")+" "+(x.c.cognome||"")}</b><br><span class="badge bad">${euro(x.res)} da saldare</span></p>`).join("")}</div>`);
+ const cert=clienti.filter(c=>daysLeft(c.certificatoScadenza)<=30);
+ if(cert.length)parts.push(`<div class="card"><h2>🩺 Certificati in scadenza</h2>${cert.slice(0,10).map(c=>`<p><b>${(c.nome||"")+" "+(c.cognome||"")}</b><br><span class="badge warn">${fmt(c.certificatoScadenza)}</span></p>`).join("")}</div>`);
+ const rec=recuperi.filter(r=>String(r.stato||"in attesa").toLowerCase()==="in attesa");
+ if(rec.length)parts.push(`<div class="card"><h2>🔄 Recuperi richiesti</h2>${rec.slice(0,10).map(r=>`<p><b>${r.clienteNome||"Cliente"}</b><br><span class="meta">${fmt(r.dataLezione)} ore ${r.ora||"-"}</span></p>`).join("")}</div>`);
+ $("listaNotifiche").innerHTML=parts.length?parts.join(""):`<div class="empty">Nessuna notifica importante.</div>`;
+}
+function renderSelectPagamenti(){
+ if(!$("pagCliente"))return;
+ $("pagCliente").innerHTML=clienti.filter(c=>c.stato!=="inattivo").map(c=>`<option value="${c.id}">${(c.nome||"")+" "+(c.cognome||"")}</option>`).join("");
+ if($("pagData")&&!$("pagData").value)$("pagData").valueAsDate=new Date();
+ if($("ecoMese")&&!$("ecoMese").value){const d=new Date();$("ecoMese").value=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")}
+}
+async function salvaPagamento(){
+ const clienteId=$("pagCliente").value;
+ const c=clienti.find(x=>x.id===clienteId);
+ if(!c)return status("Seleziona cliente.");
+ const importo=Number($("pagImporto").value||0);
+ if(!importo||importo<=0)return status("Inserisci un importo valido.");
+ const data=$("pagData").value||todayISO();
+ await addDoc(path("pagamenti"),{clienteId:c.id,clienteNome:(c.nome||"")+" "+(c.cognome||""),data,mese:meseKey(data),importo,metodo:$("pagMetodo").value,note:$("pagNote").value,createdAtText:new Date().toISOString(),createdAt:serverTimestamp()});
+ await setDoc(docPath("clienti",c.id),{pagato:Number(c.pagato||0)+importo,updatedAt:serverTimestamp()},{merge:true});
+ await audit("pagamento","Pagamento registrato",{clienteId:c.id,clienteNome:(c.nome||"")+" "+(c.cognome||""),importo,metodo:$("pagMetodo").value});
+ $("pagImporto").value="";$("pagNote").value="";status("Pagamento registrato.");
+}
+async function eliminaPagamento(id){
+ const p=pagamenti.find(x=>x.id===id);if(!p)return;
+ if(!confirm("Eliminare questo pagamento? Verrà sottratto dal totale pagato del cliente."))return;
+ const c=clienti.find(x=>x.id===p.clienteId);
+ if(c)await setDoc(docPath("clienti",c.id),{pagato:Math.max(0,Number(c.pagato||0)-Number(p.importo||0)),updatedAt:serverTimestamp()},{merge:true});
+ await deleteDoc(docPath("pagamenti",id));await audit("pagamento","Pagamento eliminato",{pagamentoId:id,importo:p.importo});status("Pagamento eliminato.");
+}
+function renderEconomia(){
+ renderSelectPagamenti();
+ if(!$("listaPagamenti"))return;
+ const oggi=todayISO();
+ const anno=String(new Date().getFullYear());
+ const filtro=$("ecoMese")?.value||"";
+ const incOggi=pagamenti.filter(p=>p.data===oggi).reduce((s,p)=>s+Number(p.importo||0),0);
+ const incMese=pagamenti.filter(p=>!filtro||p.mese===filtro).reduce((s,p)=>s+Number(p.importo||0),0);
+ const incAnno=pagamenti.filter(p=>String(p.data||"").startsWith(anno)).reduce((s,p)=>s+Number(p.importo||0),0);
+ const daInc=clienti.reduce((s,c)=>s+Math.max(0,Number(c.dovuto||0)-Number(c.pagato||0)),0);
+ $("kIncassoOggi").textContent=euro(incOggi);$("kIncassoMese").textContent=euro(incMese);$("kIncassoAnno").textContent=euro(incAnno);$("kDaIncassareEco").textContent=euro(daInc);
+ const aperti=clienti.map(c=>({c,res:Math.max(0,Number(c.dovuto||0)-Number(c.pagato||0))})).filter(x=>x.res>0).sort((a,b)=>b.res-a.res);
+ $("listaDaIncassareEco").innerHTML=aperti.length?aperti.map(x=>`<p><b>${(x.c.nome||"")+" "+(x.c.cognome||"")}</b><br><span class="badge bad">Da saldare ${euro(x.res)}</span><span class="meta"> Dovuto ${euro(x.c.dovuto||0)} · Pagato ${euro(x.c.pagato||0)}</span></p>`).join(""):`<div class="empty">Nessun saldo aperto.</div>`;
+ const list=pagamenti.slice().sort((a,b)=>(b.data||"").localeCompare(a.data||""));
+ $("listaPagamenti").innerHTML=list.length?list.map(p=>`<div class="card"><h3>${p.clienteNome||clienteNomeById(p.clienteId)}</h3><span class="badge ok">${euro(p.importo)}</span><span class="badge info">${p.metodo||"Metodo"}</span><p class="meta"><b>Data:</b> ${fmt(p.data)}<br>${p.note?("<b>Note:</b> "+String(p.note).replaceAll("\\n","<br>")):""}</p><button class="btn red" onclick="eliminaPagamento('${p.id}')">Elimina</button></div>`).join(""):`<div class="empty">Nessun pagamento registrato.</div>`;
+ const byMonth={};pagamenti.forEach(p=>{const k=p.mese||meseKey(p.data);byMonth[k]=(byMonth[k]||0)+Number(p.importo||0)});
+ const months=Object.keys(byMonth).sort();const max=Math.max(1,...Object.values(byMonth));
+ $("graficoMesi").innerHTML=months.length?months.map(m=>{const perc=Math.round((byMonth[m]/max)*100);return `<p><b>${m}</b> · ${euro(byMonth[m])}</p><div style="height:12px;background:#eef2f7;border-radius:999px;overflow:hidden;margin-bottom:10px"><div style="height:12px;width:${perc}%;background:#d5ad52"></div></div>`}).join(""):`<div class="empty">Nessun dato economico.</div>`;
+}
+function renderAudit(){
+ if(!$("listaAudit"))return;
+ const list=auditLogs.slice().sort((a,b)=>(b.createdAtText||"").localeCompare(a.createdAtText||"")).slice(0,100);
+ $("listaAudit").innerHTML=list.length?list.map(l=>`<div class="check"><h3>${l.tipo||"Evento"}</h3><p class="meta">${l.descrizione||"-"}<br>${l.createdAtText?new Date(l.createdAtText).toLocaleString("it-IT"):""}</p></div>`).join(""):`<div class="empty">Nessuna attività registrata.</div>`;
+}
+window.salvaPagamento=salvaPagamento;window.eliminaPagamento=eliminaPagamento;window.confermaEffettuata=confermaEffettuata;window.confermaAssente=confermaAssente;window.confermaTutteEffettuate=confermaTutteEffettuate;
+
 function render(){
  if($("clientAreaUrl"))$("clientAreaUrl").value=clientAreaLink();
  const opts=clienti.map(c=>`<option value="${c.id}">${c.nome||""} ${c.cognome||""}</option>`).join("");
@@ -830,9 +1007,13 @@ function render(){
  $("listaRinnovi").innerHTML=rinnovi.length?rinnovi.map(r=>`<p><b>${r.cliente}</b> · ${r.pacchetto} lezioni<br><span class="meta">${fmt(r.data)} · €${r.importo||0}</span></p>`).join(""):`<div class="empty">Nessun rinnovo.</div>`;
  renderRecuperi();
  renderAvvisiCoach();
+ renderSmartCoach();
+ renderNotifiche();
+ renderEconomia();
+ renderAudit();
 }
 window.setFiltro=(f)=>{filtro=f;render()}
-function exportDB(){let blob=new Blob([JSON.stringify({clienti,eventi,checks,checkPro,leads,rinnovi,recuperi,avvisi,templates,exported:new Date().toISOString()},null,2)],{type:"application/json"});let a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="backup_sb_coach_6_1_2.json";a.click()}
+function exportDB(){let blob=new Blob([JSON.stringify({clienti,eventi,checks,checkPro,leads,rinnovi,recuperi,avvisi,pagamenti,auditLogs,templates,exported:new Date().toISOString()},null,2)],{type:"application/json"});let a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="backup_sb_coach_6_1_2.json";a.click()}
 </script>
 </body>
 </html>

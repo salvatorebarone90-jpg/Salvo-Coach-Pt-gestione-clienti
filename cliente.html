@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Area Cliente Premium 9.3.6</title>
+<title>Area Cliente Premium 10.0 RC</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--n:#101827;--g:#d5ad52;--b:#f4f6f8;--muted:#6b7280;--line:#e5e7eb}
@@ -222,12 +222,12 @@ async function acceptRules(){
  await setDoc(doc(db,"users",COACH_UID,"clienti",cliente.id),{
    regolamentoAccettato:true,
    regolamentoAccettatoIl:acceptedAt,
-   regolamentoVersione:"9.3.6",
+   regolamentoVersione:"10.0-RC",
    updatedAt:serverTimestamp()
  },{merge:true});
  cliente.regolamentoAccettato = true;
  cliente.regolamentoAccettatoIl = acceptedAt;
- cliente.regolamentoVersione = "9.3.6";
+ cliente.regolamentoVersione = "10.0-RC";
  alert("Regolamento accettato correttamente.");
  render();
 }
@@ -427,7 +427,7 @@ function render(){
  if($("rulesAcceptedText")){
    if(accepted && cliente.regolamentoAccettatoIl){
      const d = new Date(cliente.regolamentoAccettatoIl);
-     $("rulesAcceptedText").innerHTML = "✅ Regolamento accettato il <b>"+d.toLocaleDateString("it-IT")+"</b> alle <b>"+d.toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})+"</b> · Versione "+(cliente.regolamentoVersione||"9.3.6");
+     $("rulesAcceptedText").innerHTML = "✅ Regolamento accettato il <b>"+d.toLocaleDateString("it-IT")+"</b> alle <b>"+d.toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})+"</b> · Versione "+(cliente.regolamentoVersione||"10.0-RC");
    } else {
      $("rulesAcceptedText").innerHTML = "⚠️ Regolamento non ancora accettato.";
    }
