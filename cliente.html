@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Area Cliente Premium 10.0 RC2</title>
+<title>Area Cliente Premium 10.0 RC3</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--n:#101827;--g:#d5ad52;--b:#f4f6f8;--muted:#6b7280;--line:#e5e7eb}
@@ -174,6 +174,17 @@ const db = getFirestore(app);
 let cliente = null, eventi = [], checkPro = [], recuperi = [], avvisi = [];
 const $ = id => document.getElementById(id);
 
+
+function statoConsumaCredito(stato){
+ return ["Effettuata","Assente","Recuperata"].includes(stato);
+}
+function lezioniFatteSmart(){
+ return eventi.filter(e=>statoConsumaCredito(e.stato||"Prenotata")).length;
+}
+function lezioniResidueSmart(){
+ return Math.max(0, Number(cliente.lezioniTotali||0)-lezioniFatteSmart());
+}
+
 function pad(n){return String(n).padStart(2,"0")}
 function localISO(date){return date.getFullYear()+"-"+pad(date.getMonth()+1)+"-"+pad(date.getDate())}
 function parseLocalDate(s){const a=String(s||"").split("-").map(Number);return new Date(a[0],a[1]-1,a[2],12,0,0)}
@@ -222,12 +233,12 @@ async function acceptRules(){
  await setDoc(doc(db,"users",COACH_UID,"clienti",cliente.id),{
    regolamentoAccettato:true,
    regolamentoAccettatoIl:acceptedAt,
-   regolamentoVersione:"10.0-RC",
+   regolamentoVersione:"10.0-RC3",
    updatedAt:serverTimestamp()
  },{merge:true});
  cliente.regolamentoAccettato = true;
  cliente.regolamentoAccettatoIl = acceptedAt;
- cliente.regolamentoVersione = "10.0-RC";
+ cliente.regolamentoVersione = "10.0-RC3";
  alert("Regolamento accettato correttamente.");
  render();
 }
@@ -310,7 +321,7 @@ function renderAlerts(){
  }
  const certDays=daysLeft(cliente.certificatoScadenza);
  const packDays=daysLeft(cliente.scadenza);
- const residue=Number(cliente.lezioniResidue||0);
+ const residue=Number(lezioniResidueSmart());
  if(certDays<=0) alerts.push('<div class="alert redA">🔴 Certificato medico scaduto. Contatta il coach.</div>');
  else if(certDays<=30) alerts.push('<div class="alert goldA">🔔 Certificato medico in scadenza tra '+certDays+' giorni.</div>');
  if(residue<=2) alerts.push('<div class="alert goldA">🔔 Pacchetto quasi terminato: restano '+residue+' lezioni.</div>');
@@ -427,7 +438,7 @@ function render(){
  if($("rulesAcceptedText")){
    if(accepted && cliente.regolamentoAccettatoIl){
      const d = new Date(cliente.regolamentoAccettatoIl);
-     $("rulesAcceptedText").innerHTML = "✅ Regolamento accettato il <b>"+d.toLocaleDateString("it-IT")+"</b> alle <b>"+d.toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})+"</b> · Versione "+(cliente.regolamentoVersione||"10.0-RC");
+     $("rulesAcceptedText").innerHTML = "✅ Regolamento accettato il <b>"+d.toLocaleDateString("it-IT")+"</b> alle <b>"+d.toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})+"</b> · Versione "+(cliente.regolamentoVersione||"10.0-RC3");
    } else {
      $("rulesAcceptedText").innerHTML = "⚠️ Regolamento non ancora accettato.";
    }
@@ -441,7 +452,7 @@ function render(){
  const rulesBadge = accepted ? '<span class="badge ok">📋 Regolamento accettato'+(rulesDate?' il '+rulesDate:'')+'</span>' : '<span class="badge warn">📋 Regolamento da accettare</span>';
  const activeBadge = cliente.stato==="inattivo" ? '<span class="badge bad">Inattivo</span>' : '<span class="badge ok">Attivo</span>';
  $("heroBadges").innerHTML = activeBadge + '<span class="badge ok">'+(cliente.lezioniResidue||0)+' residue su '+(cliente.lezioniTotali||0)+'</span>' + saldoBadge + rulesBadge;
- $("kLezioni").textContent=cliente.lezioniResidue||0;$("kScadenza").textContent=fmt(cliente.scadenza);$("kCert").textContent=fmt(cliente.certificatoScadenza);
+ $("kLezioni").textContent=lezioniResidueSmart();$("kScadenza").textContent=fmt(cliente.scadenza);$("kCert").textContent=fmt(cliente.certificatoScadenza);
  const today=localISO(new Date());
  const statiVisibili=["Prenotata","Occupata","Bloccata"];
  const next=eventi.filter(e=>e.data&&e.data>=today&&statiVisibili.includes(e.stato||"Prenotata")).sort((a,b)=>(a.data+a.ora).localeCompare(b.data+b.ora));

@@ -1,22 +1,15 @@
-SB PERSONAL COACH GESTIONALE 10.0 RC2 LOGIN SAFE
+SB PERSONAL COACH GESTIONALE 10.0 RC3 SMART COUNTER
 
-Correzione:
-- Risolto blocco del login causato da errore JavaScript nella Dashboard Smart.
-- Controllo sintassi JavaScript eseguito: OK.
-- Mantiene:
-  - Dashboard Smart
-  - Centro Notifiche
-  - Centro Economico
-  - Lezioni da confermare
-  - Audit Log base
+Correzione principale:
+- Il contatore lezioni è smart e viene calcolato dagli stati reali delle lezioni.
+- Consumano credito: Effettuata, Assente, Recuperata.
+- Non consumano credito: Prenotata, Bloccata, Da confermare, Annullata.
+- Confermando una lezione come Effettuata/Assente il cliente viene sincronizzato subito.
+- La lista clienti e l'Area Cliente mostrano il contatore ricalcolato.
 
-Carica su GitHub:
-- index.html
-- cliente.html
-- firebase-config.js
-- manifest.json
-- logo.jpeg
-- README_ISTRUZIONI.txt
-
-Dopo il deploy:
-Apri il gestionale aggiungendo ?v=100rc2 all'URL.
+Test:
+1. Cliente 12/12.
+2. Lezione Da confermare.
+3. Premi Effettuata.
+4. Deve diventare 11/12.
+5. Smart Coach deve aggiornarsi.

@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SB Personal Coach Gestionale 10.0 RC2</title>
+<title>SB Personal Coach Gestionale 10.0 RC3</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--n:#101827;--g:#d5ad52;--b:#f4f6f8}
@@ -34,7 +34,7 @@ textarea{min-height:80px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10p
 </style>
 </head>
 <body>
-<header><img src="logo.jpeg" class="logo"><h1>Gestionale Clienti 10.0 RC2 Coach</h1><p>Smart Coach · RC2 Login Safe</p></header>
+<header><img src="logo.jpeg" class="logo"><h1>Gestionale Clienti 10.0 RC3 Coach</h1><p>Smart Counter · RC3</p></header>
 
 <div id="loginView" class="card" style="max-width:430px;margin:18px auto">
 <h2>🔐 Accesso Coach</h2>
@@ -539,31 +539,21 @@ window.editCliente=(id)=>{
 async function restituisciCreditoEvento(id, nuovoStato, extra={}){
  const ev = eventi.find(x=>x.id===id);
  if(!ev)return;
- const c = clienti.find(x=>x.id===ev.clienteId);
- const updateEv = {stato:nuovoStato, updatedAt:serverTimestamp(), ...extra};
- if(c && ev.scalata && !ev.creditoRestituito){
-   const nuoveResidue = Math.min(Number(c.lezioniTotali||0), Number(c.lezioniResidue||0)+1);
-   const nuovoFatte = Math.max(0, Number(c.lezioniFatte||0)-1);
-   await setDoc(docPath("clienti",c.id),{lezioniResidue:nuoveResidue,lezioniFatte:nuovoFatte,updatedAt:serverTimestamp()},{merge:true});
-   updateEv.creditoRestituito = true;
- }
+ const updateEv = {stato:nuovoStato, scalata:false, creditoRestituito:true, updatedAt:serverTimestamp(), ...extra};
  await setDoc(docPath("eventi",id),updateEv,{merge:true});
+ await sincronizzaContatoreCliente(ev.clienteId,id,nuovoStato);
 }
 
 async function consumaCreditoEvento(id, nuovoStato){
  const ev = eventi.find(x=>x.id===id);
  if(!ev)return;
- const c = clienti.find(x=>x.id===ev.clienteId);
- if(c && !ev.scalata && ["Prenotata","Occupata","Bloccata"].includes(ev.stato) && (c.lezioniResidue||0)>0){
-   await setDoc(docPath("clienti",c.id),{
-     lezioniFatte:Number(c.lezioniFatte||0)+1,
-     lezioniResidue:Math.max(0,Number(c.lezioniResidue||0)-1),
-     updatedAt:serverTimestamp()
-   },{merge:true});
-   await setDoc(docPath("eventi",id),{stato:nuovoStato,scalata:true,updatedAt:serverTimestamp()},{merge:true});
- }else{
-   await setDoc(docPath("eventi",id),{stato:nuovoStato,updatedAt:serverTimestamp()},{merge:true});
- }
+ await setDoc(docPath("eventi",id),{
+   stato:nuovoStato,
+   scalata:true,
+   creditoRestituito:false,
+   updatedAt:serverTimestamp()
+ },{merge:true});
+ await sincronizzaContatoreCliente(ev.clienteId,id,nuovoStato);
 }
 
 window.eventoEffettuato=async(id)=>await consumaCreditoEvento(id,"Effettuata");
@@ -584,6 +574,7 @@ window.delEvento=async(id)=>{
    }
  }
  await deleteDoc(docPath("eventi",id));
+ if(ev&&ev.clienteId)await sincronizzaContatoreCliente(ev.clienteId,id,"Eliminata");
 };
 
 
@@ -664,7 +655,7 @@ function fillTemplate(t,c){
 }
 function chooseTemplate(c){
  if(Math.max(0,(c.dovuto||0)-(c.pagato||0))>0)return templates.saldo||defaultTemplates.saldo;
- if((c.lezioniResidue||0)<=3&&c.lezioniTotali>0)return templates.rinnovo||defaultTemplates.rinnovo;
+ if(lezioniResidueSmart(c)<=3&&c.lezioniTotali>0)return templates.rinnovo||defaultTemplates.rinnovo;
  if(c.checkAttivo==="Sì"&&daysLeft(c.prossimoCheck)<=7)return templates.check||defaultTemplates.check;
  if(daysLeft(c.certificatoScadenza)<=7)return templates.certificato||defaultTemplates.certificato;
  return "Ciao {nome}, ti scrivo per aggiornarti sul tuo percorso.";
@@ -744,10 +735,10 @@ Salvatore Barone Personal Coach`}
 function waAccessoCliente(c){return `https://wa.me/${String(c.telefono||"").replace(/\D/g,"")}?text=${encodeURIComponent(accessoClienteMsg(c))}`}
 
 function wa(c){return `https://wa.me/${String(c.telefono||"").replace(/\D/g,"")}?text=${encodeURIComponent(fillTemplate(chooseTemplate(c),c))}`}
-function contacts(){return clienti.filter(c=>c.stato!=="inattivo"&&(daysLeft(c.scadenza)<=7||((c.lezioniResidue||0)<=3&&c.lezioniTotali>0)||Math.max(0,(c.dovuto||0)-(c.pagato||0))>0||daysLeft(c.certificatoScadenza)<=30||(c.checkAttivo==="Sì"&&daysLeft(c.prossimoCheck)<=7)))}
+function contacts(){return clienti.filter(c=>c.stato!=="inattivo"&&(daysLeft(c.scadenza)<=7||(lezioniResidueSmart(c)<=3&&c.lezioniTotali>0)||Math.max(0,(c.dovuto||0)-(c.pagato||0))>0||daysLeft(c.certificatoScadenza)<=30||(c.checkAttivo==="Sì"&&daysLeft(c.prossimoCheck)<=7)))}
 function statusClient(c){if(c.stato==="inattivo")return["info","Inattivo"];if(daysLeft(c.scadenza)<0&&c.lezioniTotali>0)return["bad","Scaduto"];if(daysLeft(c.scadenza)<=7&&c.lezioniTotali>0)return["warn","Scadenza 7gg"];return["ok","Attivo"]}
 function slotText(c){return (c.slotFissi||[]).map(s=>["Dom","Lun","Mar","Mer","Gio","Ven","Sab"][s.day]+" "+s.time).join(", ")}
-function card(c){let res=Math.max(0,(c.dovuto||0)-(c.pagato||0)),s=statusClient(c);let inactive=c.stato==="inattivo";return `<div class="card"><h3>${c.nome||""} ${c.cognome||""}</h3><p class="meta">${c.servizio||""} · ${c.modalitaPrenotazione||""} · durata ${c.durataMinuti||60} min<br>${slotText(c)}</p><span class="badge ${s[0]}">${s[1]}</span><span class="badge ${(c.lezioniResidue||0)<=3&&c.lezioniTotali>0?'warn':'ok'}">${c.lezioniResidue||0} residue su ${c.lezioniTotali||0}</span><span class="badge ${res>0?'bad':'ok'}">${res>0?'Residuo €'+res:'Pagato'}</span><p class="meta">Scadenza pacchetto: ${fmt(c.scadenza)} · Certificato: ${fmt(c.certificatoScadenza)} · Check: ${fmt(c.prossimoCheck)}</p><a class="btn green full" href="${wa(c)}" target="_blank">💬 WhatsApp</a><div class="actions"><button class="btn light" onclick="lezione('${c.id}')">+ Lezione</button><button class="btn light" onclick="restituisci('${c.id}')">Restituisci</button><button class="btn gold" onclick="rinnova('${c.id}')">Rinnova</button><button class="btn light" onclick="editCliente('${c.id}')">Modifica</button>${inactive?`<button class="btn gold" onclick="riattiva('${c.id}')">Riattiva</button>`:`<button class="btn red" onclick="inattivo('${c.id}')">Inattivo</button>`}<a class="btn gold" href="${waAccessoCliente(c)}" target="_blank">Invia accesso cliente</a><button class="btn red" onclick="eliminaCliente('${c.id}')">Elimina cliente</button></div></div>`}
+function card(c){let res=Math.max(0,(c.dovuto||0)-(c.pagato||0)),s=statusClient(c),residueSmart=lezioniResidueSmart(c);let inactive=c.stato==="inattivo";return `<div class="card"><h3>${c.nome||""} ${c.cognome||""}</h3><p class="meta">${c.servizio||""} · ${c.modalitaPrenotazione||""} · durata ${c.durataMinuti||60} min<br>${slotText(c)}</p><span class="badge ${s[0]}">${s[1]}</span><span class="badge ${residueSmart<=3&&c.lezioniTotali>0?'warn':'ok'}">${residueSmart} residue su ${c.lezioniTotali||0}</span><span class="badge ${res>0?'bad':'ok'}">${res>0?'Residuo €'+res:'Pagato'}</span><p class="meta">Scadenza pacchetto: ${fmt(c.scadenza)} · Certificato: ${fmt(c.certificatoScadenza)} · Check: ${fmt(c.prossimoCheck)}</p><a class="btn green full" href="${wa(c)}" target="_blank">💬 WhatsApp</a><div class="actions"><button class="btn light" onclick="lezione('${c.id}')">+ Lezione</button><button class="btn light" onclick="restituisci('${c.id}')">Restituisci</button><button class="btn gold" onclick="rinnova('${c.id}')">Rinnova</button><button class="btn light" onclick="editCliente('${c.id}')">Modifica</button>${inactive?`<button class="btn gold" onclick="riattiva('${c.id}')">Riattiva</button>`:`<button class="btn red" onclick="inattivo('${c.id}')">Inattivo</button>`}<a class="btn gold" href="${waAccessoCliente(c)}" target="_blank">Invia accesso cliente</a><button class="btn red" onclick="eliminaCliente('${c.id}')">Elimina cliente</button></div></div>`}
 
 
 function statoRecuperoBadge(stato){
@@ -854,6 +845,32 @@ function showTab(tab){
 }
 window.showTab=showTab;
 
+
+function statoConsumaCredito(stato){
+ return ["Effettuata","Assente","Recuperata"].includes(stato);
+}
+function lezioniFatteSmart(clienteId, overrideId=null, overrideStato=null){
+ return eventi.filter(e=>e.clienteId===clienteId).filter(e=>{
+   const st = e.id===overrideId ? overrideStato : (e.stato||"Prenotata");
+   return statoConsumaCredito(st);
+ }).length;
+}
+function lezioniResidueSmart(c, overrideId=null, overrideStato=null){
+ const fatte = lezioniFatteSmart(c.id, overrideId, overrideStato);
+ return Math.max(0, Number(c.lezioniTotali||0)-fatte);
+}
+async function sincronizzaContatoreCliente(clienteId, overrideId=null, overrideStato=null){
+ const c = clienti.find(x=>x.id===clienteId);
+ if(!c)return;
+ const fatte = lezioniFatteSmart(clienteId, overrideId, overrideStato);
+ const residue = Math.max(0, Number(c.lezioniTotali||0)-fatte);
+ await setDoc(docPath("clienti",clienteId),{
+   lezioniFatte:fatte,
+   lezioniResidue:residue,
+   updatedAt:serverTimestamp()
+ },{merge:true});
+}
+
 function euro(n){return "€"+Number(n||0).toLocaleString("it-IT",{minimumFractionDigits:0,maximumFractionDigits:2})}
 function meseKey(d){return String(d||"").slice(0,7)}
 function todayISO(){return localISO(new Date())}
@@ -884,8 +901,8 @@ async function aggiornaDaConfermare(){
 async function audit(tipo,descrizione,extra={}){
  try{await addDoc(path("auditLogs"),{tipo,descrizione,data:todayISO(),createdAtText:new Date().toISOString(),createdAt:serverTimestamp(),...extra})}catch(e){console.warn("audit",e)}
 }
-async function confermaEffettuata(id){await consumaCreditoEvento(id,"Effettuata");await audit("lezione","Lezione confermata come effettuata",{eventoId:id});}
-async function confermaAssente(id){await consumaCreditoEvento(id,"Assente");await audit("lezione","Lezione confermata come assente",{eventoId:id});}
+async function confermaEffettuata(id){await consumaCreditoEvento(id,"Effettuata");await audit("lezione","Lezione confermata come effettuata",{eventoId:id});status("Lezione confermata come effettuata.");}
+async function confermaAssente(id){await consumaCreditoEvento(id,"Assente");await audit("lezione","Lezione confermata come assente",{eventoId:id});status("Lezione confermata come assente.");}
 async function confermaTutteEffettuate(){
  const list=lezioniDaConfermare();
  if(!list.length)return status("Nessuna lezione da confermare.");
@@ -987,7 +1004,7 @@ function render(){
  $("kClienti").textContent=active.length;$("kInattivi").textContent=inactive.length;$("kContatti").textContent=dc.length;
  $("kLezioniOggi").textContent=eventi.filter(e=>e.data===today).length;$("kLezioniDomani").textContent=eventi.filter(e=>e.data===tomorrow).length;
  $("kIncassi").textContent="€"+active.reduce((s,c)=>s+Math.max(0,(c.dovuto||0)-(c.pagato||0)),0);
- $("kQuasiFiniti").textContent=active.filter(c=>(c.lezioniResidue||0)<=3&&c.lezioniTotali>0).length;
+ $("kQuasiFiniti").textContent=active.filter(c=>lezioniResidueSmart(c)<=3&&c.lezioniTotali>0).length;
  $("kCert").textContent=active.filter(c=>daysLeft(c.certificatoScadenza)<=30).length;
  $("priorita").innerHTML=dc.length?dc.slice(0,8).map(c=>`<p><b>${c.nome} ${c.cognome||""}</b><br><span class="meta">${c.lezioniResidue||0} residue su ${c.lezioniTotali||0} · residuo €${Math.max(0,(c.dovuto||0)-(c.pagato||0))}</span></p>`).join(""):`<div class="empty">Nessuna priorità.</div>`;
  const filters=["Tutti","Attivi","Inattivi","Personal Training","Coaching Online","Nutrizione","Preparazione Gara","Small Group","Da contattare"];
