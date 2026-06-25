@@ -1,20 +1,12 @@
-SB PERSONAL COACH GESTIONALE 10.0 RC7 - SEMPLIFICAZIONE + CONTABILITÀ
+SB PERSONAL COACH GESTIONALE 10.0 RC8 - MENU PULITO + RINNOVI ELIMINABILI
 
-Novità:
-1. Da contattare:
-   - obiettivo: solo pulsante WhatsApp.
-2. Storico rinnovi:
-   - nella contabilità ogni rinnovo ha una X per eliminarlo.
-3. Nuova sezione Contabilità:
-   - filtro mese
-   - totale oggi
-   - totale mese
-   - totale anno
-   - totale storico
-   - entrate per servizio
-   - movimenti del mese
-   - X per eliminare rinnovi registrati per errore.
+Correzioni:
+- Da contattare: solo WhatsApp.
+- Storico rinnovi: card leggibili con X elimina.
+- Contabilità: riepilogo e movimenti, X sui rinnovi.
+- Eliminazione rinnovo con conferma.
 
-Nota:
-- I pagamenti manuali restano nella sezione Economia.
-- La Contabilità somma rinnovi + pagamenti.
+Test:
+1. Da contattare: devono sparire +Lezione, Rinnova, Modifica, Inattivo, ecc.
+2. Rinnovi: deve apparire ✕ su ogni rinnovo.
+3. Contabilità: deve mostrare movimenti del mese.

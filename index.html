@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SB Personal Coach Gestionale 10.0 RC7</title>
+<title>SB Personal Coach Gestionale 10.0 RC8</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--n:#101827;--g:#d5ad52;--b:#f4f6f8}
@@ -34,7 +34,7 @@ textarea{min-height:80px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10p
 </style>
 </head>
 <body>
-<header><img src="logo.jpeg" class="logo"><h1>Gestionale Clienti 10.0 RC7 Coach</h1><p>Semplificazione · Contabilità RC7</p></header>
+<header><img src="logo.jpeg" class="logo"><h1>Gestionale Clienti 10.0 RC8 Coach</h1><p>Menu Pulito · Rinnovi RC8</p></header>
 
 <div id="loginView" class="card" style="max-width:430px;margin:18px auto">
 <h2>🔐 Accesso Coach</h2>
@@ -1296,6 +1296,111 @@ window.setFiltro=(f)=>{filtro=f;render()}
 function exportDB(){let blob=new Blob([JSON.stringify({clienti,eventi,checks,checkPro,leads,rinnovi,recuperi,avvisi,pagamenti,auditLogs,templates,exported:new Date().toISOString()},null,2)],{type:"application/json"});let a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="backup_sb_coach_6_1_2.json";a.click()}
 
 setInterval(()=>{try{aggiornaTestoPulsanteCliente()}catch(e){}},800);
+
+function nomeClienteRc8(c){return ((c.nome||"")+" "+(c.cognome||"")).trim()}
+function clienteNomeByIdRc8(id){const c=(clienti||[]).find(x=>x.id===id);return c?nomeClienteRc8(c):"Cliente"}
+function cardDaContattareRc8(c){
+ const res=Math.max(0,Number(c.dovuto||0)-Number(c.pagato||0));
+ return `<div class="card">
+  <h2>${nomeClienteRc8(c)}</h2>
+  <p class="meta">${c.tipo||""}${res>0?` · Residuo ${euro(res)}`:""}</p>
+  <button class="btn whatsapp full" onclick="wa('${c.whatsapp||c.telefono||""}')">💬 WhatsApp</button>
+ </div>`;
+}
+async function eliminaRinnovoRc8(id){
+ const r=(rinnovi||[]).find(x=>x.id===id);
+ if(!r)return;
+ if(!confirm("Vuoi eliminare questo rinnovo dallo storico?"))return;
+ await deleteDoc(docPath("rinnovi",id));
+ try{await audit("rinnovo","Rinnovo eliminato",{rinnovoId:id,clienteId:r.clienteId||"",importo:Number(r.importo||r.prezzo||r.costo||0)})}catch(e){}
+ status("Rinnovo eliminato.");
+}
+window.eliminaRinnovo=eliminaRinnovoRc8;
+window.eliminaRinnovoRc8=eliminaRinnovoRc8;
+
+function renderRinnoviRc8(){
+ const sec=document.getElementById("rinnovi");
+ if(!sec)return;
+ const firstCard=sec.querySelector(".card");
+ if(!firstCard)return;
+ const list=(rinnovi||[]).slice().sort((a,b)=>(b.data||b.createdAtText||"").localeCompare(a.data||a.createdAtText||""));
+ const body=list.length?list.map(r=>{
+   const nome=r.clienteNome||r.nomeCliente||r.nome||clienteNomeByIdRc8(r.clienteId);
+   const lez=r.lezioni||r.lezioniTotali||r.numeroLezioni||"";
+   const imp=Number(r.importo||r.prezzo||r.costo||0);
+   const data=r.data||String(r.createdAtText||"").slice(0,10)||"";
+   return `<div class="check" style="position:relative;padding-right:56px">
+    <button class="btn red" style="position:absolute;right:10px;top:10px;width:auto;padding:6px 10px" onclick="eliminaRinnovoRc8('${r.id}')">✕</button>
+    <h3>${nome}</h3>
+    <p class="meta">${lez?lez+" lezioni · ":""}${data?fmt(data)+" · ":""}${euro(imp)}</p>
+   </div>`;
+ }).join(""):`<div class="empty">Nessun rinnovo registrato.</div>`;
+ firstCard.innerHTML=`<h2>🔁 Storico rinnovi</h2>${body}`;
+}
+window.renderRinnoviRc8=renderRinnoviRc8;
+
+function movimentiContabiliRc8(){
+ const rn=(rinnovi||[]).map(r=>({
+   id:r.id,tipo:"rinnovo",data:r.data||String(r.createdAtText||"").slice(0,10)||"",
+   mese:String(r.data||String(r.createdAtText||"").slice(0,10)||"").slice(0,7),
+   nome:r.clienteNome||r.nomeCliente||r.nome||clienteNomeByIdRc8(r.clienteId),
+   servizio:r.tipo||r.servizio||"Personal Training",
+   importo:Number(r.importo||r.prezzo||r.costo||0),
+   desc:"Rinnovo"
+ }));
+ const pg=(pagamenti||[]).map(p=>({
+   id:p.id,tipo:"pagamento",data:p.data||String(p.createdAtText||"").slice(0,10)||"",
+   mese:p.mese||String(p.data||"").slice(0,7),
+   nome:p.clienteNome||clienteNomeByIdRc8(p.clienteId),
+   servizio:p.servizio||"Altro",
+   importo:Number(p.importo||0),
+   desc:p.note||p.metodo||"Pagamento"
+ }));
+ return [...rn,...pg].filter(x=>x.importo>0);
+}
+function renderContabilitaPulita(){
+ const box=$("contMovimenti");
+ if(!box)return;
+ const now=new Date();
+ const today=localISO(now);
+ if($("contMese")&&!$("contMese").value)$("contMese").value=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0");
+ const mese=$("contMese")?.value||"";
+ const anno=String(now.getFullYear());
+ const mov=movimentiContabiliRc8();
+ const movMese=mov.filter(m=>m.mese===mese);
+ const sum=a=>a.reduce((s,m)=>s+Number(m.importo||0),0);
+ if($("contOggi"))$("contOggi").textContent=euro(sum(mov.filter(m=>m.data===today)));
+ if($("contMeseTot"))$("contMeseTot").textContent=euro(sum(movMese));
+ if($("contAnno"))$("contAnno").textContent=euro(sum(mov.filter(m=>String(m.data||"").startsWith(anno))));
+ if($("contTotale"))$("contTotale").textContent=euro(sum(mov));
+ const byServ={}; movMese.forEach(m=>{byServ[m.servizio]=(byServ[m.servizio]||0)+m.importo});
+ if($("contPerServizio")){
+  const servs=Object.keys(byServ).sort((a,b)=>byServ[b]-byServ[a]);
+  $("contPerServizio").innerHTML=servs.length?servs.map(s=>`<p><b>${s}</b><br><span class="badge ok">${euro(byServ[s])}</span></p>`).join(""):`<div class="empty">Nessun movimento nel mese selezionato.</div>`;
+ }
+ const list=movMese.sort((a,b)=>(b.data||"").localeCompare(a.data||""));
+ box.innerHTML=list.length?list.map(m=>`<div class="check" style="position:relative;padding-right:56px">
+   ${m.tipo==="rinnovo"?`<button class="btn red" style="position:absolute;right:10px;top:10px;width:auto;padding:6px 10px" onclick="eliminaRinnovoRc8('${m.id}')">✕</button>`:""}
+   <h3>${m.nome}</h3>
+   <p class="meta">${fmt(m.data)} · ${m.servizio} · ${m.desc}</p>
+   <span class="badge ok">${euro(m.importo)}</span>
+ </div>`).join(""):`<div class="empty">Nessun movimento nel mese selezionato.</div>`;
+}
+window.renderContabilita=renderContabilitaPulita;
+window.renderContabilitaPulita=renderContabilitaPulita;
+
+function forzaDaContattareRc8(){
+ const sec=document.getElementById("dacontattare") || document.getElementById("da-contattare") || document.getElementById("contattare");
+ if(!sec)return;
+ const firstCard=sec.querySelector(".card");
+ if(!firstCard)return;
+ const active=(clienti||[]).filter(c=>Math.max(0,Number(c.dovuto||0)-Number(c.pagato||0))>0 || c.daContattare || c.contattare || c.status==="da_contattare");
+ const arr=active.length?active:(clienti||[]).filter(c=>c.stato!=="inattivo");
+ firstCard.innerHTML=`<h2>💬 Da contattare</h2>${arr.map(cardDaContattareRc8).join("")||'<div class="empty">Nessun cliente da contattare.</div>'}`;
+}
+window.forzaDaContattareRc8=forzaDaContattareRc8;
+
+setInterval(()=>{try{forzaDaContattareRc8();renderRinnoviRc8();renderContabilitaPulita()}catch(e){}},700);
 </script>
 </body>
 </html>
