@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SB Personal Coach Gestionale 10.0 RC</title>
+<title>SB Personal Coach Gestionale 10.0 RC2</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--n:#101827;--g:#d5ad52;--b:#f4f6f8}
@@ -34,7 +34,7 @@ textarea{min-height:80px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10p
 </style>
 </head>
 <body>
-<header><img src="logo.jpeg" class="logo"><h1>Gestionale Clienti 10.0 RC Coach</h1><p>Smart Coach Edition · RC</p></header>
+<header><img src="logo.jpeg" class="logo"><h1>Gestionale Clienti 10.0 RC2 Coach</h1><p>Smart Coach · RC2 Login Safe</p></header>
 
 <div id="loginView" class="card" style="max-width:430px;margin:18px auto">
 <h2>🔐 Accesso Coach</h2>
@@ -846,6 +846,14 @@ window.disattivaAvviso=disattivaAvviso;
 window.eliminaAvviso=eliminaAvviso;
 
 
+function showTab(tab){
+ document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+ const el=document.getElementById(tab);
+ if(el)el.classList.add("active");
+ document.querySelectorAll("[data-tab]").forEach(b=>b.classList.toggle("active",b.dataset.tab===tab));
+}
+window.showTab=showTab;
+
 function euro(n){return "€"+Number(n||0).toLocaleString("it-IT",{minimumFractionDigits:0,maximumFractionDigits:2})}
 function meseKey(d){return String(d||"").slice(0,7)}
 function todayISO(){return localISO(new Date())}
@@ -901,7 +909,9 @@ function renderSmartCoach(){
   <div class="kpi"><strong>${cert}</strong><span>Certificati</span></div>
  </div>
  <p class="meta">🔄 Recuperi in attesa: <b>${rec}</b></p>
- ${daConf?'<button class="btn gold full" onclick="showTab(\\'notifiche\\')">Apri lezioni da confermare</button>':""}`;
+ ${daConf?'<button class="btn gold full" data-open-notifiche="1">Apri lezioni da confermare</button>':""}`;
+ const openBtn=document.querySelector('[data-open-notifiche="1"]');
+ if(openBtn)openBtn.addEventListener("click",()=>showTab("notifiche"));
 }
 function renderNotifiche(){
  if(!$("listaNotifiche"))return;

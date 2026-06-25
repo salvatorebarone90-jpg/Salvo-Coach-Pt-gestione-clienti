@@ -1,29 +1,22 @@
-SB PERSONAL COACH GESTIONALE 10.0 RC - SMART COACH EDITION
+SB PERSONAL COACH GESTIONALE 10.0 RC2 LOGIN SAFE
 
-Moduli inclusi:
-- Dashboard Smart
-- Centro Notifiche
-- Centro Economico
-- Lezioni da confermare
-- Audit Log base
+Correzione:
+- Risolto blocco del login causato da errore JavaScript nella Dashboard Smart.
+- Controllo sintassi JavaScript eseguito: OK.
+- Mantiene:
+  - Dashboard Smart
+  - Centro Notifiche
+  - Centro Economico
+  - Lezioni da confermare
+  - Audit Log base
 
-Logica Lezioni:
-- Prenotata: non scala
-- Bloccata entro 24h: non scala
-- 2 ore dopo fine lezione: Da confermare
-- Effettuata: scala
-- Assente: scala
-- Annullata: restituisce credito solo se già scalata
+Carica su GitHub:
+- index.html
+- cliente.html
+- firebase-config.js
+- manifest.json
+- logo.jpeg
+- README_ISTRUZIONI.txt
 
-Centro Economico:
-- registra pagamento
-- aggiorna Pagato nel cliente
-- totale oggi/mese/anno
-- saldo da incassare
-- grafico mese
-- storico pagamenti
-
-Audit Log:
-- registra pagamenti e conferme lezioni principali.
-
-Questa è una Release Candidate: testare prima del rilascio stabile.
+Dopo il deploy:
+Apri il gestionale aggiungendo ?v=100rc2 all'URL.
