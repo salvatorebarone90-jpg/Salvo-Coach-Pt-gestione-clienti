@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SB Personal Coach Gestionale 10.0 RC3</title>
+<title>SB Personal Coach Gestionale 10.0 RC4</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--n:#101827;--g:#d5ad52;--b:#f4f6f8}
@@ -34,7 +34,7 @@ textarea{min-height:80px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10p
 </style>
 </head>
 <body>
-<header><img src="logo.jpeg" class="logo"><h1>Gestionale Clienti 10.0 RC3 Coach</h1><p>Smart Counter · RC3</p></header>
+<header><img src="logo.jpeg" class="logo"><h1>Gestionale Clienti 10.0 RC4 Coach</h1><p>Smart Counter · Ricalcolo RC4</p></header>
 
 <div id="loginView" class="card" style="max-width:430px;margin:18px auto">
 <h2>🔐 Accesso Coach</h2>
@@ -871,6 +871,32 @@ async function sincronizzaContatoreCliente(clienteId, overrideId=null, overrideS
  },{merge:true});
 }
 
+
+async function ricalcolaContatoreCliente(clienteId){
+ const c = clienti.find(x=>x.id===clienteId);
+ if(!c)return;
+ const fatte = lezioniFatteSmart(clienteId);
+ const residue = Math.max(0, Number(c.lezioniTotali||0)-fatte);
+ await setDoc(docPath("clienti",clienteId),{
+   lezioniFatte:fatte,
+   lezioniResidue:residue,
+   updatedAt:serverTimestamp()
+ },{merge:true});
+ return {fatte,residue};
+}
+async function ricalcolaTuttiContatori(){
+ if(!confirm("Ricalcolare i contatori di tutti i clienti?"))return;
+ let count=0;
+ for(const c of clienti){
+   await ricalcolaContatoreCliente(c.id);
+   count++;
+ }
+ await audit("contatori","Ricalcolo contatori completato",{totaleClienti:count});
+ status("Contatori ricalcolati per "+count+" clienti.");
+}
+window.ricalcolaContatoreCliente=ricalcolaContatoreCliente;
+window.ricalcolaTuttiContatori=ricalcolaTuttiContatori;
+
 function euro(n){return "€"+Number(n||0).toLocaleString("it-IT",{minimumFractionDigits:0,maximumFractionDigits:2})}
 function meseKey(d){return String(d||"").slice(0,7)}
 function todayISO(){return localISO(new Date())}
@@ -926,7 +952,8 @@ function renderSmartCoach(){
   <div class="kpi"><strong>${cert}</strong><span>Certificati</span></div>
  </div>
  <p class="meta">🔄 Recuperi in attesa: <b>${rec}</b></p>
- ${daConf?'<button class="btn gold full" data-open-notifiche="1">Apri lezioni da confermare</button>':""}`;
+ ${daConf?'<button class="btn gold full" data-open-notifiche="1">Apri lezioni da confermare</button>':""}
+ <button class="btn light full" onclick="ricalcolaTuttiContatori()">🔄 Ricalcola contatori</button>`;
  const openBtn=document.querySelector('[data-open-notifiche="1"]');
  if(openBtn)openBtn.addEventListener("click",()=>showTab("notifiche"));
 }

@@ -1,15 +1,13 @@
-SB PERSONAL COACH GESTIONALE 10.0 RC3 SMART COUNTER
+SB PERSONAL COACH GESTIONALE 10.0 RC4 SMART COUNTER + RICALCOLO
 
-Correzione principale:
-- Il contatore lezioni è smart e viene calcolato dagli stati reali delle lezioni.
-- Consumano credito: Effettuata, Assente, Recuperata.
-- Non consumano credito: Prenotata, Bloccata, Da confermare, Annullata.
-- Confermando una lezione come Effettuata/Assente il cliente viene sincronizzato subito.
-- La lista clienti e l'Area Cliente mostrano il contatore ricalcolato.
+Novità:
+- Pulsante "Ricalcola contatori" nella Dashboard Smart.
+- Allinea i clienti creati/testati prima dello Smart Counter.
+- Conta Effettuata, Assente, Recuperata.
+- Aggiorna lezioniFatte e lezioniResidue.
 
 Test:
-1. Cliente 12/12.
-2. Lezione Da confermare.
-3. Premi Effettuata.
-4. Deve diventare 11/12.
-5. Smart Coach deve aggiornarsi.
+1. Apri il gestionale.
+2. Premi "Ricalcola contatori".
+3. Apri Salvo.
+4. Badge sopra e box sotto devono mostrare lo stesso valore.
