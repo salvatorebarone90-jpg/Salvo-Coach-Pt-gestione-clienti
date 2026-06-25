@@ -1,19 +1,20 @@
-SB PERSONAL COACH GESTIONALE 10.0 RC5 - GESTIONE CLIENTE SICURA
+SB PERSONAL COACH GESTIONALE 10.0 RC7 - SEMPLIFICAZIONE + CONTABILITÀ
 
 Novità:
-- Pulsante intelligente:
-  Nuovo cliente: Crea cliente + genera calendario
-  Cliente esistente: Salva modifiche
-- Se modifichi solo saldo/pagamenti/dati anagrafici, il calendario NON viene rigenerato.
-- Se modifichi giorni, orari, frequenza, durata o date, il gestionale avvisa prima.
-- In caso di rigenerazione:
-  - salva backup calendario
-  - elimina solo lezioni future non storiche
-  - mantiene Effettuata, Assente, Recuperata, Annullata
-  - ricalcola contatore
-- Pulsante Rigenera calendario automatico diventa sicuro.
+1. Da contattare:
+   - obiettivo: solo pulsante WhatsApp.
+2. Storico rinnovi:
+   - nella contabilità ogni rinnovo ha una X per eliminarlo.
+3. Nuova sezione Contabilità:
+   - filtro mese
+   - totale oggi
+   - totale mese
+   - totale anno
+   - totale storico
+   - entrate per servizio
+   - movimenti del mese
+   - X per eliminare rinnovi registrati per errore.
 
-Test:
-1. Modifica solo saldo cliente: calendario invariato.
-2. Modifica orario cliente: avviso, poi rigenera solo futuro.
-3. Contatore deve restare coerente.
+Nota:
+- I pagamenti manuali restano nella sezione Economia.
+- La Contabilità somma rinnovi + pagamenti.
