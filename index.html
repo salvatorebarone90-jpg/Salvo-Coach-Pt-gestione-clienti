@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SB Personal Coach Gestionale 10.0 RC11</title>
+<title>SB Personal Coach Gestionale 10.0 RC12</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--n:#101827;--g:#d5ad52;--b:#f4f6f8}
@@ -34,7 +34,7 @@ textarea{min-height:80px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10p
 </style>
 </head>
 <body>
-<header><img src="logo.jpeg" class="logo"><h1>Gestionale Clienti 10.0 RC11 Coach</h1><p>Fix Tre Problemi · RC11</p></header>
+<header><img src="logo.jpeg" class="logo"><h1>Gestionale Clienti 10.0 RC12 Coach</h1><p>Registro Lezioni Sicuro · RC12</p></header>
 
 <div id="loginView" class="card" style="max-width:430px;margin:18px auto">
 <h2>🔐 Accesso Coach</h2>
@@ -1624,6 +1624,146 @@ setInterval(()=>{try{renderDaContattareRC10();renderRinnoviRC10();renderContabil
 
 // RC11_FINAL_FIX_INTERVAL
 setInterval(()=>{try{aggiornaPulsantiClienteRC11(); if(typeof renderSmartCoach==='function')renderSmartCoach();}catch(e){}},800);
+
+function rc12EventDateTime(ev){
+ if(!ev || !ev.data)return null;
+ const a=String(ev.data).split("-").map(Number);
+ let h=9,mi=0;
+ if(ev.ora && String(ev.ora).includes(":")){
+   const p=String(ev.ora).split(":").map(Number);
+   h=p[0]||0; mi=p[1]||0;
+ }
+ return new Date(a[0],a[1]-1,a[2],h,mi,0);
+}
+function rc12EventEndDateTime(ev){
+ const start=rc12EventDateTime(ev);
+ if(!start)return null;
+ return new Date(start.getTime()+Number(ev.durata||60)*60000);
+}
+function rc12Historical(stato){
+ return ["Effettuata","Assente","Recuperata","Annullata","Annullata dal cliente"].includes(stato||"");
+}
+function rc12Consumes(stato){
+ return ["Effettuata","Assente","Recuperata"].includes(stato||"");
+}
+function rc12FutureMutable(ev){
+ const today=localISO(new Date());
+ return ev.data>=today && !rc12Historical(ev.stato||"Prenotata");
+}
+function rc12Fatte(clienteId){
+ return (eventi||[]).filter(e=>e.clienteId===clienteId && rc12Consumes(e.stato)).length;
+}
+function rc12Residue(c){
+ return Math.max(0,Number(c.lezioniTotali||0)-rc12Fatte(c.id));
+}
+async function rc12Sync(clienteId){
+ const c=(clienti||[]).find(x=>x.id===clienteId);
+ if(!c)return;
+ const fatte=rc12Fatte(clienteId);
+ const residue=Math.max(0,Number(c.lezioniTotali||0)-fatte);
+ await setDoc(docPath("clienti",clienteId),{lezioniFatte:fatte,lezioniResidue:residue,updatedAt:serverTimestamp()},{merge:true});
+}
+async function rc12SetLesson(id,stato){
+ const ev=(eventi||[]).find(x=>x.id===id);
+ if(!ev)return;
+ await setDoc(docPath("eventi",id),{stato,scalata:rc12Consumes(stato),storico:rc12Historical(stato),updatedAt:serverTimestamp()},{merge:true});
+ await rc12Sync(ev.clienteId);
+ try{await audit("lezione","Lezione impostata come "+stato,{eventoId:id,clienteId:ev.clienteId})}catch(e){}
+ status("Lezione aggiornata: "+stato);
+}
+window.confermaEffettuata=async(id)=>rc12SetLesson(id,"Effettuata");
+window.confermaAssente=async(id)=>rc12SetLesson(id,"Assente");
+window.eventoEffettuato=async(id)=>rc12SetLesson(id,"Effettuata");
+window.eventoPerso=async(id)=>rc12SetLesson(id,"Assente");
+window.eventoRecuperata=async(id)=>rc12SetLesson(id,"Recuperata");
+window.eventoAnnullata=async(id)=>rc12SetLesson(id,"Annullata");
+async function rc12AutoDaConfermare(){
+ const now=new Date();
+ for(const ev of (eventi||[])){
+   const st=ev.stato||"Prenotata";
+   if(rc12Historical(st))continue;
+   const start=rc12EventDateTime(ev), end=rc12EventEndDateTime(ev);
+   if(!start||!end)continue;
+   const twoAfter=new Date(end.getTime()+2*60*60000);
+   const hours=(start-now)/36e5;
+   if(hours<=24 && ["Prenotata","Programmata","Occupata"].includes(st)){
+     await setDoc(docPath("eventi",ev.id),{stato:"Bloccata",bloccataEntro24h:true,updatedAt:serverTimestamp()},{merge:true});
+   }
+   if(now>=twoAfter && ["Prenotata","Programmata","Occupata","Bloccata"].includes(st)){
+     await setDoc(docPath("eventi",ev.id),{stato:"Da confermare",updatedAt:serverTimestamp()},{merge:true});
+   }
+ }
+}
+window.autoScalaLezioni=rc12AutoDaConfermare;
+function rc12DaConfermare(){
+ const now=new Date();
+ return (eventi||[]).filter(ev=>{
+   const st=ev.stato||"Prenotata";
+   if(st==="Da confermare")return true;
+   if(rc12Historical(st))return false;
+   const end=rc12EventEndDateTime(ev);
+   if(!end)return false;
+   return now>=new Date(end.getTime()+2*60*60000);
+ });
+}
+window.lezioniDaConfermare=rc12DaConfermare;
+window.confermaTutteEffettuate=async()=>{
+ const list=rc12DaConfermare();
+ if(!list.length)return status("Nessuna lezione da confermare.");
+ if(!confirm("Confermare tutte come effettuate?"))return;
+ for(const ev of list){await rc12SetLesson(ev.id,"Effettuata");}
+};
+async function rc12Backup(clienteId){
+ try{await addDoc(path("calendarBackups"),{clienteId,createdAtText:new Date().toISOString(),createdAt:serverTimestamp(),eventi:(eventi||[]).filter(e=>e.clienteId===clienteId)})}catch(e){}
+}
+async function rc12DeleteFuture(clienteId){
+ const fut=(eventi||[]).filter(e=>e.clienteId===clienteId && rc12FutureMutable(e));
+ for(const ev of fut){await deleteDoc(docPath("eventi",ev.id));}
+}
+async function rc12SafeCalendar(clienteId){
+ const c=(clienti||[]).find(x=>x.id===clienteId);
+ if(!c)return;
+ const beforeFatte=rc12Fatte(clienteId);
+ const beforeResidue=rc12Residue(c);
+ if(!confirm("Aggiornare SOLO le lezioni future? Storico e contatore resteranno invariati."))return;
+ await rc12Backup(clienteId);
+ await rc12DeleteFuture(clienteId);
+ if(typeof generateFixedEvents==="function"){
+   await generateFixedEvents(clienteId,{...c});
+ }else if(typeof generaCalendarioAutomatico==="function"){
+   await generaCalendarioAutomatico(clienteId);
+ }else if(typeof rigeneraCalendarioAutomatico==="function"){
+   await rigeneraCalendarioAutomatico(clienteId,true);
+ }
+ const snap=await getDocs(query(path("eventi"),where("clienteId","==",clienteId)));
+ const today=localISO(new Date());
+ for(const d of snap.docs){
+   const ev={id:d.id,...d.data()};
+   if(ev.data>=today && !rc12Historical(ev.stato)){
+     await setDoc(docPath("eventi",ev.id),{stato:"Prenotata",scalata:false,storico:false,updatedAt:serverTimestamp()},{merge:true});
+   }
+ }
+ await setDoc(docPath("clienti",clienteId),{lezioniFatte:beforeFatte,lezioniResidue:beforeResidue,updatedAt:serverTimestamp()},{merge:true});
+ status("Calendario futuro aggiornato. Storico e contatore invariati.");
+}
+window.rigeneraCalendarioDaPulsante=async()=>{
+ const id=$("clienteId")?.value || $("editId")?.value;
+ if(!id)return status("Apri prima un cliente in modifica.");
+ await rc12SafeCalendar(id);
+};
+window.aggiornaCalendarioFuturo=rc12SafeCalendar;
+window.ricalcolaContatoreCliente=async(id)=>{await rc12Sync(id);status("Contatore ricalcolato.");};
+window.ricalcolaTuttiContatori=async()=>{if(!confirm("Ricalcolare tutti i contatori?"))return;for(const c of (clienti||[])){await rc12Sync(c.id)}status("Contatori ricalcolati.");};
+function rc12Smart(){
+ const box=$("smartCoachSummary") || document.getElementById("smartCoachBox");
+ if(!box)return;
+ const list=rc12DaConfermare();
+ const content=list.length?`<div class="card"><h2>⏳ Lezioni da confermare</h2>${list.map(ev=>`<div class="check"><h3>${ev.clienteNome||"Cliente"}</h3><p class="meta">${fmt(ev.data)} ore ${ev.ora||"-"}</p><button class="btn light" onclick="confermaEffettuata('${ev.id}')">Effettuata</button> <button class="btn red" onclick="confermaAssente('${ev.id}')">Assente</button></div>`).join("")}<button class="btn gold full" onclick="confermaTutteEffettuate()">Conferma tutte come effettuate</button></div>`:'<p class="meta">Nessuna lezione da confermare.</p>';
+ if($("smartCoachSummary"))$("smartCoachSummary").innerHTML=content;
+ else box.innerHTML=`<h2>👋 Smart Coach</h2>${content}`;
+}
+setInterval(()=>{try{rc12Smart()}catch(e){}},700);
+
 </script>
 </body>
 </html>

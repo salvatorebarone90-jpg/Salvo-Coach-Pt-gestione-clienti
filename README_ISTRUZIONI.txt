@@ -1,13 +1,17 @@
-SB PERSONAL COACH GESTIONALE 10.0 RC11 - FIX TRE PROBLEMI
+SB PERSONAL COACH GESTIONALE 10.0 RC12 - REGISTRO LEZIONI SICURO
 
-Correzioni richieste:
-1. Smart Coach: ripristinato banner Lezioni da confermare con pulsanti Effettuata/Assente e Conferma tutte.
-2. Modifica cliente: nuovo cliente mostra solo Crea cliente; cliente salvato mostra solo Modifica solo saldo, Aggiorna calendario, Ricalcola contatore.
-3. Da contattare: nella sezione dedicata rimane solo WhatsApp.
+Principio:
+- Il passato è storico e non viene mai modificato automaticamente.
+- Cambiare blocco/orari/frequenza aggiorna solo lezioni future non storiche.
+- Contatore e saldo restano invariati durante l'aggiornamento calendario.
 
-Importante:
-- Modifica solo saldo aggiorna solo Dovuto/Pagato. Non tocca calendario, lezioni o contatore.
-- Aggiorna calendario elimina e ricrea solo lezioni future automatiche.
-- Ricalcola contatore non azzera: conta stati Effettuata/Assente/Recuperata.
+Regole:
+- Effettuata, Assente, Recuperata = consumano credito.
+- Prenotata, Bloccata, Da confermare, Annullata = non consumano credito finché non confermate.
 
-Apri con ?v=rc11 per evitare cache.
+Test:
+1. Cliente 11/12.
+2. Cambia orario e premi Aggiorna calendario.
+3. Deve restare 11/12.
+4. Le lezioni vecchie Effettuata/Assente devono restare.
+5. Le nuove future non devono apparire nello Smart Coach.
