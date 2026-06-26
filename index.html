@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SB Personal Coach Gestionale 10.0 RC13</title>
+<title>SB Personal Coach Gestionale 10.0 RC14</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--n:#101827;--g:#d5ad52;--b:#f4f6f8}
@@ -34,7 +34,7 @@ textarea{min-height:80px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10p
 </style>
 </head>
 <body>
-<header><img src="logo.jpeg" class="logo"><h1>Gestionale Clienti 10.0 RC13 Coach</h1><p>Smart Box Stabile · RC13</p></header>
+<header><img src="logo.jpeg" class="logo"><h1>Gestionale Clienti 10.0 RC14 Coach</h1><p>Calendario Solo Futuro · RC14</p></header>
 
 <div id="loginView" class="card" style="max-width:430px;margin:18px auto">
 <h2>🔐 Accesso Coach</h2>
@@ -1786,6 +1786,172 @@ function rc13RefreshUI(){
 window.rc13RefreshUI=rc13RefreshUI;
 setTimeout(rc13RefreshUI,300);
 setInterval(rc13RefreshUI,5000);
+
+
+function rc14TomorrowISO(){
+ const d=new Date();
+ d.setDate(d.getDate()+1);
+ return localISO(d);
+}
+function rc14EventStart(ev){
+ if(!ev || !ev.data)return null;
+ const a=String(ev.data).split("-").map(Number);
+ let h=9,mi=0;
+ if(ev.ora && String(ev.ora).includes(":")){
+   const p=String(ev.ora).split(":").map(Number);
+   h=p[0]||0; mi=p[1]||0;
+ }
+ return new Date(a[0],a[1]-1,a[2],h,mi,0);
+}
+function rc14EventEnd(ev){
+ const s=rc14EventStart(ev);
+ if(!s)return null;
+ return new Date(s.getTime()+Number(ev.durata||60)*60000);
+}
+function rc14Historical(st){
+ return ["Effettuata","Assente","Recuperata","Annullata","Annullata dal cliente"].includes(st||"");
+}
+function rc14Consumes(st){
+ return ["Effettuata","Assente","Recuperata"].includes(st||"");
+}
+function rc14IsRealFuture(ev){
+ const s=rc14EventStart(ev);
+ return s && s.getTime()>Date.now();
+}
+function rc14MutableFuture(ev){
+ return rc14IsRealFuture(ev) && !rc14Historical(ev.stato||"Prenotata");
+}
+function rc14Fatte(clienteId){
+ return (eventi||[]).filter(e=>e.clienteId===clienteId && rc14Consumes(e.stato)).length;
+}
+async function rc14SyncCounter(clienteId, forcedFatte=null, forcedResidue=null){
+ const c=(clienti||[]).find(x=>x.id===clienteId);
+ if(!c)return;
+ const fatte=forcedFatte!==null?forcedFatte:rc14Fatte(clienteId);
+ const residue=forcedResidue!==null?forcedResidue:Math.max(0,Number(c.lezioniTotali||0)-fatte);
+ await setDoc(docPath("clienti",clienteId),{lezioniFatte:fatte,lezioniResidue:residue,updatedAt:serverTimestamp()},{merge:true});
+}
+async function rc14SetLesson(id,stato){
+ const ev=(eventi||[]).find(x=>x.id===id);
+ if(!ev)return;
+ await setDoc(docPath("eventi",id),{stato,scalata:rc14Consumes(stato),storico:rc14Historical(stato),updatedAt:serverTimestamp()},{merge:true});
+ await rc14SyncCounter(ev.clienteId);
+ status("Lezione aggiornata: "+stato);
+}
+window.confermaEffettuata=async(id)=>rc14SetLesson(id,"Effettuata");
+window.confermaAssente=async(id)=>rc14SetLesson(id,"Assente");
+window.eventoEffettuato=async(id)=>rc14SetLesson(id,"Effettuata");
+window.eventoPerso=async(id)=>rc14SetLesson(id,"Assente");
+window.eventoRecuperata=async(id)=>rc14SetLesson(id,"Recuperata");
+window.eventoAnnullata=async(id)=>rc14SetLesson(id,"Annullata");
+
+function rc14DaConfermare(){
+ const now=new Date();
+ return (eventi||[]).filter(ev=>{
+   const st=ev.stato||"Prenotata";
+   if(rc14Historical(st))return false;
+   const end=rc14EventEnd(ev);
+   if(!end)return false;
+   if(st!=="Da confermare" && end.getTime()<now.getTime()-24*60*60*1000)return false;
+   if(st==="Da confermare")return true;
+   return now>=new Date(end.getTime()+2*60*60000);
+ });
+}
+window.lezioniDaConfermare=rc14DaConfermare;
+
+async function rc14AutoDaConfermare(){
+ const now=new Date();
+ for(const ev of (eventi||[])){
+   const st=ev.stato||"Prenotata";
+   if(rc14Historical(st))continue;
+   const start=rc14EventStart(ev),end=rc14EventEnd(ev);
+   if(!start||!end)continue;
+   if(end.getTime()<now.getTime()-24*60*60*1000)continue;
+   const hours=(start-now)/36e5;
+   if(hours<=24 && start>now && ["Prenotata","Programmata","Occupata"].includes(st)){
+     await setDoc(docPath("eventi",ev.id),{stato:"Bloccata",bloccataEntro24h:true,updatedAt:serverTimestamp()},{merge:true});
+   }
+   if(now>=new Date(end.getTime()+2*60*60000) && ["Prenotata","Programmata","Occupata","Bloccata"].includes(st)){
+     await setDoc(docPath("eventi",ev.id),{stato:"Da confermare",updatedAt:serverTimestamp()},{merge:true});
+   }
+ }
+}
+window.autoScalaLezioni=rc14AutoDaConfermare;
+
+async function rc14DeleteMutableFuture(clienteId){
+ const fut=(eventi||[]).filter(e=>e.clienteId===clienteId && rc14MutableFuture(e));
+ for(const ev of fut){ await deleteDoc(docPath("eventi",ev.id)); }
+}
+async function rc14CleanGeneratedPastAndDuplicates(clienteId){
+ const snap=await getDocs(query(path("eventi"),where("clienteId","==",clienteId)));
+ const seen=new Set();
+ const now=Date.now();
+ for(const d of snap.docs){
+   const ev={id:d.id,...d.data()};
+   const st=ev.stato||"Prenotata";
+   const start=rc14EventStart(ev);
+   if(!start)continue;
+   if(start.getTime()<=now && !rc14Historical(st)){
+     await deleteDoc(docPath("eventi",ev.id));
+     continue;
+   }
+   const key=[ev.clienteId,ev.data,ev.ora||""].join("|");
+   if(!rc14Historical(st)){
+     if(seen.has(key)){
+       await deleteDoc(docPath("eventi",ev.id));
+       continue;
+     }
+     seen.add(key);
+     await setDoc(docPath("eventi",ev.id),{stato:"Prenotata",scalata:false,storico:false,updatedAt:serverTimestamp()},{merge:true});
+   }
+ }
+}
+async function rc14RigeneraSoloFuturo(clienteId){
+ const c=(clienti||[]).find(x=>x.id===clienteId);
+ if(!c)return;
+ const beforeFatte=rc14Fatte(clienteId);
+ const beforeResidue=Math.max(0,Number(c.lezioniTotali||0)-beforeFatte);
+ if(!confirm("Aggiornare SOLO le lezioni future? Il passato/storico non verrà toccato."))return;
+ try{await addDoc(path("calendarBackups"),{clienteId,createdAtText:new Date().toISOString(),createdAt:serverTimestamp(),eventi:(eventi||[]).filter(e=>e.clienteId===clienteId)})}catch(e){}
+ await rc14DeleteMutableFuture(clienteId);
+ const cFuture={...c,inizio:rc14TomorrowISO(),dataInizio:rc14TomorrowISO()};
+ if(typeof generateFixedEvents==="function"){
+   await generateFixedEvents(clienteId,cFuture);
+ }else if(typeof generaCalendarioAutomatico==="function"){
+   const old=$("inizio")?.value;
+   if($("inizio"))$("inizio").value=rc14TomorrowISO();
+   await generaCalendarioAutomatico(clienteId);
+   if($("inizio") && old)$("inizio").value=old;
+ }else if(typeof rigeneraCalendarioAutomatico==="function"){
+   const old=$("inizio")?.value;
+   if($("inizio"))$("inizio").value=rc14TomorrowISO();
+   await rigeneraCalendarioAutomatico(clienteId,true);
+   if($("inizio") && old)$("inizio").value=old;
+ }
+ await rc14CleanGeneratedPastAndDuplicates(clienteId);
+ await setDoc(docPath("clienti",clienteId),{lezioniFatte:beforeFatte,lezioniResidue:beforeResidue,updatedAt:serverTimestamp()},{merge:true});
+ status("Calendario futuro aggiornato. Passato e contatore invariati.");
+}
+window.rigeneraCalendarioDaPulsante=async()=>{
+ const id=$("clienteId")?.value || $("editId")?.value;
+ if(!id)return status("Apri prima un cliente in modifica.");
+ await rc14RigeneraSoloFuturo(id);
+};
+window.aggiornaCalendarioFuturo=rc14RigeneraSoloFuturo;
+window.ricalcolaContatoreCliente=async(id)=>{await rc14SyncCounter(id);status("Contatore ricalcolato.");};
+
+function rc14SmartStable(){
+ const summary=$("smartCoachSummary");
+ const outer=document.getElementById("smartCoachBox");
+ if(!summary && !outer)return;
+ const list=rc14DaConfermare();
+ const content=list.length?`<div class="card"><h2>⏳ Lezioni da confermare</h2>${list.map(ev=>`<div class="check"><h3>${ev.clienteNome||"Cliente"}</h3><p class="meta">${fmt(ev.data)} ore ${ev.ora||"-"}</p><button class="btn light" onclick="confermaEffettuata('${ev.id}')">Effettuata</button> <button class="btn red" onclick="confermaAssente('${ev.id}')">Assente</button></div>`).join("")}<button class="btn gold full" onclick="confermaTutteEffettuate()">Conferma tutte come effettuate</button></div>`:`<p class="meta">Nessuna lezione da confermare.</p>`;
+ if(summary)summary.innerHTML=content;
+ else outer.innerHTML=`<h2>👋 Smart Coach</h2>${content}`;
+}
+window.rc14SmartStable=rc14SmartStable;
+setInterval(()=>{try{rc14SmartStable()}catch(e){}},4000);
+setTimeout(()=>{try{rc14SmartStable()}catch(e){}},500);
 
 </script>
 </body>
