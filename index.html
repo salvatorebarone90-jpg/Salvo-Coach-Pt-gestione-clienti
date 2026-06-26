@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SB Personal Coach Gestionale 10.0 RC15</title>
+<title>SB Personal Coach Gestionale 10.0 RC16</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--n:#101827;--g:#d5ad52;--b:#f4f6f8}
@@ -34,7 +34,7 @@ textarea{min-height:80px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10p
 </style>
 </head>
 <body>
-<header><img src="logo.jpeg" class="logo"><h1>Gestionale Clienti 10.0 RC15 Coach</h1><p>Smart No Loop · No Passato RC15</p></header>
+<header><img src="logo.jpeg" class="logo"><h1>Gestionale Clienti 10.0 RC16 Coach</h1><p>Registro Cliente · Futuro RC16</p></header>
 
 <div id="loginView" class="card" style="max-width:430px;margin:18px auto">
 <h2>🔐 Accesso Coach</h2>
@@ -51,9 +51,9 @@ textarea{min-height:80px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10p
 <button data-tab="clienti">Clienti</button>
 <button data-tab="contatti">Da contattare</button>
 <button data-tab="calendario">Calendario</button>
+<button data-tab="registro">Registro Cliente</button>
 <button data-tab="recuperi">Recuperi</button>
 <button data-tab="check">Check</button>
-<button data-tab="lead">Lead</button>
 <button data-tab="rinnovi">Rinnovi</button>
 <button data-tab="contabilita">Contabilità</button>
 <button data-tab="messaggi">Messaggi</button>
@@ -176,6 +176,13 @@ textarea{min-height:80px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10p
   </div>
 </section>
 
+
+<section id="registro" class="section">
+  <div class="card"><h2>📚 Registro Cliente</h2><p class="meta">Storico completo del cliente: inizio/fine pacchetto e tutte le lezioni.</p><label>Seleziona cliente</label><select id="registroCliente" onchange="renderRegistroClienteRC16()"></select><button class="btn gold full" onclick="renderRegistroClienteRC16()">Aggiorna registro</button></div>
+  <div class="grid"><div class="kpi"><strong id="regTotali">0</strong><span>Lezioni pacchetto</span></div><div class="kpi"><strong id="regFatte">0</strong><span>Consumate</span></div><div class="kpi"><strong id="regResidue">0</strong><span>Residue</span></div><div class="kpi"><strong id="regPeriodo">-</strong><span>Periodo pacchetto</span></div></div>
+  <div class="card"><h2>🗓️ Lezioni del cliente</h2><div id="registroLista"></div></div>
+</section>
+
 <section id="dashboard" class="section active">
 <div class="card premium" id="smartCoachBox"><h2>👋 Smart Coach</h2><div id="smartCoachSummary"></div><div id="smartConfirmBanner"></div></div>
 <div class="card" style="display:flex;justify-content:space-between;align-items:center"><div><b id="userEmail"></b><br><span class="meta">Database cloud Firestore</span></div><button id="logoutBtn" class="btn red">Esci</button></div>
@@ -253,7 +260,6 @@ textarea{min-height:80px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10p
 </section>
 
 <section id="check" class="section"><div class="card"><h2>📏 Nuovo check</h2><label>Cliente</label><select id="checkCliente"></select><div class="row"><div><label>Data check</label><input id="checkData" type="date"></div><div><label>Peso kg</label><input id="checkPeso" type="number" step="0.1"></div></div><label>Note</label><textarea id="checkNote"></textarea><button id="saveCheckBtn" class="btn primary full">Salva check</button></div><div id="listaCheck"></div></section>
-<section id="lead" class="section"><div class="card"><h2>🎯 Nuovo lead</h2><div class="row"><div><label>Nome</label><input id="leadNome"></div><div><label>Telefono</label><input id="leadTelefono"></div></div><button id="saveLeadBtn" class="btn primary full">Salva lead</button></div><div id="listaLead"></div></section>
 <section id="rinnovi" class="section"><div class="card"><h2>🔁 Storico rinnovi</h2><div id="listaRinnovi"></div></div></section>
 
 <section id="googlecal" class="section">
@@ -1272,6 +1278,7 @@ function renderAudit(){
 window.salvaPagamento=salvaPagamento;window.eliminaPagamento=eliminaPagamento;window.confermaEffettuata=confermaEffettuata;window.confermaAssente=confermaAssente;window.confermaTutteEffettuate=confermaTutteEffettuate;
 
 function render(){
+ setTimeout(refreshRC16Once,100);
  setTimeout(rc13RefreshUI,50);
  if($("clientAreaUrl"))$("clientAreaUrl").value=clientAreaLink();
  const opts=clienti.map(c=>`<option value="${c.id}">${c.nome||""} ${c.cognome||""}</option>`).join("");
@@ -2018,6 +2025,35 @@ function renderSmartCoachRC15(){
 window.renderSmartCoachRC15=renderSmartCoachRC15;
 window.confermaTutteEffettuate=async()=>{ const list=lezioniDaConfermareRC15(); if(!list.length)return status("Nessuna lezione da confermare oggi."); if(!confirm("Confermare tutte le lezioni di oggi come effettuate?"))return; for(const ev of list){await rc15SetLesson(ev.id,"Effettuata");} __rc15LastSmartHTML=""; renderSmartCoachRC15(); };
 setTimeout(renderSmartCoachRC15,300); setTimeout(renderSmartCoachRC15,1200);
+
+
+/* RC16 override: calendario da domani + registro cliente */
+let __rc16SmartHTML="";
+function rc16TodayISO(){return localISO(new Date())}
+function rc16TomorrowISO(){const d=new Date();d.setDate(d.getDate()+1);return localISO(d)}
+function rc16Start(e){if(!e||!e.data)return null;const a=String(e.data).split("-").map(Number);let h=9,m=0;if(e.ora&&String(e.ora).includes(":")){const p=String(e.ora).split(":").map(Number);h=p[0]||0;m=p[1]||0}return new Date(a[0],a[1]-1,a[2],h,m,0)}
+function rc16End(e){const s=rc16Start(e);return s?new Date(s.getTime()+Number(e.durata||60)*60000):null}
+function rc16Hist(s){return ["Effettuata","Assente","Recuperata","Annullata","Annullata dal cliente"].includes(s||"")}
+function rc16Cons(s){return ["Effettuata","Assente","Recuperata"].includes(s||"")}
+function rc16Fatte(id){return (eventi||[]).filter(e=>e.clienteId===id&&rc16Cons(e.stato)).length}
+async function rc16Sync(id){const c=(clienti||[]).find(x=>x.id===id);if(!c)return;const f=rc16Fatte(id),r=Math.max(0,Number(c.lezioniTotali||0)-f);await setDoc(docPath("clienti",id),{lezioniFatte:f,lezioniResidue:r,updatedAt:serverTimestamp()},{merge:true})}
+function lezioniDaConfermareRC16(){const today=rc16TodayISO(),now=new Date();return (eventi||[]).filter(e=>{const st=e.stato||"Prenotata";if(rc16Hist(st))return false;if(String(e.data||"")!==today)return false;const end=rc16End(e);if(!end||end>now)return false;if(st==="Da confermare")return true;return ["Prenotata","Programmata","Occupata","Bloccata"].includes(st)&&now>=new Date(end.getTime()+2*60*60000)})}
+window.lezioniDaConfermare=lezioniDaConfermareRC16;
+async function autoScalaLezioniRC16(){const today=rc16TodayISO(),now=new Date();for(const e of (eventi||[])){const st=e.stato||"Prenotata";if(rc16Hist(st)||String(e.data||"")!==today)continue;const s=rc16Start(e),end=rc16End(e);if(!s||!end)continue;const hrs=(s-now)/36e5;if(hrs<=24&&s>now&&["Prenotata","Programmata","Occupata"].includes(st))await setDoc(docPath("eventi",e.id),{stato:"Bloccata",bloccataEntro24h:true,updatedAt:serverTimestamp()},{merge:true});if(now>=new Date(end.getTime()+2*60*60000)&&["Prenotata","Programmata","Occupata","Bloccata"].includes(st))await setDoc(docPath("eventi",e.id),{stato:"Da confermare",updatedAt:serverTimestamp()},{merge:true})}}
+window.autoScalaLezioni=autoScalaLezioniRC16;
+async function rc16Set(id,st){const e=(eventi||[]).find(x=>x.id===id);if(!e)return;await setDoc(docPath("eventi",id),{stato:st,scalata:rc16Cons(st),storico:rc16Hist(st),updatedAt:serverTimestamp()},{merge:true});await rc16Sync(e.clienteId);__rc16SmartHTML="";renderSmartCoachRC16();try{renderRegistroClienteRC16()}catch(x){};status("Lezione aggiornata: "+st)}
+window.confermaEffettuata=id=>rc16Set(id,"Effettuata");window.confermaAssente=id=>rc16Set(id,"Assente");window.eventoEffettuato=id=>rc16Set(id,"Effettuata");window.eventoPerso=id=>rc16Set(id,"Assente");window.eventoRecuperata=id=>rc16Set(id,"Recuperata");window.eventoAnnullata=id=>rc16Set(id,"Annullata");
+window.confermaTutteEffettuate=async()=>{const l=lezioniDaConfermareRC16();if(!l.length)return status("Nessuna lezione di oggi da confermare.");if(!confirm("Confermare tutte le lezioni di oggi come effettuate?"))return;for(const e of l)await rc16Set(e.id,"Effettuata")};
+async function rigeneraCalendarioSoloFuturoRC16(id){const c=(clienti||[]).find(x=>x.id===id);if(!c)return;const f=rc16Fatte(id),r=Math.max(0,Number(c.lezioniTotali||0)-f),tom=rc16TomorrowISO();if(!confirm("Aggiornare il calendario SOLO da domani in poi? Oggi e lo storico non verranno toccati."))return;try{await addDoc(path("calendarBackups"),{clienteId:id,createdAtText:new Date().toISOString(),createdAt:serverTimestamp(),eventi:(eventi||[]).filter(e=>e.clienteId===id)})}catch(e){};for(const e of (eventi||[]).filter(e=>e.clienteId===id&&String(e.data||"")>=tom&&!rc16Hist(e.stato||"Prenotata")))await deleteDoc(docPath("eventi",e.id));const old1=$("inizio")?.value, old2=$("dataInizio")?.value;if($("inizio"))$("inizio").value=tom;if($("dataInizio"))$("dataInizio").value=tom;const cf={...c,inizio:tom,dataInizio:tom};if(typeof generateFixedEvents==="function")await generateFixedEvents(id,cf);else if(typeof generaCalendarioAutomatico==="function")await generaCalendarioAutomatico(id);else if(typeof rigeneraCalendarioAutomatico==="function")await rigeneraCalendarioAutomatico(id,true);if($("inizio")&&old1)$("inizio").value=old1;if($("dataInizio")&&old2)$("dataInizio").value=old2;const snap=await getDocs(query(path("eventi"),where("clienteId","==",id)));const seen=new Set();for(const d of snap.docs){const e={id:d.id,...d.data()};if(String(e.data||"")<tom||rc16Hist(e.stato||""))continue;const k=[e.clienteId,e.data,e.ora||""].join("|");if(seen.has(k))await deleteDoc(docPath("eventi",e.id));else{seen.add(k);await setDoc(docPath("eventi",e.id),{stato:"Prenotata",scalata:false,storico:false,updatedAt:serverTimestamp()},{merge:true})}}await setDoc(docPath("clienti",id),{lezioniFatte:f,lezioniResidue:r,updatedAt:serverTimestamp()},{merge:true});status("Calendario aggiornato da domani in poi. Oggi, storico e contatore invariati.")}
+window.rigeneraCalendarioDaPulsante=async()=>{const id=$("editId")?.value||$("clienteId")?.value;if(!id)return status("Apri prima un cliente in modifica.");await rigeneraCalendarioSoloFuturoRC16(id)};window.aggiornaCalendarioFuturo=rigeneraCalendarioSoloFuturoRC16;window.ricalcolaContatoreCliente=async id=>{await rc16Sync(id);status("Contatore ricalcolato.")};
+function renderSmartCoachRC16(){const sum=$("smartCoachSummary"),outer=document.getElementById("smartCoachBox");if(!sum&&!outer)return;const l=lezioniDaConfermareRC16();const c=l.length?`<div class="card"><h2>⏳ Lezioni da confermare</h2><p class="meta">Hai ${l.length} lezione/i di oggi da confermare.</p>${l.map(e=>`<div class="check"><h3>${e.clienteNome||"Cliente"}</h3><p class="meta">${fmt(e.data)} ore ${e.ora||"-"}</p><button class="btn light" onclick="confermaEffettuata('${e.id}')">Effettuata</button> <button class="btn red" onclick="confermaAssente('${e.id}')">Assente</button></div>`).join("")}<button class="btn gold full" onclick="confermaTutteEffettuate()">Conferma tutte come effettuate</button></div>`:`<p class="meta">Nessuna lezione di oggi da confermare.</p>`;if(c===__rc16SmartHTML)return;__rc16SmartHTML=c;if(sum)sum.innerHTML=c;else outer.innerHTML=`<h2>👋 Smart Coach</h2><div id="smartCoachSummary">${c}</div>`}
+window.renderSmartCoachRC16=renderSmartCoachRC16;
+function rc16Name(c){return ((c.nome||"")+" "+(c.cognome||"")).trim()}
+function initRegistroClienteRC16(){const s=$("registroCliente");if(!s)return;const cur=s.value;s.innerHTML='<option value="">Seleziona cliente</option>'+(clienti||[]).map(c=>`<option value="${c.id}">${rc16Name(c)}</option>`).join("");if(cur)s.value=cur}
+function renderRegistroClienteRC16(){initRegistroClienteRC16();const s=$("registroCliente"),box=$("registroLista");if(!s||!box)return;const id=s.value;if(!id){["regTotali","regFatte","regResidue"].forEach(x=>$(x).textContent="0");$("regPeriodo").textContent="-";box.innerHTML='<div class="empty">Seleziona un cliente per vedere il registro.</div>';return}const c=(clienti||[]).find(x=>x.id===id);if(!c)return;const evs=(eventi||[]).filter(e=>e.clienteId===id).slice().sort((a,b)=>String(a.data||"").localeCompare(String(b.data||""))||String(a.ora||"").localeCompare(String(b.ora||"")));const f=rc16Fatte(id),r=Math.max(0,Number(c.lezioniTotali||0)-f);$("regTotali").textContent=Number(c.lezioniTotali||0);$("regFatte").textContent=f;$("regResidue").textContent=r;$("regPeriodo").textContent=`${fmt(c.inizio||c.dataInizio||"-")} → ${fmt(c.scadenza||c.fine||c.dataFine||"-")}`;box.innerHTML=`<div class="check"><h3>${rc16Name(c)}</h3><p class="meta">Inizio: ${fmt(c.inizio||c.dataInizio||"-")} · Fine/scadenza: ${fmt(c.scadenza||c.fine||c.dataFine||"-")}</p><span class="badge ok">${r} residue su ${c.lezioniTotali||0}</span></div>`+(evs.length?evs.map(e=>`<div class="check"><h3>${fmt(e.data)} ore ${e.ora||"-"}</h3><p class="meta">Durata ${e.durata||60} min · Stato: ${e.stato||"Prenotata"}</p><span class="badge ${rc16Cons(e.stato)?"ok":(e.stato==="Assente"||e.stato==="Annullata"?"bad":"warn")}">${e.stato||"Prenotata"}</span></div>`).join(""):'<div class="empty">Nessuna lezione registrata.</div>')}
+window.renderRegistroClienteRC16=renderRegistroClienteRC16;window.initRegistroClienteRC16=initRegistroClienteRC16;
+function refreshRC16Once(){try{renderSmartCoachRC16()}catch(e){};try{initRegistroClienteRC16()}catch(e){};try{if($("registro")?.classList.contains("active"))renderRegistroClienteRC16()}catch(e){}}
+setTimeout(refreshRC16Once,300);setTimeout(refreshRC16Once,1200);
 
 </script>
 </body>

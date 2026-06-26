@@ -1,12 +1,8 @@
-SB PERSONAL COACH GESTIONALE 10.0 RC15 - SMART NO LOOP + NO PASSATO
+SB PERSONAL COACH GESTIONALE 10.0 RC16 - REGISTRO CLIENTE + FUTURO REALE
 
 Fix:
-- Smart Dashboard non si aggiorna più in loop continuo.
-- Smart Coach non mostra mai lezioni con data precedente a oggi.
-- Le lezioni passate non vengono più trasformate automaticamente in Da confermare.
-- Il banner Smart viene aggiornato solo al caricamento e dopo azioni manuali.
-
-Test:
-1. Apri Dashboard: lo Smart Box non deve scomparire/ricomparire.
-2. Le date precedenti a oggi non devono apparire in Da confermare.
-3. Dopo conferma, il banner si aggiorna senza lampeggiare.
+- Modifica calendario parte sempre da domani.
+- Oggi non viene toccato: se oggi è venerdì e cambi venerdì, parte dal venerdì successivo.
+- Smart Coach mostra solo lezioni di oggi terminate da almeno 2 ore.
+- Rimosso menu Lead.
+- Aggiunto Registro Cliente con filtro cliente, periodo pacchetto e tutte le lezioni.
