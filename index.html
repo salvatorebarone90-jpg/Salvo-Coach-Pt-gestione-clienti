@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SB Personal Coach Gestionale 10.0 RC12</title>
+<title>SB Personal Coach Gestionale 10.0 RC13</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--n:#101827;--g:#d5ad52;--b:#f4f6f8}
@@ -34,7 +34,7 @@ textarea{min-height:80px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10p
 </style>
 </head>
 <body>
-<header><img src="logo.jpeg" class="logo"><h1>Gestionale Clienti 10.0 RC12 Coach</h1><p>Registro Lezioni Sicuro · RC12</p></header>
+<header><img src="logo.jpeg" class="logo"><h1>Gestionale Clienti 10.0 RC13 Coach</h1><p>Smart Box Stabile · RC13</p></header>
 
 <div id="loginView" class="card" style="max-width:430px;margin:18px auto">
 <h2>🔐 Accesso Coach</h2>
@@ -1272,6 +1272,7 @@ function renderAudit(){
 window.salvaPagamento=salvaPagamento;window.eliminaPagamento=eliminaPagamento;window.confermaEffettuata=confermaEffettuata;window.confermaAssente=confermaAssente;window.confermaTutteEffettuate=confermaTutteEffettuate;
 
 function render(){
+ setTimeout(rc13RefreshUI,50);
  if($("clientAreaUrl"))$("clientAreaUrl").value=clientAreaLink();
  const opts=clienti.map(c=>`<option value="${c.id}">${c.nome||""} ${c.cognome||""}</option>`).join("");
  $("checkCliente").innerHTML=opts;$("calCliente").innerHTML=opts;if($("proCliente"))$("proCliente").innerHTML=opts;
@@ -1318,7 +1319,7 @@ function render(){
 window.setFiltro=(f)=>{filtro=f;render()}
 function exportDB(){let blob=new Blob([JSON.stringify({clienti,eventi,checks,checkPro,leads,rinnovi,recuperi,avvisi,pagamenti,auditLogs,templates,exported:new Date().toISOString()},null,2)],{type:"application/json"});let a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="backup_sb_coach_6_1_2.json";a.click()}
 
-setInterval(()=>{try{aggiornaTestoPulsanteCliente()}catch(e){}},800);
+
 
 function nomeClienteRc8(c){return ((c.nome||"")+" "+(c.cognome||"")).trim()}
 function clienteNomeByIdRc8(id){const c=(clienti||[]).find(x=>x.id===id);return c?nomeClienteRc8(c):"Cliente"}
@@ -1619,7 +1620,7 @@ window.renderDaContattareRC10=renderDaContattareRC10;
 window.renderRinnoviRC10=renderRinnoviRC10;
 window.renderContabilitaRC10=renderContabilitaRC10;
 window.renderContabilita=renderContabilitaRC10;
-setInterval(()=>{try{renderDaContattareRC10();renderRinnoviRC10();renderContabilitaRC10()}catch(e){}},500);
+
 
 
 // RC11_FINAL_FIX_INTERVAL
@@ -1754,15 +1755,37 @@ window.rigeneraCalendarioDaPulsante=async()=>{
 window.aggiornaCalendarioFuturo=rc12SafeCalendar;
 window.ricalcolaContatoreCliente=async(id)=>{await rc12Sync(id);status("Contatore ricalcolato.");};
 window.ricalcolaTuttiContatori=async()=>{if(!confirm("Ricalcolare tutti i contatori?"))return;for(const c of (clienti||[])){await rc12Sync(c.id)}status("Contatori ricalcolati.");};
+
+let __rc13SmartLastHTML="";
 function rc12Smart(){
- const box=$("smartCoachSummary") || document.getElementById("smartCoachBox");
- if(!box)return;
+ const summary=$("smartCoachSummary");
+ const outer=document.getElementById("smartCoachBox");
+ if(!summary && !outer)return;
  const list=rc12DaConfermare();
- const content=list.length?`<div class="card"><h2>⏳ Lezioni da confermare</h2>${list.map(ev=>`<div class="check"><h3>${ev.clienteNome||"Cliente"}</h3><p class="meta">${fmt(ev.data)} ore ${ev.ora||"-"}</p><button class="btn light" onclick="confermaEffettuata('${ev.id}')">Effettuata</button> <button class="btn red" onclick="confermaAssente('${ev.id}')">Assente</button></div>`).join("")}<button class="btn gold full" onclick="confermaTutteEffettuate()">Conferma tutte come effettuate</button></div>`:'<p class="meta">Nessuna lezione da confermare.</p>';
- if($("smartCoachSummary"))$("smartCoachSummary").innerHTML=content;
- else box.innerHTML=`<h2>👋 Smart Coach</h2>${content}`;
+ const content=list.length?`<div class="card"><h2>⏳ Lezioni da confermare</h2>${list.map(ev=>`<div class="check"><h3>${ev.clienteNome||"Cliente"}</h3><p class="meta">${fmt(ev.data)} ore ${ev.ora||"-"}</p><button class="btn light" onclick="confermaEffettuata('${ev.id}')">Effettuata</button> <button class="btn red" onclick="confermaAssente('${ev.id}')">Assente</button></div>`).join("")}<button class="btn gold full" onclick="confermaTutteEffettuate()">Conferma tutte come effettuate</button></div>`:`<p class="meta">Nessuna lezione da confermare.</p>`;
+ if(content===__rc13SmartLastHTML)return;
+ __rc13SmartLastHTML=content;
+ if(summary){
+   summary.innerHTML=content;
+ }else if(outer){
+   let box=document.getElementById("rc13SmartContent");
+   if(!box){
+     outer.innerHTML='<h2>👋 Smart Coach</h2><div id="rc13SmartContent"></div>';
+     box=document.getElementById("rc13SmartContent");
+   }
+   box.innerHTML=content;
+ }
 }
-setInterval(()=>{try{rc12Smart()}catch(e){}},700);
+function rc13RefreshUI(){
+ try{rc12Smart()}catch(e){}
+ try{if(typeof renderDaContattareRC10==="function")renderDaContattareRC10()}catch(e){}
+ try{if(typeof renderRinnoviRC10==="function")renderRinnoviRC10()}catch(e){}
+ try{if(typeof renderContabilitaRC10==="function")renderContabilitaRC10()}catch(e){}
+ try{if(typeof aggiornaTestoPulsanteCliente==="function")aggiornaTestoPulsanteCliente()}catch(e){}
+}
+window.rc13RefreshUI=rc13RefreshUI;
+setTimeout(rc13RefreshUI,300);
+setInterval(rc13RefreshUI,5000);
 
 </script>
 </body>
