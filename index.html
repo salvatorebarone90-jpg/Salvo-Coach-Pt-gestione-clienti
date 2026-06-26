@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SB Personal Coach Gestionale 10.0 RC14</title>
+<title>SB Personal Coach Gestionale 10.0 RC15</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--n:#101827;--g:#d5ad52;--b:#f4f6f8}
@@ -34,7 +34,7 @@ textarea{min-height:80px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10p
 </style>
 </head>
 <body>
-<header><img src="logo.jpeg" class="logo"><h1>Gestionale Clienti 10.0 RC14 Coach</h1><p>Calendario Solo Futuro · RC14</p></header>
+<header><img src="logo.jpeg" class="logo"><h1>Gestionale Clienti 10.0 RC15 Coach</h1><p>Smart No Loop · No Passato RC15</p></header>
 
 <div id="loginView" class="card" style="max-width:430px;margin:18px auto">
 <h2>🔐 Accesso Coach</h2>
@@ -1624,7 +1624,7 @@ window.renderContabilita=renderContabilitaRC10;
 
 
 // RC11_FINAL_FIX_INTERVAL
-setInterval(()=>{try{aggiornaPulsantiClienteRC11(); if(typeof renderSmartCoach==='function')renderSmartCoach();}catch(e){}},800);
+
 
 function rc12EventDateTime(ev){
  if(!ev || !ev.data)return null;
@@ -1785,7 +1785,7 @@ function rc13RefreshUI(){
 }
 window.rc13RefreshUI=rc13RefreshUI;
 setTimeout(rc13RefreshUI,300);
-setInterval(rc13RefreshUI,5000);
+
 
 
 function rc14TomorrowISO(){
@@ -1950,8 +1950,74 @@ function rc14SmartStable(){
  else outer.innerHTML=`<h2>👋 Smart Coach</h2>${content}`;
 }
 window.rc14SmartStable=rc14SmartStable;
-setInterval(()=>{try{rc14SmartStable()}catch(e){}},4000);
+
 setTimeout(()=>{try{rc14SmartStable()}catch(e){}},500);
+
+
+/* RC15 - Smart stabile: no loop, no passato */
+let __rc15LastSmartHTML="";
+function rc15TodayISO(){ return localISO(new Date()); }
+function rc15EventStart(ev){
+ if(!ev || !ev.data)return null;
+ const a=String(ev.data).split("-").map(Number);
+ let h=9,mi=0;
+ if(ev.ora && String(ev.ora).includes(":")){ const p=String(ev.ora).split(":").map(Number); h=p[0]||0; mi=p[1]||0; }
+ return new Date(a[0],a[1]-1,a[2],h,mi,0);
+}
+function rc15EventEnd(ev){ const s=rc15EventStart(ev); if(!s)return null; return new Date(s.getTime()+Number(ev.durata||60)*60000); }
+function rc15Historical(st){ return ["Effettuata","Assente","Recuperata","Annullata","Annullata dal cliente"].includes(st||""); }
+function rc15Consumes(st){ return ["Effettuata","Assente","Recuperata"].includes(st||""); }
+function rc15Fatte(clienteId){ return (eventi||[]).filter(e=>e.clienteId===clienteId && rc15Consumes(e.stato)).length; }
+async function rc15SyncCounter(clienteId){
+ const c=(clienti||[]).find(x=>x.id===clienteId); if(!c)return;
+ const fatte=rc15Fatte(clienteId); const residue=Math.max(0,Number(c.lezioniTotali||0)-fatte);
+ await setDoc(docPath("clienti",clienteId),{lezioniFatte:fatte,lezioniResidue:residue,updatedAt:serverTimestamp()},{merge:true});
+}
+async function rc15SetLesson(id,stato){
+ const ev=(eventi||[]).find(x=>x.id===id); if(!ev)return;
+ await setDoc(docPath("eventi",id),{stato,scalata:rc15Consumes(stato),storico:rc15Historical(stato),updatedAt:serverTimestamp()},{merge:true});
+ await rc15SyncCounter(ev.clienteId); __rc15LastSmartHTML=""; renderSmartCoachRC15(); status("Lezione aggiornata: "+stato);
+}
+window.confermaEffettuata=async(id)=>rc15SetLesson(id,"Effettuata");
+window.confermaAssente=async(id)=>rc15SetLesson(id,"Assente");
+window.eventoEffettuato=async(id)=>rc15SetLesson(id,"Effettuata");
+window.eventoPerso=async(id)=>rc15SetLesson(id,"Assente");
+window.eventoRecuperata=async(id)=>rc15SetLesson(id,"Recuperata");
+window.eventoAnnullata=async(id)=>rc15SetLesson(id,"Annullata");
+function lezioniDaConfermareRC15(){
+ const today=rc15TodayISO(); const now=new Date();
+ return (eventi||[]).filter(ev=>{
+   const st=ev.stato||"Prenotata"; if(rc15Historical(st))return false;
+   if(String(ev.data||"") < today)return false; // MAI date precedenti a oggi
+   const end=rc15EventEnd(ev); if(!end)return false;
+   if(end>now)return false;
+   if(st==="Da confermare")return true;
+   if(["Prenotata","Programmata","Occupata","Bloccata"].includes(st)) return now>=new Date(end.getTime()+2*60*60000);
+   return false;
+ });
+}
+window.lezioniDaConfermare=lezioniDaConfermareRC15;
+async function autoScalaLezioniRC15(){
+ const today=rc15TodayISO(); const now=new Date();
+ for(const ev of (eventi||[])){
+   const st=ev.stato||"Prenotata"; if(rc15Historical(st))continue; if(String(ev.data||"") < today)continue;
+   const start=rc15EventStart(ev), end=rc15EventEnd(ev); if(!start||!end)continue;
+   const hours=(start-now)/36e5;
+   if(hours<=24 && start>now && ["Prenotata","Programmata","Occupata"].includes(st)) await setDoc(docPath("eventi",ev.id),{stato:"Bloccata",bloccataEntro24h:true,updatedAt:serverTimestamp()},{merge:true});
+   if(now>=new Date(end.getTime()+2*60*60000) && ["Prenotata","Programmata","Occupata","Bloccata"].includes(st)) await setDoc(docPath("eventi",ev.id),{stato:"Da confermare",updatedAt:serverTimestamp()},{merge:true});
+ }
+}
+window.autoScalaLezioni=autoScalaLezioniRC15;
+function renderSmartCoachRC15(){
+ const summary=$("smartCoachSummary"); const outer=document.getElementById("smartCoachBox"); if(!summary && !outer)return;
+ const list=lezioniDaConfermareRC15();
+ const content=list.length?`<div class="card"><h2>⏳ Lezioni da confermare</h2><p class="meta">Hai ${list.length} lezione/i da confermare oggi.</p>${list.map(ev=>`<div class="check"><h3>${ev.clienteNome||"Cliente"}</h3><p class="meta">${fmt(ev.data)} ore ${ev.ora||"-"}</p><button class="btn light" onclick="confermaEffettuata('${ev.id}')">Effettuata</button> <button class="btn red" onclick="confermaAssente('${ev.id}')">Assente</button></div>`).join("")}<button class="btn gold full" onclick="confermaTutteEffettuate()">Conferma tutte come effettuate</button></div>`:`<p class="meta">Nessuna lezione da confermare oggi.</p>`;
+ if(content===__rc15LastSmartHTML)return; __rc15LastSmartHTML=content;
+ if(summary) summary.innerHTML=content; else if(outer) outer.innerHTML=`<h2>👋 Smart Coach</h2><div id="smartCoachSummary">${content}</div>`;
+}
+window.renderSmartCoachRC15=renderSmartCoachRC15;
+window.confermaTutteEffettuate=async()=>{ const list=lezioniDaConfermareRC15(); if(!list.length)return status("Nessuna lezione da confermare oggi."); if(!confirm("Confermare tutte le lezioni di oggi come effettuate?"))return; for(const ev of list){await rc15SetLesson(ev.id,"Effettuata");} __rc15LastSmartHTML=""; renderSmartCoachRC15(); };
+setTimeout(renderSmartCoachRC15,300); setTimeout(renderSmartCoachRC15,1200);
 
 </script>
 </body>

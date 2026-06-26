@@ -1,16 +1,12 @@
-SB PERSONAL COACH GESTIONALE 10.0 RC14 - CALENDARIO SOLO FUTURO
+SB PERSONAL COACH GESTIONALE 10.0 RC15 - SMART NO LOOP + NO PASSATO
 
 Fix:
-- Aggiorna calendario rigenera solo da domani in poi.
-- Il passato non viene mai ricreato.
-- Le lezioni non storiche nel passato vengono eliminate dopo la rigenerazione.
-- Duplicati futuri stesso cliente/data/ora vengono rimossi.
-- Smart Coach non deve più mostrare lezioni vecchie rigenerate.
-- Il contatore viene congelato e ripristinato dopo aggiornamento calendario.
+- Smart Dashboard non si aggiorna più in loop continuo.
+- Smart Coach non mostra mai lezioni con data precedente a oggi.
+- Le lezioni passate non vengono più trasformate automaticamente in Da confermare.
+- Il banner Smart viene aggiornato solo al caricamento e dopo azioni manuali.
 
 Test:
-1. Cliente 11/12.
-2. Cambia orario del blocco.
-3. Premi Aggiorna calendario.
-4. Deve restare 11/12.
-5. Le lezioni passate non devono comparire nello Smart.
+1. Apri Dashboard: lo Smart Box non deve scomparire/ricomparire.
+2. Le date precedenti a oggi non devono apparire in Da confermare.
+3. Dopo conferma, il banner si aggiorna senza lampeggiare.
