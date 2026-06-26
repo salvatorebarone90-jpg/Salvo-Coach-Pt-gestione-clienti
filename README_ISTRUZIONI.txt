@@ -1,9 +1,11 @@
-SB PERSONAL COACH GESTIONALE 10.0 RC17 - HOTFIX TASTI + REGISTRO
+SB PERSONAL COACH GESTIONALE 10.0 RC18 - TASTI CLIENTI + REGISTRO
 
 Fix:
-- Ripristinati i pulsanti delle card cliente.
+- Funzionamento tasti cliente anche nella sezione Clienti.
+- Ripristinati: + Lezione, Restituisci, Rinnova, Modifica, Inattivo, Elimina cliente, Invia accesso.
+- Registro Cliente: il filtro aggiorna realmente numeri e lista lezioni.
 - Rimossa sezione Lead.
-- Corretto Registro Cliente con filtro e storico date lezioni.
 
-Nota:
-- Non ho modificato la logica calendario RC16.
+Test:
+1. Sezione Clienti: prova ogni tasto.
+2. Registro Cliente: cambia cliente e verifica che cambino date e valori.

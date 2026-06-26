@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SB Personal Coach Gestionale 10.0 RC17</title>
+<title>SB Personal Coach Gestionale 10.0 RC18</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--n:#101827;--g:#d5ad52;--b:#f4f6f8}
@@ -34,7 +34,7 @@ textarea{min-height:80px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10p
 </style>
 </head>
 <body>
-<header><img src="logo.jpeg" class="logo"><h1>Gestionale Clienti 10.0 RC17 Coach</h1><p>Hotfix Tasti · Registro RC17</p></header>
+<header><img src="logo.jpeg" class="logo"><h1>Gestionale Clienti 10.0 RC18 Coach</h1><p>Tasti Clienti · Registro RC18</p></header>
 
 <div id="loginView" class="card" style="max-width:430px;margin:18px auto">
 <h2>🔐 Accesso Coach</h2>
@@ -178,7 +178,7 @@ textarea{min-height:80px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10p
 
 
 <section id="registro" class="section">
-  <div class="card"><h2>📚 Registro Cliente</h2><p class="meta">Storico completo del cliente: inizio/fine pacchetto e tutte le lezioni.</p><label>Seleziona cliente</label><select id="registroCliente" onchange="renderRegistroClienteRC16()"></select><button class="btn gold full" onclick="renderRegistroClienteRC16()">Aggiorna registro</button></div>
+  <div class="card"><h2>📚 Registro Cliente</h2><p class="meta">Storico completo del cliente: inizio/fine pacchetto e tutte le lezioni.</p><label>Seleziona cliente</label><select id="registroCliente" onchange="renderRegistroClienteRC18()"></select><button class="btn gold full" onclick="renderRegistroClienteRC16()">Aggiorna registro</button></div>
   <div class="grid"><div class="kpi"><strong id="regTotali">0</strong><span>Lezioni pacchetto</span></div><div class="kpi"><strong id="regFatte">0</strong><span>Consumate</span></div><div class="kpi"><strong id="regResidue">0</strong><span>Residue</span></div><div class="kpi"><strong id="regPeriodo">-</strong><span>Periodo pacchetto</span></div></div>
   <div class="card"><h2>🗓️ Lezioni del cliente</h2><div id="registroLista"></div></div>
 </section>
@@ -1278,8 +1278,9 @@ function renderAudit(){
 window.salvaPagamento=salvaPagamento;window.eliminaPagamento=eliminaPagamento;window.confermaEffettuata=confermaEffettuata;window.confermaAssente=confermaAssente;window.confermaTutteEffettuate=confermaTutteEffettuate;
 
 function render(){
- setTimeout(refreshRC17,100);
- setTimeout(refreshRC16Once,100);
+ setTimeout(refreshRC18,100);
+ 
+ 
 
  if($("clientAreaUrl"))$("clientAreaUrl").value=clientAreaLink();
  const opts=clienti.map(c=>`<option value="${c.id}">${c.nome||""} ${c.cognome||""}</option>`).join("");
@@ -2166,6 +2167,188 @@ window.initRegistroClienteRC16=rc17InitRegistro;
 function refreshRC17(){try{rc17InitRegistro()}catch(e){}try{if($("registro")&&$("registro").classList.contains("active"))renderRegistroClienteRC17()}catch(e){}}
 setTimeout(refreshRC17,300);
 setTimeout(refreshRC17,1200);
+
+
+/* RC18 - Tasti Cliente funzionanti + Registro */
+function rc18Name(c){return ((c.nome||"")+" "+(c.cognome||"")).trim();}
+function rc18Consumes(st){return ["Effettuata","Assente","Recuperata"].includes(st||"");}
+function rc18Fatte(id){return (eventi||[]).filter(e=>e.clienteId===id && rc18Consumes(e.stato)).length;}
+function rc18ById(id){return (clienti||[]).find(c=>c.id===id);}
+function rc18FindFromCard(card){
+ const name=card.querySelector("h2,h3")?.textContent?.trim();
+ return (clienti||[]).find(c=>rc18Name(c)===name);
+}
+
+async function rc18AddLesson(id){
+ const c=rc18ById(id); if(!c)return alert("Cliente non trovato.");
+ if(!confirm("Aggiungere una lezione manuale e scalare 1 credito?"))return;
+ await setDoc(docPath("clienti",id),{
+   lezioniFatte:Number(c.lezioniFatte||0)+1,
+   lezioniResidue:Math.max(0,Number(c.lezioniResidue||0)-1),
+   updatedAt:serverTimestamp()
+ },{merge:true});
+ status("+1 lezione registrata.");
+ try{render()}catch(e){}
+}
+async function rc18ReturnLesson(id){
+ const c=rc18ById(id); if(!c)return alert("Cliente non trovato.");
+ if(!confirm("Restituire 1 credito al cliente?"))return;
+ await setDoc(docPath("clienti",id),{
+   lezioniFatte:Math.max(0,Number(c.lezioniFatte||0)-1),
+   lezioniResidue:Number(c.lezioniResidue||0)+1,
+   updatedAt:serverTimestamp()
+ },{merge:true});
+ status("Credito restituito.");
+ try{render()}catch(e){}
+}
+async function rc18Renew(id){
+ const c=rc18ById(id); if(!c)return alert("Cliente non trovato.");
+ if(!confirm("Rinnovare il pacchetto di "+rc18Name(c)+"?"))return;
+ const start=localISO(new Date());
+ await addDoc(path("rinnovi"),{
+   cliente:rc18Name(c),clienteId:id,servizio:c.servizio||"",pacchetto:Number(c.lezioniTotali||0),
+   data:start,importo:Number(c.dovuto||0),createdAt:serverTimestamp()
+ });
+ await setDoc(docPath("clienti",id),{
+   stato:"attivo",lezioniFatte:0,lezioniResidue:Number(c.lezioniTotali||0),
+   inizio:start,scadenza:calcExpiry(start,Number(c.lezioniTotali||0),Number(c.frequenza||1)),
+   updatedAt:serverTimestamp()
+ },{merge:true});
+ status("Pacchetto rinnovato.");
+ try{render()}catch(e){}
+}
+async function rc18Inactive(id){
+ const c=rc18ById(id); if(!c)return alert("Cliente non trovato.");
+ if(!confirm("Rendere inattivo "+rc18Name(c)+"?"))return;
+ await setDoc(docPath("clienti",id),{stato:"inattivo",updatedAt:serverTimestamp()},{merge:true});
+ status("Cliente reso inattivo.");
+ try{render()}catch(e){}
+}
+async function rc18Delete(id){
+ const c=rc18ById(id); if(!c)return alert("Cliente non trovato.");
+ if(!confirm("Eliminare definitivamente "+rc18Name(c)+"?"))return;
+ const evs=await getDocs(query(path("eventi"),where("clienteId","==",id)));
+ const chs=await getDocs(query(path("checks"),where("clienteId","==",id)));
+ await Promise.all([...evs.docs.map(d=>deleteDoc(docPath("eventi",d.id))),...chs.docs.map(d=>deleteDoc(docPath("checks",d.id))),deleteDoc(docPath("clienti",id))]);
+ status("Cliente eliminato.");
+ try{render()}catch(e){}
+}
+const rc18OldEdit = window.editCliente;
+function rc18Edit(id){
+ try{
+   if(typeof rc18OldEdit==="function") rc18OldEdit(id);
+   else {
+     const c=rc18ById(id); if(!c)return alert("Cliente non trovato.");
+     ["nome","cognome","telefono","emailCliente","inizio","dovuto","pagato","note"].forEach(k=>{if($(k)&&c[k]!==undefined)$(k).value=c[k]||""});
+     if($("editId"))$("editId").value=id;
+     if($("clienteId"))$("clienteId").value=id;
+   }
+   window.scrollTo({top:0,behavior:"smooth"});
+   status("Cliente aperto in modifica.");
+ }catch(e){alert("Errore modifica: "+e.message)}
+}
+function rc18Access(id){
+ const c=rc18ById(id); if(!c)return alert("Cliente non trovato.");
+ const url=location.origin+location.pathname.replace("index.html","")+"cliente.html?id="+id;
+ if(navigator.clipboard) navigator.clipboard.writeText(url);
+ status("Link cliente copiato.");
+}
+
+// Override all names used in card/list/clienti sections
+window.lezione=rc18AddLesson;
+window.addLezione=rc18AddLesson;
+window.aggiungiLezione=rc18AddLesson;
+window.restituisci=rc18ReturnLesson;
+window.restituisciLezione=rc18ReturnLesson;
+window.rinnova=rc18Renew;
+window.rinnovaCliente=rc18Renew;
+window.modificaCliente=rc18Edit;
+window.editCliente=rc18Edit;
+window.inattivo=rc18Inactive;
+window.toggleInactive=rc18Inactive;
+window.eliminaCliente=rc18Delete;
+window.deleteCliente=rc18Delete;
+window.inviaAccessoCliente=rc18Access;
+window.sendAccess=rc18Access;
+
+function rc18PatchVisibleClientButtons(){
+ const buttons=[...document.querySelectorAll("button")];
+ buttons.forEach(btn=>{
+   const t=btn.textContent.trim().toLowerCase();
+   if(!["+ lezione","restituisci","rinnova","modifica","inattivo","elimina cliente","invia accesso cliente"].some(x=>t.includes(x)))return;
+   const card=btn.closest(".card") || btn.closest("div");
+   if(!card)return;
+   let c=rc18FindFromCard(card);
+   if(!c){
+     let p=card.parentElement;
+     for(let i=0;i<4 && p && !c;i++,p=p.parentElement)c=rc18FindFromCard(p);
+   }
+   if(!c)return;
+   btn.onclick=(ev)=>{
+     ev.preventDefault(); ev.stopPropagation();
+     if(t.includes("+ lezione")) return rc18AddLesson(c.id);
+     if(t.includes("restituisci")) return rc18ReturnLesson(c.id);
+     if(t.includes("rinnova")) return rc18Renew(c.id);
+     if(t.includes("modifica")) return rc18Edit(c.id);
+     if(t.includes("inattivo")) return rc18Inactive(c.id);
+     if(t.includes("elimina cliente")) return rc18Delete(c.id);
+     if(t.includes("invia accesso")) return rc18Access(c.id);
+   };
+ });
+}
+
+function rc18InitRegistro(){
+ const sel=$("registroCliente"); if(!sel)return;
+ const current=sel.value;
+ const list=(clienti||[]).slice().sort((a,b)=>rc18Name(a).localeCompare(rc18Name(b)));
+ sel.innerHTML='<option value="">Seleziona cliente</option>'+list.map(c=>`<option value="${c.id}">${rc18Name(c)}</option>`).join("");
+ if(current && list.some(c=>c.id===current)) sel.value=current;
+}
+function rc18StatoClass(st){
+ if(st==="Effettuata"||st==="Recuperata")return "ok";
+ if(st==="Assente"||st==="Annullata"||st==="Annullata dal cliente")return "bad";
+ return "warn";
+}
+function renderRegistroClienteRC18(){
+ const sel=$("registroCliente"), box=$("registroLista");
+ if(!sel||!box)return;
+ const before=sel.value;
+ rc18InitRegistro();
+ if(before)sel.value=before;
+ const id=sel.value;
+ const c=rc18ById(id);
+ if(!c){
+   if($("regTotali"))$("regTotali").textContent="0";
+   if($("regFatte"))$("regFatte").textContent="0";
+   if($("regResidue"))$("regResidue").textContent="0";
+   if($("regPeriodo"))$("regPeriodo").textContent="-";
+   box.innerHTML='<div class="empty">Seleziona un cliente per vedere il registro.</div>';
+   return;
+ }
+ const evs=(eventi||[]).filter(e=>e.clienteId===id).slice().sort((a,b)=>String(a.data||"").localeCompare(String(b.data||"")) || String(a.ora||"").localeCompare(String(b.ora||"")));
+ const fatte=rc18Fatte(id);
+ const residue=Math.max(0,Number(c.lezioniTotali||0)-fatte);
+ const inizio=c.inizio||c.dataInizio||"-";
+ const fine=c.scadenza||c.fine||c.dataFine||"-";
+ if($("regTotali"))$("regTotali").textContent=Number(c.lezioniTotali||0);
+ if($("regFatte"))$("regFatte").textContent=fatte;
+ if($("regResidue"))$("regResidue").textContent=residue;
+ if($("regPeriodo"))$("regPeriodo").textContent=`${fmt(inizio)} → ${fmt(fine)}`;
+ box.innerHTML=`<div class="check"><h3>${rc18Name(c)}</h3><p class="meta">Inizio: ${fmt(inizio)} · Fine/scadenza: ${fmt(fine)}</p><span class="badge ok">${residue} residue su ${c.lezioniTotali||0}</span></div>`+
+ (evs.length?evs.map(e=>`<div class="check"><h3>${fmt(e.data)} ore ${e.ora||"-"}</h3><p class="meta">Durata ${e.durata||60} min · Stato: ${e.stato||"Prenotata"}</p><span class="badge ${rc18StatoClass(e.stato||"Prenotata")}">${e.stato||"Prenotata"}</span></div>`).join(""):'<div class="empty">Nessuna lezione registrata per questo cliente.</div>');
+}
+window.renderRegistroClienteRC18=renderRegistroClienteRC18;
+window.renderRegistroClienteRC17=renderRegistroClienteRC18;
+window.renderRegistroClienteRC16=renderRegistroClienteRC18;
+
+function refreshRC18(){
+ try{rc18PatchVisibleClientButtons()}catch(e){}
+ try{rc18InitRegistro()}catch(e){}
+ try{if($("registro")&&$("registro").classList.contains("active"))renderRegistroClienteRC18()}catch(e){}
+}
+setTimeout(refreshRC18,300);
+setTimeout(refreshRC18,1000);
+setInterval(refreshRC18,2500);
 
 </script>
 </body>
