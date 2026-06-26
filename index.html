@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SB Personal Coach Gestionale 10.0 RC10</title>
+<title>SB Personal Coach Gestionale 10.0 RC11</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--n:#101827;--g:#d5ad52;--b:#f4f6f8}
@@ -34,7 +34,7 @@ textarea{min-height:80px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10p
 </style>
 </head>
 <body>
-<header><img src="logo.jpeg" class="logo"><h1>Gestionale Clienti 10.0 RC10 Coach</h1><p>Da contattare · Contabilità RC10</p></header>
+<header><img src="logo.jpeg" class="logo"><h1>Gestionale Clienti 10.0 RC11 Coach</h1><p>Fix Tre Problemi · RC11</p></header>
 
 <div id="loginView" class="card" style="max-width:430px;margin:18px auto">
 <h2>🔐 Accesso Coach</h2>
@@ -177,7 +177,7 @@ textarea{min-height:80px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10p
 </section>
 
 <section id="dashboard" class="section active">
-<div class="card premium" id="smartCoachBox"><h2>👋 Smart Coach</h2><div id="smartCoachSummary"></div></div>
+<div class="card premium" id="smartCoachBox"><h2>👋 Smart Coach</h2><div id="smartCoachSummary"></div><div id="smartConfirmBanner"></div></div>
 <div class="card" style="display:flex;justify-content:space-between;align-items:center"><div><b id="userEmail"></b><br><span class="meta">Database cloud Firestore</span></div><button id="logoutBtn" class="btn red">Esci</button></div>
 <div class="card">
 <h2>📱 Area Cliente</h2>
@@ -228,8 +228,9 @@ textarea{min-height:80px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10p
 <div class="row"><div><label>Ultimo check</label><input id="ultimoCheck" type="date"></div></div>
 <label>Anamnesi / note interne</label><textarea id="anamnesi"></textarea><label>Note</label><textarea id="note"></textarea>
 <button id="saveClientBtn" class="btn primary full">Crea cliente + genera calendario</button>
-<button id="regenBtn" class="btn gold full">📅 Aggiorna calendario futuro</button>
-<button id="resetLessonsBtn" class="btn light full">🔄 Ricalcola contatore cliente</button>
+<button id="updateSaldoBtn" class="btn gold full" style="display:none">💰 Modifica solo saldo</button>
+<button id="regenBtn" class="btn gold full" style="display:none">📅 Aggiorna calendario</button>
+<button id="resetLessonsBtn" class="btn light full" style="display:none">🔄 Ricalcola contatore</button>
 <button id="clearBtn" class="btn light full">Pulisci</button></div>
 <input id="search" placeholder="Cerca cliente..."><div class="filters" id="clientFilters"></div><div id="listaClienti"></div>
 </section>
@@ -401,6 +402,7 @@ $("pacchetto").addEventListener("change",()=>$("manualeBox").style.display=$("pa
 $("search").addEventListener("input",render);
 $("clearBtn").addEventListener("click",pulisciForm);
 $("saveClientBtn").addEventListener("click",salvaCliente);
+if($("updateSaldoBtn"))$("updateSaldoBtn").addEventListener("click",aggiornaSoloSaldo);
 $("regenBtn").addEventListener("click",rigeneraCalendarioCliente);
 $("resetLessonsBtn").addEventListener("click",ripristinaLezioniResidue);
 $("saveEventBtn").addEventListener("click",salvaEventoManuale);
@@ -420,6 +422,7 @@ if($("proData"))$("proData").valueAsDate=new Date();
 function pulisciForm(){
  ["editId","nome","cognome","emailCliente","telefono","dataNascita","pacchettoManuale","dovuto","pagato","note","anamnesi","certificatoData","ultimoCheck","checkFreqCustom","durataCustom","slot1","slot2","slot3","slot4","slot5","slot6"].forEach(id=>$(id).value="");
  $("inizio").valueAsDate=new Date();$("pacchetto").value="12";$("frequenza").value="2";$("manualeBox").style.display="none";
+ aggiornaPulsantiClienteRC11();
 }
 
 async function deleteAutoEvents(clienteId, onlyFuture=true){
@@ -488,11 +491,10 @@ async function salvaCliente(){
 
 async function rigeneraCalendarioCliente(){
  const id=$("editId").value;
- if(!id){alert("Apri prima un cliente con Modifica, poi rigenera il calendario.");return}
+ if(!id){alert("Apri prima un cliente con Modifica, poi aggiorna il calendario.");return}
  const c=clienti.find(x=>x.id===id);
  if(!c){alert("Cliente non trovato.");return}
- if(!confirm("Rigenerare il calendario automatico di questo cliente? Verranno eliminati TUTTI gli eventi automatici collegati e ricreati con i giorni corretti."))return;
- const reset=confirm("Vuoi anche ripristinare le lezioni residue al totale del pacchetto? Consigliato se il calendario precedente aveva scalato lezioni per errore.");
+ if(!confirm("Aggiornare il calendario? Verranno eliminate e ricreate solo le lezioni future automatiche. Saldo, storico e contatore non vengono azzerati."))return;
  const lez=pack();
  const updated={
    ...c,
@@ -502,24 +504,22 @@ async function rigeneraCalendarioCliente(){
    lezioniTotali:lez,
    frequenza:Number($("frequenza").value),
    scadenza:calcExpiry($("inizio").value,lez,Number($("frequenza").value)),
-   ...(reset?{lezioniFatte:0,lezioniResidue:lez}:{}),
    updatedAt:serverTimestamp()
  };
  await setDoc(docPath("clienti",id),updated,{merge:true});
- await deleteAutoEvents(id,false);
+ await deleteAutoEvents(id,true);
  await generateFixedEvents(id,updated);
- alert("Calendario rigenerato. Controlla la sezione Calendario.");
+ if(typeof ricalcolaContatoreCliente==="function")await ricalcolaContatoreCliente(id);
+ alert("Calendario futuro aggiornato. Saldo e storico mantenuti.");
 }
 
 async function ripristinaLezioniResidue(){
  const id=$("editId").value;
  if(!id){alert("Apri prima un cliente con Modifica.");return}
- const c=clienti.find(x=>x.id===id);
- if(!c)return;
- clienteOriginaleForm={...c};
- if(!confirm("Ripristinare le lezioni residue al totale del pacchetto?"))return;
- await setDoc(docPath("clienti",id),{lezioniFatte:0,lezioniResidue:c.lezioniTotali||0,updatedAt:serverTimestamp()},{merge:true});
- alert("Lezioni residue ripristinate.");
+ if(!confirm("Ricalcolare il contatore in base alle lezioni effettuate/assenti/recuperate?"))return;
+ if(typeof ricalcolaContatoreCliente==="function"){await ricalcolaContatoreCliente(id);}
+ else{const c=clienti.find(x=>x.id===id); if(c) await setDoc(docPath("clienti",id),{lezioniResidue:c.lezioniTotali||0,updatedAt:serverTimestamp()},{merge:true});}
+ alert("Contatore ricalcolato.");
 }
 
 async function salvaEventoManuale(){
@@ -572,6 +572,7 @@ window.editCliente=(id)=>{
  (c.slotFissi||[]).forEach(s=>{if($("slot"+s.day))$("slot"+s.day).value=s.time});
  $("durataLezione").value=[30,60,90].includes(Number(c.durataMinuti))?String(c.durataMinuti):"custom";$("durataCustom").value=[30,60,90].includes(Number(c.durataMinuti))?"":(c.durataMinuti||"");
  window.scrollTo({top:130,behavior:"smooth"});
+ aggiornaPulsantiClienteRC11();
 }
 
 async function restituisciCreditoEvento(id, nuovoStato, extra={}){
@@ -785,6 +786,33 @@ function cardDaContattare(c){
   <button class="btn whatsapp full" onclick="wa('${c.whatsapp||c.telefono||""}')">💬 WhatsApp</button>
  </div>`;
 }
+
+
+function cardDaContattareClean(c){
+ const res=Math.max(0,Number(c.dovuto||0)-Number(c.pagato||0));
+ return `<div class="card"><h3>${c.nome||""} ${c.cognome||""}</h3>
+  <p class="meta">${c.servizio||c.tipo||""}${res>0?` · Residuo €${res}`:""}</p>
+  <a class="btn green full" href="${wa(c)}" target="_blank">💬 WhatsApp</a>
+ </div>`;
+}
+function aggiornaPulsantiClienteRC11(){
+ const isEdit=Boolean($("editId")&&$("editId").value);
+ if($("saveClientBtn")){$("saveClientBtn").style.display=isEdit?"none":"block";$("saveClientBtn").textContent="Crea cliente + genera calendario";}
+ if($("updateSaldoBtn"))$("updateSaldoBtn").style.display=isEdit?"block":"none";
+ if($("regenBtn"))$("regenBtn").style.display=isEdit?"block":"none";
+ if($("resetLessonsBtn"))$("resetLessonsBtn").style.display=isEdit?"block":"none";
+}
+async function aggiornaSoloSaldo(){
+ const id=$("editId")?.value;
+ if(!id){alert("Apri prima un cliente con Modifica.");return}
+ const dovuto=Number($("dovuto").value||0);
+ const pagato=Number($("pagato").value||0);
+ await setDoc(docPath("clienti",id),{dovuto,pagato,updatedAt:serverTimestamp()},{merge:true});
+ try{await audit("saldo","Saldo cliente aggiornato",{clienteId:id,dovuto,pagato})}catch(e){}
+ status("Saldo aggiornato. Calendario e contatore non modificati.");
+}
+window.aggiornaSoloSaldo=aggiornaSoloSaldo;
+window.aggiornaPulsantiClienteRC11=aggiornaPulsantiClienteRC11;
 
 function card(c){let res=Math.max(0,(c.dovuto||0)-(c.pagato||0)),s=statusClient(c),residueSmart=lezioniResidueSmart(c);let inactive=c.stato==="inattivo";return `<div class="card"><h3>${c.nome||""} ${c.cognome||""}</h3><p class="meta">${c.servizio||""} · ${c.modalitaPrenotazione||""} · durata ${c.durataMinuti||60} min<br>${slotText(c)}</p><span class="badge ${s[0]}">${s[1]}</span><span class="badge ${residueSmart<=3&&c.lezioniTotali>0?'warn':'ok'}">${residueSmart} residue su ${c.lezioniTotali||0}</span><span class="badge ${res>0?'bad':'ok'}">${res>0?'Residuo €'+res:'Pagato'}</span><p class="meta">Scadenza pacchetto: ${fmt(c.scadenza)} · Certificato: ${fmt(c.certificatoScadenza)} · Check: ${fmt(c.prossimoCheck)}</p><a class="btn green full" href="${wa(c)}" target="_blank">💬 WhatsApp</a><div class="actions"><button class="btn light" onclick="lezione('${c.id}')">+ Lezione</button><button class="btn light" onclick="restituisci('${c.id}')">Restituisci</button><button class="btn gold" onclick="rinnova('${c.id}')">Rinnova</button><button class="btn light" onclick="editCliente('${c.id}')">Modifica</button>${inactive?`<button class="btn gold" onclick="riattiva('${c.id}')">Riattiva</button>`:`<button class="btn red" onclick="inattivo('${c.id}')">Inattivo</button>`}<a class="btn gold" href="${waAccessoCliente(c)}" target="_blank">Invia accesso cliente</a><button class="btn red" onclick="eliminaCliente('${c.id}')">Elimina cliente</button></div></div>`}
 
@@ -1155,8 +1183,9 @@ async function confermaTutteEffettuate(){
 function renderSmartCoach(){
  if(!$("smartCoachSummary"))return;
  const oggi=todayISO();
+ const listConf=lezioniDaConfermare();
  const lezOggi=eventi.filter(e=>e.data===oggi && !["Annullata","Annullata dal cliente"].includes(e.stato)).length;
- const daConf=lezioniDaConfermare().length;
+ const daConf=listConf.length;
  const daInc=clienti.reduce((s,c)=>s+Math.max(0,Number(c.dovuto||0)-Number(c.pagato||0)),0);
  const cert=clienti.filter(c=>daysLeft(c.certificatoScadenza)<=30).length;
  const rec=recuperi.filter(r=>String(r.stato||"in attesa").toLowerCase()==="in attesa").length;
@@ -1165,13 +1194,17 @@ function renderSmartCoach(){
   <div class="kpi"><strong>${daConf}</strong><span>Da confermare</span></div>
   <div class="kpi"><strong>${euro(daInc)}</strong><span>Da incassare</span></div>
   <div class="kpi"><strong>${cert}</strong><span>Certificati</span></div>
- </div>
- <p class="meta">🔄 Recuperi in attesa: <b>${rec}</b></p>
- ${daConf?'<button class="btn gold full" data-open-notifiche="1">Apri lezioni da confermare</button>':""}
- <button class="btn light full" onclick="ricalcolaTuttiContatori()">🔄 Ricalcola contatori</button>`;
- const openBtn=document.querySelector('[data-open-notifiche="1"]');
- if(openBtn)openBtn.addEventListener("click",()=>showTab("notifiche"));
+ </div><p class="meta">🔄 Recuperi in attesa: <b>${rec}</b></p>`;
+ if($("smartConfirmBanner")){
+   $("smartConfirmBanner").innerHTML=daConf?`<div class="card" style="background:#fff7df;border:1px solid #e3bd5a;margin-top:12px">
+    <h2>⏳ Lezioni da confermare</h2>
+    <p class="meta">Hai ${daConf} lezione/i da confermare.</p>
+    ${listConf.slice(0,5).map(ev=>`<div class="check"><b>${ev.clienteNome||clienteNomeById(ev.clienteId)}</b><br><span class="meta">${fmt(ev.data)} ore ${ev.ora||"-"}</span><div class="actions"><button class="btn light" onclick="confermaEffettuata('${ev.id}')">Effettuata</button><button class="btn red" onclick="confermaAssente('${ev.id}')">Assente</button></div></div>`).join("")}
+    <button class="btn gold full" onclick="confermaTutteEffettuate()">Conferma tutte come effettuate</button>
+   </div>`:"";
+ }
 }
+
 function renderNotifiche(){
  if(!$("listaNotifiche"))return;
  const parts=[];
@@ -1254,7 +1287,7 @@ function render(){
  let q=($("search").value||"").toLowerCase();let list=clienti.filter(c=>((c.nome||"")+" "+(c.cognome||"")+" "+(c.servizio||"")).toLowerCase().includes(q));
  if(filtro==="Attivi")list=active; else if(filtro==="Inattivi")list=inactive; else if(filtro==="Da contattare")list=dc; else if(filtro!=="Tutti")list=list.filter(c=>c.servizio===filtro);
  $("listaClienti").innerHTML=list.length?list.map(card).join(""):`<div class="empty">Nessun cliente.</div>`;
- $("listaContatti").innerHTML=dc.length?dc.map(card).join(""):`<div class="empty">Nessun cliente da contattare.</div>`;
+ $("listaContatti").innerHTML=dc.length?dc.map(cardDaContattareClean).join(""):`<div class="empty">Nessun cliente da contattare.</div>`;
  $("listaEventi").innerHTML=eventi.length?eventi.slice().filter(e=>!e.data||e.data>=today).sort((a,b)=>(a.data+a.ora).localeCompare(b.data+b.ora)).map(e=>`<div class="card"><b>${e.tipo}</b> · <span class="badge ${e.stato==='Bloccata'?'black':e.stato==='Assente'?'bad':e.stato==='Effettuata'?'ok':'warn'}">${e.stato}</span><p class="meta">${e.clienteNome||""} · ${fmt(e.data)} ore ${e.ora||"-"} · ${e.durata||60} min ${e.scalata?'· scalata':''} ${e.autoGenerato?'· auto':''}</p><div class="actions"><button class="btn light" onclick="eventoEffettuato('${e.id}')">Effettuata</button><button class="btn red" onclick="eventoPerso('${e.id}')">Assente</button><button class="btn light" onclick="eventoRecuperata('${e.id}')">Recuperata</button><button class="btn light" onclick="eventoAnnullata('${e.id}')">Annullata</button><a class="btn gold" href="${googleCalendarUrl(e)}" target="_blank">Google Calendar</a><button class="btn red" onclick="delEvento('${e.id}')">Elimina</button></div></div>`).join(""):`<div class="empty">Nessun evento.</div>`;
  
  if($("listaGoogleEventi"))$("listaGoogleEventi").innerHTML=eventi.filter(e=>e.data&&e.ora&&e.clienteNome).slice().filter(e=>!e.data||e.data>=today).sort((a,b)=>(a.data+a.ora).localeCompare(b.data+b.ora)).slice(0,20).map(e=>`<div class="card"><b>${e.tipo||"Lezione PT"}</b><p class="meta">${e.clienteNome||""} · ${fmt(e.data)} ore ${e.ora||"-"}</p><a class="btn gold full" href="${googleCalendarUrl(e)}" target="_blank">Aggiungi a Google Calendar</a></div>`).join("")||`<div class="empty">Nessun evento valido.</div>`;
@@ -1588,6 +1621,9 @@ window.renderContabilitaRC10=renderContabilitaRC10;
 window.renderContabilita=renderContabilitaRC10;
 setInterval(()=>{try{renderDaContattareRC10();renderRinnoviRC10();renderContabilitaRC10()}catch(e){}},500);
 
+
+// RC11_FINAL_FIX_INTERVAL
+setInterval(()=>{try{aggiornaPulsantiClienteRC11(); if(typeof renderSmartCoach==='function')renderSmartCoach();}catch(e){}},800);
 </script>
 </body>
 </html>
