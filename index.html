@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>SB Personal Coach Gestionale 11.1</title>
+<title>SB Personal Coach Gestionale 11.2</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--dark:#101827;--blue:#17233a;--gold:#d5ad52;--bg:#f4f6f8;--card:#fff;--muted:#667085;--ok:#13915f;--bad:#c0392b;--warn:#c47d00}
@@ -50,8 +50,8 @@ hr{border:0;border-top:1px solid #e5e7eb;margin:12px 0}
   <div class="header-inner">
     <img src="logo.jpeg" class="logo" onerror="this.style.display='none'">
     <div>
-      <h1>SB Personal Coach Gestionale 11.1</h1>
-      <div class="subtitle">Giorni e Orari Intuitivi · 11.1</div>
+      <h1>SB Personal Coach Gestionale 11.2</h1>
+      <div class="subtitle">Solo Fix · 11.2</div>
     </div>
   </div>
   <nav id="nav">
@@ -110,21 +110,22 @@ hr{border:0;border-top:1px solid #e5e7eb;margin:12px 0}
       <div><label>Frequenza settimanale</label><input id="frequenza" type="number" value="2"></div>
       <div><label>Durata lezione minuti</label><input id="durata" type="number" value="60"></div>
     </div>
-    <div class="row">
-      <div>
-        <label>Giorni di allenamento</label>
-        <input id="giorni" placeholder="Esempio: Lunedì, Mercoledì, Venerdì" oninput="aggiornaAnteprimaOrari()">
-        <p class="meta small">Scrivi i giorni separati da virgola.</p>
-      </div>
-      <div>
-        <label>Orari corrispondenti</label>
-        <input id="orari" placeholder="Esempio: 17:30, 18:00, 09:00" oninput="aggiornaAnteprimaOrari()">
-        <p class="meta small">L’orario 1 corrisponde al giorno 1, ecc.</p>
-      </div>
-    </div>
     <div class="card" style="background:#f8fafc;margin-top:8px">
-      <h3>Anteprima blocco settimanale</h3>
-      <p id="anteprimaOrari" class="meta">Inserisci giorni e orari per vedere il riepilogo.</p>
+      <h3>Giorni e orari settimanali</h3>
+      <p class="meta small">Attiva i giorni del cliente e inserisci l'orario corrispondente.</p>
+      <div class="row">
+        <div><label><input id="day_lun" type="checkbox" style="width:auto"> Lunedì</label><input id="time_lun" type="time"></div>
+        <div><label><input id="day_mar" type="checkbox" style="width:auto"> Martedì</label><input id="time_mar" type="time"></div>
+        <div><label><input id="day_mer" type="checkbox" style="width:auto"> Mercoledì</label><input id="time_mer" type="time"></div>
+      </div>
+      <div class="row">
+        <div><label><input id="day_gio" type="checkbox" style="width:auto"> Giovedì</label><input id="time_gio" type="time"></div>
+        <div><label><input id="day_ven" type="checkbox" style="width:auto"> Venerdì</label><input id="time_ven" type="time"></div>
+        <div><label><input id="day_sab" type="checkbox" style="width:auto"> Sabato</label><input id="time_sab" type="time"></div>
+      </div>
+      <input id="giorni" type="hidden">
+      <input id="orari" type="hidden">
+      <p id="anteprimaOrari" class="meta"><b>-</b></p>
     </div>
     <div class="row">
       <div><label>Data inizio pacchetto</label><input id="inizio" type="date"></div>
@@ -399,6 +400,72 @@ function renderContabilita(){const now=new Date();if(!$("contMese").value)$("con
 window.esportaBackup=()=>{const data={clienti,eventi,rinnovi,pagamenti,exported:new Date().toISOString()};const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="backup_sb_coach_11.json";a.click()}
 function render(){if(!user)return;renderDashboard();renderClienti();renderCalendario();renderRegistroSelect();renderContattare();renderRinnovi();renderContabilita()}
 window.addEventListener("load",()=>{if(!$("inizio").value)$("inizio").value=todayISO();if(!$("calDal").value)$("calDal").value=todayISO()})
+
+/* 11.2 Solo Fix */
+const dayFields112=[["lun","Lunedì","Lun"],["mar","Martedì","Mar"],["mer","Mercoledì","Mer"],["gio","Giovedì","Gio"],["ven","Venerdì","Ven"],["sab","Sabato","Sab"]];
+function syncScheduleFields112(){
+ const giorni=[],orari=[];
+ dayFields112.forEach(([k,full])=>{
+   const chk=$("day_"+k), tm=$("time_"+k);
+   if(chk && chk.checked){giorni.push(full);orari.push(tm?.value||"");}
+ });
+ if($("giorni"))$("giorni").value=giorni.join(",");
+ if($("orari"))$("orari").value=orari.join(",");
+ const txt=scheduleSummary({giorni:giorni.join(","),orari:orari.join(",")});
+ if($("anteprimaOrari"))$("anteprimaOrari").innerHTML="<b>"+(txt||"-")+"</b>";
+}
+function setScheduleFields112(c){
+ const giorni=String(c.giorni||"").split(/[,\n;]/).map(x=>normDay(x.trim())).filter(Boolean);
+ const orari=String(c.orari||"").split(/[,\n;]/).map(x=>x.trim()).filter(Boolean);
+ dayFields112.forEach(([k,full])=>{
+   const idx=giorni.indexOf(normDay(full));
+   if($("day_"+k))$("day_"+k).checked=idx>=0;
+   if($("time_"+k))$("time_"+k).value=idx>=0?(orari[idx]||orari[0]||""):"";
+ });
+ syncScheduleFields112();
+}
+setTimeout(()=>{dayFields112.forEach(([k])=>{if($("day_"+k))$("day_"+k).addEventListener("change",syncScheduleFields112);if($("time_"+k))$("time_"+k).addEventListener("input",syncScheduleFields112);});},300);
+const oldFormData112=formData;
+formData=()=>{syncScheduleFields112();return oldFormData112();};
+
+window.editCliente=id=>{
+ const c=clienti.find(x=>x.id===id); if(!c)return;
+ $("clienteId").value=id;
+ ["nome","cognome","telefono","emailCliente","servizio","lezioniTotali","frequenza","durata","inizio","scadenza","dovuto","pagato","note"].forEach(k=>{if($(k))$(k).value=c[k]??""});
+ setScheduleFields112(c); setEditMode(true); showTab("clienti"); window.scrollTo({top:0,behavior:"smooth"});
+};
+window.lezione=async id=>{const c=clienti.find(x=>x.id===id);if(!c)return alert("Cliente non trovato");if(!confirm("Scalare 1 lezione manualmente?"))return;await setDoc(docPath("clienti",id),{lezioniFatte:Number(c.lezioniFatte||0)+1,lezioniResidue:Math.max(0,Number(c.lezioniResidue||residue(c))-1),updatedAt:serverTimestamp()},{merge:true});};
+window.restituisci=async id=>{const c=clienti.find(x=>x.id===id);if(!c)return alert("Cliente non trovato");if(!confirm("Restituire 1 lezione?"))return;await setDoc(docPath("clienti",id),{lezioniFatte:Math.max(0,Number(c.lezioniFatte||0)-1),lezioniResidue:Number(c.lezioniResidue||residue(c))+1,updatedAt:serverTimestamp()},{merge:true});};
+
+window.aggiornaCalendarioFuturo=async()=>{
+ const id=$("clienteId").value;if(!id)return alert("Apri prima un cliente in modifica.");
+ const cOld=clienti.find(x=>x.id===id);if(!cOld)return;
+ if(!confirm("Aggiornare il calendario SOLO da domani in poi?"))return;
+ syncScheduleFields112();
+ const beforeF=fatte(id), beforeR=residue(cOld), tomorrow=tomorrowISO();
+ for(const ev of eventi.filter(e=>e.clienteId===id && e.data>=tomorrow && !historical(e.stato))) await deleteDoc(docPath("eventi",ev.id));
+ const c={...cOld,...formData(),id};
+ await setDoc(docPath("clienti",id),{...formData(),lezioniFatte:beforeF,lezioniResidue:beforeR,updatedAt:serverTimestamp()},{merge:true});
+ await generaEventi(id,c,tomorrow);
+ alert("Calendario futuro aggiornato.");
+};
+window.apriGoogleCalendarEvento=(id)=>{
+ const ev=eventi.find(e=>e.id===id); if(!ev)return;
+ const f=d=>d.toISOString().replace(/[-:]/g,"").split(".")[0]+"Z";
+ const url=`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent("Lezione PT - "+(ev.clienteNome||"Cliente"))}&dates=${f(eventStart(ev))}/${f(eventEnd(ev))}&details=${encodeURIComponent("SB Personal Coach")}`;
+ window.open(url,"_blank");
+};
+renderCalendario=()=>{
+ if(!$("calDal").value)$("calDal").value=todayISO();
+ if(!$("calAl").value){const d=new Date();d.setDate(d.getDate()+14);$("calAl").value=d.toISOString().slice(0,10)}
+ const dal=$("calDal").value,al=$("calAl").value;
+ const list=eventi.filter(e=>e.data>=dal&&e.data<=al).sort((a,b)=>a.data.localeCompare(b.data)||String(a.ora).localeCompare(String(b.ora)));
+ $("listaCalendario").innerHTML=list.map(e=>`<div class="card"><h3>${e.clienteNome}</h3><p class="meta">${fmt(e.data)} ore ${e.ora} · ${e.stato||"Prenotata"}</p><button class="btn gold" onclick="apriGoogleCalendarEvento('${e.id}')">Google Calendar</button></div>`).join("")||'<div class="empty">Nessuna lezione.</div>';
+};
+window.inviaAccessoCliente=id=>{const url=location.href.split("/").slice(0,-1).join("/")+"/cliente.html?id="+encodeURIComponent(id);navigator.clipboard?.writeText(url);window.open(url,"_blank");};
+window.renderContabilita=renderContabilita;
+const oldRender112=render; render=()=>{oldRender112();syncScheduleFields112();};
+
 </script>
 </body>
 </html>
