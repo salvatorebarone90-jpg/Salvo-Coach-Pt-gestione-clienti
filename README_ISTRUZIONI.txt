@@ -1,8 +1,8 @@
-SB PERSONAL COACH GESTIONALE 11.3 - FIX REALI
+SB PERSONAL COACH GESTIONALE 11.4 - FIX TASTI + LINK CLIENTE
 
 Fix:
-1. Calendario: il tasto aggiorna usa l'intervallo Dal/Al.
-2. + Lezione e Restituisci aggiornano direttamente il contatore.
-3. Invio accesso cliente apre WhatsApp con messaggio e link cliente.
-4. Contabilità semplificata sui pacchetti assegnati nel mese scelto o ultimi 4/12 mesi.
-5. Google Calendar mantenuto negli eventi.
+1. + Lezione e Restituisci riscritti con funzioni globali stabili.
+2. Le card cliente ora hanno data-client-id e pulsanti collegati direttamente.
+3. Invio accesso cliente apre WhatsApp con messaggio e link.
+4. Link cliente ora include uid + id: cliente.html?uid=...&id=...
+5. Area Cliente legge direttamente il documento corretto e non resta su Caricamento.

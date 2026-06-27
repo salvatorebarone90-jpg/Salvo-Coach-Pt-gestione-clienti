@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>SB Personal Coach Gestionale 11.3</title>
+<title>SB Personal Coach Gestionale 11.4</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--dark:#101827;--blue:#17233a;--gold:#d5ad52;--bg:#f4f6f8;--card:#fff;--muted:#667085;--ok:#13915f;--bad:#c0392b;--warn:#c47d00}
@@ -50,8 +50,8 @@ hr{border:0;border-top:1px solid #e5e7eb;margin:12px 0}
   <div class="header-inner">
     <img src="logo.jpeg" class="logo" onerror="this.style.display='none'">
     <div>
-      <h1>SB Personal Coach Gestionale 11.3</h1>
-      <div class="subtitle">Fix Reali · 11.3</div>
+      <h1>SB Personal Coach Gestionale 11.4</h1>
+      <div class="subtitle">Fix Tasti + Link Cliente · 11.4</div>
     </div>
   </div>
   <nav id="nav">
@@ -372,20 +372,25 @@ async function setStatoEvento(id,stato){const ev=eventi.find(e=>e.id===id);if(!e
 window.confermaTutteEffettuate=async()=>{for(const ev of lezioniDaConfermare())await setStatoEvento(ev.id,"Effettuata")}
 
 function clientCard(c){
- const inactive=(c.stato||"attivo")==="inattivo", res=residuoEuro(c), r=residue(c);
- return `<div class="card"><h2>${nome(c)}</h2><p class="meta">${c.servizio||""} · ${inactive?"Inattivo":"Attivo"}</p>
- <p class="meta"><b>${scheduleSummary(c)}</b></p>
- <span class="badge ${r<=3?"warn":"ok"}">${r} residue su ${c.lezioniTotali||0}</span>${res>0?`<span class="badge bad">Residuo ${euro(res)}</span>`:""}
- <div class="actions">
- <button class="btn whatsapp" onclick="window.open('https://wa.me/${String(c.telefono||"").replace(/\D/g,"")}')">WhatsApp</button>
- <button class="btn light" onclick="lezione('${c.id}')">+ Lezione</button>
- <button class="btn light" onclick="restituisci('${c.id}')">Restituisci</button>
- <button class="btn gold" onclick="rinnova('${c.id}')">Rinnova</button>
- <button class="btn dark" onclick="editCliente('${c.id}')">Modifica</button>
- <button class="btn light" onclick="inattivo('${c.id}')">${inactive?"Riattiva":"Inattivo"}</button>
- <button class="btn light" onclick="inviaAccessoCliente('${c.id}')">Invia accesso cliente</button>
- <button class="btn red" onclick="eliminaCliente('${c.id}')">Elimina cliente</button>
- </div></div>`
+ const inactive=(c.stato||"attivo")==="inattivo";
+ const res=residuoEuro(c);
+ const r=Number(c.lezioniResidue ?? residue(c) ?? 0);
+ return `<div class="card client-card" data-client-id="${c.id}">
+   <h2>${nome(c)}</h2>
+   <p class="meta">${c.servizio||""} · ${inactive?"Inattivo":"Attivo"}</p>
+   <p class="meta"><b>${scheduleSummary(c)}</b></p>
+   <span class="badge ${r<=3?"warn":"ok"}">${r} residue su ${c.lezioniTotali||0}</span>${res>0?`<span class="badge bad">Residuo ${euro(res)}</span>`:""}
+   <div class="actions">
+     <button type="button" class="btn whatsapp" onclick="window.open('https://wa.me/${String(c.telefono||"").replace(/\\D/g,"")}','_blank')">WhatsApp</button>
+     <button type="button" class="btn light" onclick="sbAddLesson('${c.id}')">+ Lezione</button>
+     <button type="button" class="btn light" onclick="sbReturnLesson('${c.id}')">Restituisci</button>
+     <button type="button" class="btn gold" onclick="rinnova('${c.id}')">Rinnova</button>
+     <button type="button" class="btn dark" onclick="editCliente('${c.id}')">Modifica</button>
+     <button type="button" class="btn light" onclick="inattivo('${c.id}')">${inactive?"Riattiva":"Inattivo"}</button>
+     <button type="button" class="btn light" onclick="sbInviteClient('${c.id}')">Invia accesso cliente</button>
+     <button type="button" class="btn red" onclick="eliminaCliente('${c.id}')">Elimina cliente</button>
+   </div>
+ </div>`;
 }
 function renderClienti(){const list=clienti.slice().sort((a,b)=>nome(a).localeCompare(nome(b)));$("listaClienti").innerHTML=list.map(clientCard).join("")||'<div class="empty">Nessun cliente.</div>'}
 function renderSmart(){const list=lezioniDaConfermare();$("smartCoachBox").innerHTML=list.length?`<div class="check"><h3>⏳ Lezioni da confermare oggi</h3>${list.map(ev=>`<div class="check"><b>${ev.clienteNome||""}</b><p class="meta">${fmt(ev.data)} ore ${ev.ora}</p><button class="btn green" onclick="confermaEffettuata('${ev.id}')">Effettuata</button><button class="btn red" onclick="confermaAssente('${ev.id}')">Assente</button></div>`).join("")}<button class="btn gold full" onclick="confermaTutteEffettuate()">Conferma tutte</button></div>`:'<p class="meta">Nessuna lezione di oggi da confermare.</p>'}
@@ -541,6 +546,80 @@ function patchButtons113(){
 const renderOld113=render;
 render=()=>{renderOld113();setTimeout(patchButtons113,50);};
 setTimeout(patchButtons113,500);
+
+
+/* 11.4 - Fix stabile tasti cliente + link area cliente */
+function sbGetClient(id){ return clienti.find(c=>c.id===id); }
+
+window.sbAddLesson = async function(id){
+ const c = sbGetClient(id);
+ if(!c) return alert("Cliente non trovato.");
+ if(!confirm("Scalare 1 lezione dal contatore?")) return;
+ const currentResidue = Number(c.lezioniResidue ?? residue(c) ?? c.lezioniTotali ?? 0);
+ const newResidue = Math.max(0, currentResidue - 1);
+ const newFatte = Math.max(0, Number(c.lezioniTotali||0) - newResidue);
+ await setDoc(docPath("clienti", id), {
+   lezioniResidue: newResidue,
+   lezioniFatte: newFatte,
+   updatedAt: serverTimestamp()
+ }, {merge:true});
+};
+
+window.sbReturnLesson = async function(id){
+ const c = sbGetClient(id);
+ if(!c) return alert("Cliente non trovato.");
+ if(!confirm("Restituire 1 lezione al contatore?")) return;
+ const total = Number(c.lezioniTotali||0);
+ const currentResidue = Number(c.lezioniResidue ?? residue(c) ?? 0);
+ const newResidue = Math.min(total || currentResidue + 1, currentResidue + 1);
+ const newFatte = Math.max(0, total - newResidue);
+ await setDoc(docPath("clienti", id), {
+   lezioniResidue: newResidue,
+   lezioniFatte: newFatte,
+   updatedAt: serverTimestamp()
+ }, {merge:true});
+};
+
+window.lezione = window.sbAddLesson;
+window.restituisci = window.sbReturnLesson;
+
+window.sbClientLink = function(id){
+ const base = location.href.split("/").slice(0,-1).join("/");
+ const uid = user?.uid || "";
+ return `${base}/cliente.html?uid=${encodeURIComponent(uid)}&id=${encodeURIComponent(id)}`;
+};
+
+window.sbInviteClient = function(id){
+ const c = sbGetClient(id);
+ if(!c) return alert("Cliente non trovato.");
+ const link = sbClientLink(id);
+ const phone = String(c.telefono||"").replace(/\D/g,"");
+ const text = encodeURIComponent(`Ciao ${c.nome||""}, ecco il link per accedere alla tua Area Cliente Premium:\n${link}`);
+ if(phone){
+   window.open(`https://wa.me/${phone}?text=${text}`, "_blank");
+ }else{
+   navigator.clipboard?.writeText(link);
+   window.open(link, "_blank");
+ }
+};
+
+window.inviaAccessoCliente = window.sbInviteClient;
+
+function sbPatchButtons114(){
+ document.querySelectorAll(".client-card").forEach(card=>{
+   const id = card.getAttribute("data-client-id");
+   if(!id) return;
+   card.querySelectorAll("button").forEach(btn=>{
+     const t = btn.textContent.trim().toLowerCase();
+     if(t.includes("+ lezione")) btn.onclick = (e)=>{e.preventDefault(); sbAddLesson(id);};
+     if(t.includes("restituisci")) btn.onclick = (e)=>{e.preventDefault(); sbReturnLesson(id);};
+     if(t.includes("invia accesso")) btn.onclick = (e)=>{e.preventDefault(); sbInviteClient(id);};
+   });
+ });
+}
+const sbOldRender114 = render;
+render = ()=>{ sbOldRender114(); setTimeout(sbPatchButtons114, 50); };
+setTimeout(sbPatchButtons114, 500);
 
 </script>
 </body>

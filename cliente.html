@@ -2,14 +2,15 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Area Cliente Premium 11.3</title>
+<title>Area Cliente Premium 11.4</title>
 <style>
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:#f4f6f8;margin:0;color:#111827}
 header{background:#101827;color:#fff;padding:20px}
 main{padding:14px;max-width:900px;margin:auto}
 .card{background:#fff;border-radius:18px;padding:16px;margin:12px 0;box-shadow:0 8px 24px rgba(16,24,39,.08)}
-.badge{display:inline-block;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:800;background:#dcfce7;color:#166534}
+.badge{display:inline-block;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:800;background:#dcfce7;color:#166534;margin:3px}
 .meta{color:#667085;font-size:13px}
+.badge.warn{background:#fef3c7;color:#92400e}.badge.bad{background:#fee2e2;color:#991b1b}
 </style>
 </head>
 <body>
@@ -20,19 +21,53 @@ main{padding:14px;max-width:900px;margin:auto}
 </main>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collectionGroup, query, where, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, getDoc, collection, getDocs, collectionGroup, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
-const app=initializeApp(firebaseConfig), db=getFirestore(app);
-const params=new URLSearchParams(location.search), id=params.get("id");
-function fmt(d){if(!d)return"-";const [y,m,day]=String(d).slice(0,10).split("-");return `${day}/${m}/${y}`}
+
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+const params=new URLSearchParams(location.search);
+const id=params.get("id");
+const uid=params.get("uid");
+
+function fmt(d){if(!d)return"-";const [y,m,day]=String(d).slice(0,10).split("-");return day&&m&&y?`${day}/${m}/${y}`:d}
+function nome(c){return `${c.nome||""} ${c.cognome||""}`.trim()}
+function statoClass(st){return ["Effettuata","Recuperata"].includes(st)?"":(["Assente","Annullata","Annullata dal cliente"].includes(st)?"bad":"warn")}
+
 async function load(){
- if(!id){document.getElementById("nome").textContent="Link non valido";return}
- const qs=await getDocs(query(collectionGroup(db,"clienti"),where("__name__","==",id)));
- if(qs.empty){document.getElementById("nome").textContent="Cliente non trovato";return}
- const c={id:qs.docs[0].id,...qs.docs[0].data()};
- document.getElementById("nome").textContent=`${c.nome||""} ${c.cognome||""}`;
- document.getElementById("info").innerHTML=`<span class="badge">${c.lezioniResidue||0} residue su ${c.lezioniTotali||0}</span><br>Periodo: ${fmt(c.inizio)} → ${fmt(c.scadenza)}`;
- document.getElementById("lezioni").innerHTML="<p class='meta'>Le prossime lezioni sono visibili dal calendario coach.</p>";
+ try{
+   if(!id){document.getElementById("nome").textContent="Link non valido";return}
+
+   let c=null, ownerUid=uid;
+   if(uid){
+     const snap=await getDoc(doc(db,"users",uid,"clienti",id));
+     if(snap.exists()) c={id:snap.id,...snap.data()};
+   }
+
+   if(!c){
+     const qs=await getDocs(query(collectionGroup(db,"clienti"),where("__name__","==",id)));
+     if(!qs.empty){
+       c={id:qs.docs[0].id,...qs.docs[0].data()};
+       ownerUid=qs.docs[0].ref.parent.parent.id;
+     }
+   }
+
+   if(!c){document.getElementById("nome").textContent="Cliente non trovato";return}
+
+   document.getElementById("nome").textContent=nome(c);
+   document.getElementById("info").innerHTML=`<span class="badge">${c.lezioniResidue||0} residue su ${c.lezioniTotali||0}</span><br>Periodo: ${fmt(c.inizio)} → ${fmt(c.scadenza)}<br>${c.servizio||""}`;
+
+   let evs=[];
+   if(ownerUid){
+     const es=await getDocs(collection(db,"users",ownerUid,"eventi"));
+     evs=es.docs.map(d=>({id:d.id,...d.data()})).filter(e=>e.clienteId===id).sort((a,b)=>String(a.data||"").localeCompare(String(b.data||""))||String(a.ora||"").localeCompare(String(b.ora||"")));
+   }
+
+   document.getElementById("lezioni").innerHTML=evs.length?evs.map(e=>`<div class="card"><b>${fmt(e.data)} ore ${e.ora||"-"}</b><p class="meta">Stato: ${e.stato||"Prenotata"}</p><span class="badge ${statoClass(e.stato||"Prenotata")}">${e.stato||"Prenotata"}</span></div>`).join(""):"<p class='meta'>Nessuna lezione trovata.</p>";
+ }catch(e){
+   document.getElementById("nome").textContent="Errore caricamento";
+   document.getElementById("info").textContent=e.message;
+ }
 }
 load();
 </script>
