@@ -88,7 +88,7 @@ main{padding:16px;max-width:900px;margin:auto}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, doc, getDoc, updateDoc, setDoc, addDoc, collection, getDocs, collectionGroup, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, getDoc, updateDoc, collection, getDocs, collectionGroup, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
 
 const app=initializeApp(firebaseConfig);
@@ -103,67 +103,7 @@ const REG_VERSION="11.5";
 
 function fmt(d){if(!d)return"-";const [y,m,day]=String(d).slice(0,10).split("-");return day&&m&&y?`${day}/${m}/${y}`:d}
 function nome(c){return `${c.nome||""} ${c.cognome||""}`.trim()}
-function statoClass(st){return ["Effettuata","Recuperata","Recupero programmato"].includes(st)?"":([" Assente","Annullata","Annullata dal cliente","Recupero rifiutato"].includes(st)?"bad":"warn")}
-
-// Controlla se il cliente può richiedere recupero (lezione futura, mancano >24h)
-function canRequestRecovery(e){
-  if(e.stato!=="Prenotata")return false; // solo lezioni ancora prenotate
-  const [y,m,d]=String(e.data).split("-").map(Number);
-  const [h,mi]=(e.ora||"09:00").split(":").map(Number);
-  const lezioneMs=new Date(y,m-1,d,h,mi,0).getTime();
-  const mancano=lezioneMs-Date.now();
-  return mancano>24*60*60*1000; // più di 24h
-}
-function mancanoOre(e){
-  const [y,m,d]=String(e.data).split("-").map(Number);
-  const [h,mi]=(e.ora||"09:00").split(":").map(Number);
-  const lezioneMs=new Date(y,m-1,d,h,mi,0).getTime();
-  return Math.max(0,lezioneMs-Date.now());
-}
-function countdownLabel(e){
-  const ms=mancanoOre(e)-24*60*60*1000; // ms al "deadline 24h"
-  if(ms<=0)return null;
-  const h=Math.floor(ms/3600000);
-  const m=Math.floor((ms%3600000)/60000);
-  return h>0?`${h}h ${m}m rimanenti`:`${m}m rimanenti`;
-}
-
-window.richiediRecupero=async evId=>{
-  const ev=evs.find(e=>e.id===evId);
-  if(!ev||!canRequestRecovery(ev)){alert("Non è più possibile richiedere il recupero per questa lezione (termine 24h scaduto).");return;}
-  if(!confirm("Vuoi richiedere il recupero della lezione del "+fmt(ev.data)+" alle "+ev.ora+"?\n\nLa richiesta sarà inviata al coach per approvazione."))return;
-  if(!ownerUid){alert("Errore: owner non trovato.");return;}
-  const evRef=doc(db,"users",ownerUid,"eventi",evId);
-  await setDoc(evRef,{stato:"Recupero richiesto",recuperoRichiestoIl:new Date().toISOString().slice(0,10),recuperoRichiestoAt:new Date().toISOString(),updatedAt:serverTimestamp()},{merge:true});
-  // Aggiorna localmente e ricarica
-  ev.stato="Recupero richiesto";
-  renderLezioni();
-  alert("✅ Richiesta inviata! Il coach ti contatterà per concordare la data.");
-};
-
-let evs=[];
-function renderLezioni(){
-  document.getElementById("lezioni").innerHTML=evs.length?evs.map(e=>{
-    const stato=e.stato||"Prenotata";
-    const canRec=canRequestRecovery(e);
-    const cdown=e.stato==="Prenotata"?countdownLabel(e):null;
-    let recBtn="";
-    if(stato==="Prenotata"){
-      if(canRec){
-        recBtn=`<br><button onclick="richiediRecupero('${e.id}')" style="margin-top:8px;border:0;border-radius:10px;padding:10px 14px;font-weight:800;cursor:pointer;background:#fef3c7;color:#92400e;font-size:14px">🔄 Richiedi recupero${cdown?" · ⏱ "+cdown:""}</button>`;
-      } else {
-        recBtn=`<br><span style="display:inline-block;margin-top:6px;font-size:12px;color:#991b1b;font-weight:700">⛔ Recupero non più richiedibile (meno di 24h)</span>`;
-      }
-    } else if(stato==="Recupero richiesto"){
-      recBtn=`<br><span style="display:inline-block;margin-top:6px;font-size:12px;color:#92400e;font-weight:700">⏳ Richiesta inviata al coach, in attesa di risposta</span>`;
-    } else if(stato==="Recupero programmato"){
-      recBtn=`<br><span style="display:inline-block;margin-top:6px;font-size:12px;color:#166534;font-weight:700">✅ Recupero confermato dal coach</span>`;
-    } else if(stato==="Recupero rifiutato"){
-      recBtn=`<br><span style="display:inline-block;margin-top:6px;font-size:12px;color:#991b1b;font-weight:700">❌ Recupero rifiutato dal coach</span>`;
-    }
-    return `<div class="card"><b>${fmt(e.data)} ore ${e.ora||"-"}</b><p class="meta">Stato: ${stato}</p><span class="badge ${statoClass(stato)}">${stato}</span>${recBtn}</div>`;
-  }).join(""):"<p class='meta'>Nessuna lezione trovata.</p>";
-}
+function statoClass(st){return ["Effettuata","Recuperata"].includes(st)?"":(["Assente","Annullata","Annullata dal cliente"].includes(st)?"bad":"warn")}
 function nowLabel(){
  const d=new Date();
  return d.toLocaleDateString("it-IT")+" ore "+d.toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"});
@@ -245,13 +185,13 @@ async function load(){
    document.getElementById("nome").textContent=nome(c);
    document.getElementById("info").innerHTML=`<span class="badge">${c.lezioniResidue||0} residue su ${c.lezioniTotali||0}</span><br>Periodo: ${fmt(c.inizio)} → ${fmt(c.scadenza)}<br>${c.servizio||""}`;
 
-   let evsTmp=[];
+   let evs=[];
    if(ownerUid){
      const es=await getDocs(collection(db,"users",ownerUid,"eventi"));
-     evsTmp=es.docs.map(d=>({id:d.id,...d.data()})).filter(e=>e.clienteId===id).sort((a,b)=>String(a.data||"").localeCompare(String(b.data||""))||String(a.ora||"").localeCompare(String(b.ora||"")));
+     evs=es.docs.map(d=>({id:d.id,...d.data()})).filter(e=>e.clienteId===id).sort((a,b)=>String(a.data||"").localeCompare(String(b.data||""))||String(a.ora||"").localeCompare(String(b.ora||"")));
    }
-   evs=evsTmp;
-   renderLezioni();
+
+   document.getElementById("lezioni").innerHTML=evs.length?evs.map(e=>`<div class="card"><b>${fmt(e.data)} ore ${e.ora||"-"}</b><p class="meta">Stato: ${e.stato||"Prenotata"}</p><span class="badge ${statoClass(e.stato||"Prenotata")}">${e.stato||"Prenotata"}</span></div>`).join(""):"<p class='meta'>Nessuna lezione trovata.</p>";
    updateRegolamentoUI();
  }catch(e){
    document.getElementById("nome").textContent="Errore caricamento";
@@ -259,8 +199,6 @@ async function load(){
  }
 }
 load();
-// Aggiorna countdown ogni minuto (il tasto scompare automaticamente quando scadono le 24h)
-setInterval(()=>{if(evs.length)renderLezioni();},60000);
 </script>
 </body>
 </html>

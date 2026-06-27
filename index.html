@@ -258,9 +258,8 @@ function parseDays(s){return String(s||"").split(/[,\n;]/).map(x=>dayMap[normDay
 function parseHours(s){return String(s||"").split(/[,\n;]/).map(x=>x.trim()).filter(Boolean)}
 function eventStart(ev){const [y,m,d]=String(ev.data||"").split("-").map(Number);let h=9,mi=0;if(ev.ora){const p=String(ev.ora).split(":").map(Number);h=p[0]||0;mi=p[1]||0}return new Date(y,m-1,d,h,mi,0)}
 function eventEnd(ev){return new Date(eventStart(ev).getTime()+Number(ev.durata||60)*60000)}
-function historical(st){return ["Effettuata","Assente","Recuperata","Annullata","Annullata dal cliente","Recupero richiesto","Recupero rifiutato"].includes(st||"")}
+function historical(st){return ["Effettuata","Assente","Recuperata","Annullata","Annullata dal cliente"].includes(st||"")}
 function consumes(st){return ["Effettuata","Assente","Recuperata"].includes(st||"")}
-function isRecuperoRichiesto(st){return st==="Recupero richiesto"}
 function fatte(id){return eventi.filter(e=>e.clienteId===id&&consumes(e.stato)).length}
 function residue(c){return Math.max(0,Number(c.lezioniTotali||0)-fatte(c.id))}
 function valore(c){return Number(c.dovuto||0)}
@@ -352,33 +351,7 @@ window.aggiornaCalendarioFuturo=async()=>{
 window.lezione=async id=>{const c=clienti.find(x=>x.id===id);if(!c)return;if(!confirm("Scalare 1 lezione manualmente?"))return;await setDoc(docPath("clienti",id),{lezioniFatte:Number(c.lezioniFatte||0)+1,lezioniResidue:Math.max(0,Number(c.lezioniResidue||0)-1)},{merge:true})}
 window.restituisci=async id=>{const c=clienti.find(x=>x.id===id);if(!c)return;if(!confirm("Restituire 1 lezione?"))return;await setDoc(docPath("clienti",id),{lezioniFatte:Math.max(0,Number(c.lezioniFatte||0)-1),lezioniResidue:Number(c.lezioniResidue||0)+1},{merge:true})}
 window.inattivo=async id=>{const c=clienti.find(x=>x.id===id);if(!c)return;const nuovo=(c.stato||"attivo")==="inattivo"?"attivo":"inattivo";await setDoc(docPath("clienti",id),{stato:nuovo},{merge:true})}
-window.rinnova=async id=>{
-  const c=clienti.find(x=>x.id===id);if(!c)return;
-  const importoStr=prompt("Importo del nuovo pacchetto (€):",String(c.dovuto||0));
-  if(importoStr===null)return;
-  const importoRinnovo=parseFloat(importoStr)||0;
-  if(!confirm("Rinnovare pacchetto per "+nome(c)+"?\nImporto: €"+importoRinnovo+"\n\nIl calendario verrà rigenerato a partire dal primo giorno utile."))return;
-  // Primo giorno utile (giorni configurati del cliente) a partire da domani
-  const days=parseDays(c.giorni);
-  let startD=new Date();startD.setDate(startD.getDate()+1);
-  if(days.length){let att=0;while(!days.includes(startD.getDay())&&att<14){startD.setDate(startD.getDate()+1);att++;}}
-  const start=startD.toISOString().slice(0,10);
-  const nuovaScadenza=calcExpiry(start,c.lezioniTotali,c.frequenza);
-  // Salva rinnovo con snapshot per poterlo annullare
-  await addDoc(path("rinnovi"),{
-    cliente:nome(c),clienteId:id,pacchetto:c.lezioniTotali,data:start,importo:importoRinnovo,createdAt:serverTimestamp(),
-    prevInizio:c.inizio||"",prevScadenza:c.scadenza||"",prevDovuto:c.dovuto||0,prevPagato:c.pagato||0,
-    prevLezioniFatte:c.lezioniFatte||0,prevLezioniResidue:Number(c.lezioniResidue??residue(c)??0)
-  });
-  // Reset cliente con nuovo pacchetto e importo
-  await setDoc(docPath("clienti",id),{stato:"attivo",lezioniFatte:0,lezioniResidue:Number(c.lezioniTotali||0),inizio:start,scadenza:nuovaScadenza,dovuto:importoRinnovo,pagato:0,updatedAt:serverTimestamp()},{merge:true});
-  // Elimina lezioni future non storiche del vecchio pacchetto
-  const tomorrow=tomorrowISO();
-  for(const ev of eventi.filter(e=>e.clienteId===id&&e.data>=tomorrow&&!historical(e.stato))){await deleteDoc(docPath("eventi",ev.id));}
-  // Genera nuovo calendario dal primo giorno utile
-  await generaEventi(id,{...c,id},start);
-  alert("Pacchetto rinnovato!\nInizio: "+fmt(start)+" → Scadenza: "+fmt(nuovaScadenza));
-}
+window.rinnova=async id=>{const c=clienti.find(x=>x.id===id);if(!c)return;if(!confirm("Rinnovare pacchetto?"))return;const start=todayISO();await addDoc(path("rinnovi"),{cliente:nome(c),clienteId:id,pacchetto:c.lezioniTotali,data:start,importo:valore(c),createdAt:serverTimestamp()});await setDoc(docPath("clienti",id),{stato:"attivo",lezioniFatte:0,lezioniResidue:Number(c.lezioniTotali||0),inizio:start,scadenza:calcExpiry(start,c.lezioniTotali,c.frequenza)},{merge:true})}
 window.eliminaCliente=async id=>{const c=clienti.find(x=>x.id===id);if(!c)return;if(!confirm("Eliminare cliente?"))return;await deleteDoc(docPath("clienti",id))}
 window.inviaAccessoCliente=id=>{const url=location.origin+location.pathname.replace("index.html","")+"cliente.html?id="+id;navigator.clipboard?.writeText(url);alert("Link copiato.")}
 
@@ -397,31 +370,6 @@ window.confermaEffettuata=async id=>setStatoEvento(id,"Effettuata");
 window.confermaAssente=async id=>setStatoEvento(id,"Assente");
 async function setStatoEvento(id,stato){const ev=eventi.find(e=>e.id===id);if(!ev)return;await setDoc(docPath("eventi",id),{stato,storico:true,scalata:consumes(stato),updatedAt:serverTimestamp()},{merge:true});const c=clienti.find(x=>x.id===ev.clienteId);await setDoc(docPath("clienti",ev.clienteId),{lezioniFatte:fatte(ev.clienteId)+1,lezioniResidue:Math.max(0,Number(c?.lezioniTotali||0)-fatte(ev.clienteId)-1)},{merge:true})}
 window.confermaTutteEffettuate=async()=>{for(const ev of lezioniDaConfermare())await setStatoEvento(ev.id,"Effettuata")}
-
-window.accettaRecupero=async id=>{
-  const ev=eventi.find(e=>e.id===id);if(!ev)return;
-  const dataRecupero=prompt("Inserisci la data per il recupero (AAAA-MM-GG):");
-  if(!dataRecupero||!/^\d{4}-\d{2}-\d{2}$/.test(dataRecupero)){alert("Data non valida. Usa il formato AAAA-MM-GG.");return;}
-  const c=clienti.find(x=>x.id===ev.clienteId);
-  const ora=ev.ora||"09:00";
-  // Segna la lezione originale come Annullata dal cliente (non consuma)
-  await setDoc(docPath("eventi",id),{stato:"Annullata dal cliente",storico:true,scalata:false,recuperoAccettato:true,updatedAt:serverTimestamp()},{merge:true});
-  // Crea la nuova lezione di recupero
-  await addDoc(path("eventi"),{
-    clienteId:ev.clienteId,clienteNome:ev.clienteNome||nome(c),
-    data:dataRecupero,ora:ora,durata:Number(ev.durata||c?.durata||60),
-    stato:"Recupero programmato",storico:false,scalata:false,
-    recuperoDiId:id,createdAt:serverTimestamp()
-  });
-  alert("Recupero accettato!\nNuova lezione creata il "+dataRecupero+" alle "+ora+".\nPuoi modificare l'orario dal calendario.");
-};
-
-window.rifiutaRecupero=async id=>{
-  const ev=eventi.find(e=>e.id===id);if(!ev)return;
-  if(!confirm("Rifiutare la richiesta di recupero di "+ev.clienteNome+"?\nLa lezione verrà marcata come Annullata dal cliente."))return;
-  await setDoc(docPath("eventi",id),{stato:"Recupero rifiutato",storico:true,scalata:false,updatedAt:serverTimestamp()},{merge:true});
-  alert("Recupero rifiutato. Il cliente verrà notificato alla prossima apertura dell'area cliente.");
-};
 
 function clientCard(c){
  const inactive=(c.stato||"attivo")==="inattivo";
@@ -446,59 +394,13 @@ function clientCard(c){
  </div>`;
 }
 function renderClienti(){const list=clienti.slice().sort((a,b)=>nome(a).localeCompare(nome(b)));$("listaClienti").innerHTML=list.map(clientCard).join("")||'<div class="empty">Nessun cliente.</div>'}
-function recuperiInAttesa(){return eventi.filter(ev=>ev.stato==="Recupero richiesto")}
-function renderSmart(){
-  const listConf=lezioniDaConfermare();
-  const listRec=recuperiInAttesa();
-  let html="";
-  if(listRec.length){
-    html+=`<div class="check" style="border-left:4px solid #d5ad52;margin-bottom:10px">
-      <h3>🔄 Richieste di recupero (${listRec.length})</h3>
-      ${listRec.map(ev=>`<div class="check" style="background:#fffbeb">
-        <b>${ev.clienteNome||""}</b>
-        <p class="meta">Lezione del ${fmt(ev.data)} ore ${ev.ora} · Richiesta il ${fmt(ev.recuperoRichiestoIl||ev.data)}</p>
-        <button class="btn green" style="width:auto;margin-right:6px" onclick="accettaRecupero('${ev.id}')">✅ Accetta</button>
-        <button class="btn red" style="width:auto" onclick="rifiutaRecupero('${ev.id}')">✕ Rifiuta</button>
-      </div>`).join("")}
-    </div>`;
-  }
-  if(listConf.length){
-    html+=`<div class="check"><h3>⏳ Lezioni da confermare oggi</h3>${listConf.map(ev=>`<div class="check"><b>${ev.clienteNome||""}</b><p class="meta">${fmt(ev.data)} ore ${ev.ora}</p><button class="btn green" onclick="confermaEffettuata('${ev.id}')">Effettuata</button><button class="btn red" onclick="confermaAssente('${ev.id}')">Assente</button></div>`).join("")}<button class="btn gold full" onclick="confermaTutteEffettuate()">Conferma tutte</button></div>`;
-  }
-  $("smartCoachBox").innerHTML=html||'<p class="meta">Nessuna azione richiesta.</p>';
-}
-function renderDashboard(){const att=clienti.filter(c=>(c.stato||"attivo")!=="inattivo");$("kClienti").textContent=att.length;$("kOggi").textContent=eventi.filter(e=>e.data===todayISO()).length;$("kDaConf").textContent=lezioniDaConfermare().length+recuperiInAttesa().length;$("kResidui").textContent=euro(att.reduce((s,c)=>s+residuoEuro(c),0));renderSmart()}
+function renderSmart(){const list=lezioniDaConfermare();$("smartCoachBox").innerHTML=list.length?`<div class="check"><h3>⏳ Lezioni da confermare oggi</h3>${list.map(ev=>`<div class="check"><b>${ev.clienteNome||""}</b><p class="meta">${fmt(ev.data)} ore ${ev.ora}</p><button class="btn green" onclick="confermaEffettuata('${ev.id}')">Effettuata</button><button class="btn red" onclick="confermaAssente('${ev.id}')">Assente</button></div>`).join("")}<button class="btn gold full" onclick="confermaTutteEffettuate()">Conferma tutte</button></div>`:'<p class="meta">Nessuna lezione di oggi da confermare.</p>'}
+function renderDashboard(){const att=clienti.filter(c=>(c.stato||"attivo")!=="inattivo");$("kClienti").textContent=att.length;$("kOggi").textContent=eventi.filter(e=>e.data===todayISO()).length;$("kDaConf").textContent=lezioniDaConfermare().length;$("kResidui").textContent=euro(att.reduce((s,c)=>s+residuoEuro(c),0));renderSmart()}
 function renderCalendario(){if(!$("calDal").value)$("calDal").value=todayISO();if(!$("calAl").value){const d=new Date();d.setDate(d.getDate()+14);$("calAl").value=d.toISOString().slice(0,10)}const dal=$("calDal").value,al=$("calAl").value;const list=eventi.filter(e=>e.data>=dal&&e.data<=al).sort((a,b)=>a.data.localeCompare(b.data)||String(a.ora).localeCompare(String(b.ora)));$("listaCalendario").innerHTML=list.map(e=>`<div class="card"><h3>${e.clienteNome}</h3><p class="meta">${fmt(e.data)} ore ${e.ora} · ${e.stato||"Prenotata"}</p></div>`).join("")||'<div class="empty">Nessuna lezione.</div>'}
 function renderRegistroSelect(){const cur=$("registroCliente").value;$("registroCliente").innerHTML='<option value="">Seleziona cliente</option>'+clienti.map(c=>`<option value="${c.id}">${nome(c)}</option>`).join("");if(cur)$("registroCliente").value=cur}
 window.renderRegistro=()=>{renderRegistroSelect();const id=$("registroCliente").value,c=clienti.find(x=>x.id===id);if(!c){$("registroLista").innerHTML='<div class="empty">Seleziona un cliente.</div>';return}const evs=eventi.filter(e=>e.clienteId===id).sort((a,b)=>a.data.localeCompare(b.data)||String(a.ora).localeCompare(String(b.ora)));$("regTotali").textContent=c.lezioniTotali||0;$("regFatte").textContent=fatte(id);$("regResidue").textContent=residue(c);$("regPeriodo").textContent=`${fmt(c.inizio)} → ${fmt(c.scadenza)}`;$("registroLista").innerHTML=evs.map(e=>`<div class="check"><h3>${fmt(e.data)} ore ${e.ora}</h3><p class="meta">Stato: ${e.stato||"Prenotata"}</p><span class="badge ${consumes(e.stato)?"ok":historical(e.stato)?"bad":"warn"}">${e.stato||"Prenotata"}</span></div>`).join("")||'<div class="empty">Nessuna lezione.</div>'}
 function renderContattare(){const list=clienti.filter(c=>(c.stato||"attivo")!=="inattivo"&&residuoEuro(c)>0);$("listaContattare").innerHTML=list.map(c=>`<div class="check"><h3>${nome(c)}</h3><p class="meta">Residuo ${euro(residuoEuro(c))}</p><button class="btn whatsapp full" onclick="window.open('https://wa.me/${String(c.telefono||"").replace(/\D/g,"")}')">WhatsApp</button></div>`).join("")||'<div class="empty">Nessun cliente da contattare.</div>'}
-window.eliminaRinnovo=async id=>{
-  const r=rinnovi.find(x=>x.id===id);if(!r)return;
-  const hasPrev=r.prevInizio!==undefined;
-  const msg=hasPrev
-    ? "Eliminare questo rinnovo?\n\nIl cliente verrà riportato allo stato precedente:\n• Inizio: "+fmt(r.prevInizio)+"\n• Scadenza: "+fmt(r.prevScadenza)+"\n• Lezioni fatte: "+r.prevLezioniFatte+"\n• Dovuto: €"+r.prevDovuto+"\nIl calendario futuro generato dal rinnovo verrà eliminato."
-    : "Eliminare questo rinnovo? (Nessun dato precedente disponibile per il ripristino)";
-  if(!confirm(msg))return;
-  // Elimina il documento rinnovo (scompare da contabilità automaticamente)
-  await deleteDoc(docPath("rinnovi",id));
-  // Se abbiamo uno snapshot, ripristina il cliente
-  if(hasPrev&&r.clienteId){
-    await setDoc(docPath("clienti",r.clienteId),{
-      inizio:r.prevInizio||"",scadenza:r.prevScadenza||"",
-      dovuto:r.prevDovuto||0,pagato:r.prevPagato||0,
-      lezioniFatte:r.prevLezioniFatte||0,lezioniResidue:r.prevLezioniResidue||0,
-      updatedAt:serverTimestamp()
-    },{merge:true});
-    // Elimina le lezioni future generate dal rinnovo (data >= data rinnovo e non storiche)
-    const rinnovoData=r.data||tomorrowISO();
-    for(const ev of eventi.filter(e=>e.clienteId===r.clienteId&&e.data>=rinnovoData&&!historical(e.stato))){
-      await deleteDoc(docPath("eventi",ev.id));
-    }
-    alert("Rinnovo eliminato. Cliente ripristinato allo stato precedente.");
-  }else{
-    alert("Rinnovo eliminato dalla contabilità.");
-  }
-}
+window.eliminaRinnovo=async id=>{if(confirm("Eliminare rinnovo?"))await deleteDoc(docPath("rinnovi",id))}
 function renderRinnovi(){$("listaRinnovi").innerHTML=rinnovi.map(r=>`<div class="check" style="position:relative;padding-right:60px"><button class="btn red" style="position:absolute;right:8px;top:8px;width:auto" onclick="eliminaRinnovo('${r.id}')">✕</button><h3>${r.cliente||"Cliente"}</h3><p class="meta">${r.pacchetto||""} lezioni · ${fmt(r.data)} · ${euro(r.importo)}</p></div>`).join("")||'<div class="empty">Nessun rinnovo.</div>'}
 function renderContabilita(){const now=new Date();if(!$("contMese").value)$("contMese").value=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0");const mese=$("contMese").value;const mov=[...rinnovi.map(r=>({tipo:"rinnovo",data:r.data,mese:String(r.data||"").slice(0,7),nome:r.cliente,importo:Number(r.importo||0)})),...pagamenti.map(p=>({tipo:"pagamento",data:p.data,mese:p.mese||String(p.data||"").slice(0,7),nome:p.clienteNome,importo:Number(p.importo||0)}))];const movM=mov.filter(m=>m.mese===mese);const att=clienti.filter(c=>(c.stato||"attivo")!=="inattivo");$("contIncassato").textContent=euro(movM.reduce((s,m)=>s+m.importo,0));$("contDaIncassare").textContent=euro(att.reduce((s,c)=>s+residuoEuro(c),0));$("contValorePacchetti").textContent=euro(att.reduce((s,c)=>s+valore(c),0));$("contTotaleStorico").textContent=euro(mov.reduce((s,m)=>s+m.importo,0));$("contClientiResiduo").innerHTML=att.filter(c=>residuoEuro(c)>0).map(c=>`<div class="check"><h3>${nome(c)}</h3><p class="meta">Pagato ${euro(pagato(c))} · Dovuto ${euro(valore(c))}</p><span class="badge bad">Residuo ${euro(residuoEuro(c))}</span></div>`).join("")||'<div class="empty">Nessun residuo.</div>';$("contPacchettiAttivi").innerHTML=att.map(c=>`<div class="check"><h3>${nome(c)}</h3><p class="meta">${residue(c)} residue su ${c.lezioniTotali||0}</p><span class="badge ok">${euro(valore(c))}</span></div>`).join("")||'<div class="empty">Nessun pacchetto.</div>';$("contMovimenti").innerHTML=movM.map(m=>`<div class="check"><h3>${m.nome||"Cliente"}</h3><p class="meta">${fmt(m.data)} · ${m.tipo}</p><span class="badge ok">${euro(m.importo)}</span></div>`).join("")||'<div class="empty">Nessun movimento nel mese.</div>'}
 window.esportaBackup=()=>{const data={clienti,eventi,rinnovi,pagamenti,exported:new Date().toISOString()};const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="backup_sb_coach_11.json";a.click()}
