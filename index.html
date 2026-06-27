@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>SB Personal Coach Gestionale 11.2</title>
+<title>SB Personal Coach Gestionale 11.3</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--dark:#101827;--blue:#17233a;--gold:#d5ad52;--bg:#f4f6f8;--card:#fff;--muted:#667085;--ok:#13915f;--bad:#c0392b;--warn:#c47d00}
@@ -50,8 +50,8 @@ hr{border:0;border-top:1px solid #e5e7eb;margin:12px 0}
   <div class="header-inner">
     <img src="logo.jpeg" class="logo" onerror="this.style.display='none'">
     <div>
-      <h1>SB Personal Coach Gestionale 11.2</h1>
-      <div class="subtitle">Solo Fix · 11.2</div>
+      <h1>SB Personal Coach Gestionale 11.3</h1>
+      <div class="subtitle">Fix Reali · 11.3</div>
     </div>
   </div>
   <nav id="nav">
@@ -190,7 +190,7 @@ hr{border:0;border-top:1px solid #e5e7eb;margin:12px 0}
 <section id="contabilita" class="section">
   <div class="card">
     <h2>💰 Contabilità</h2>
-    <label>Mese</label><input id="contMese" type="month">
+    <label>Mese</label><input id="contMese" type="month"><label>Periodo</label><select id="contMesi"><option value="1">Solo mese selezionato</option><option value="4">Ultimi 4 mesi</option><option value="12">Ultimi 12 mesi</option></select>
     <button class="btn gold full" onclick="renderContabilita()">Aggiorna</button>
   </div>
   <div class="grid">
@@ -465,6 +465,82 @@ renderCalendario=()=>{
 window.inviaAccessoCliente=id=>{const url=location.href.split("/").slice(0,-1).join("/")+"/cliente.html?id="+encodeURIComponent(id);navigator.clipboard?.writeText(url);window.open(url,"_blank");};
 window.renderContabilita=renderContabilita;
 const oldRender112=render; render=()=>{oldRender112();syncScheduleFields112();};
+
+
+/* 11.3 Fix Reali */
+function byId113(id){return clienti.find(c=>c.id===id)}
+function monthNow113(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")}
+function monthNum113(m){const p=String(m||"").split("-").map(Number);return (p[0]||0)*12+(p[1]||0)}
+function cMonth113(c){return String(c.inizio||c.dataInizio||"").slice(0,7)}
+function cVal113(c){return Number(c.dovuto||0)}
+function cPaid113(c){return Number(c.pagato||0)}
+function cResidEuro113(c){return Math.max(0,cVal113(c)-cPaid113(c))}
+async function counter113(id,delta){
+ const c=byId113(id); if(!c)return alert("Cliente non trovato.");
+ const current=Number(c.lezioniResidue ?? residue(c) ?? 0);
+ const newResid=Math.max(0,current+delta);
+ const newFatte=Math.max(0,Number(c.lezioniTotali||0)-newResid);
+ await setDoc(docPath("clienti",id),{lezioniResidue:newResid,lezioniFatte:newFatte,updatedAt:serverTimestamp()},{merge:true});
+}
+window.lezione=async id=>{if(!confirm("Scalare 1 lezione?"))return;await counter113(id,-1)};
+window.restituisci=async id=>{if(!confirm("Restituire 1 lezione?"))return;await counter113(id,1)};
+
+window.renderCalendario=()=>{
+ if(!$("calDal").value)$("calDal").value=todayISO();
+ if(!$("calAl").value){const d=new Date();d.setDate(d.getDate()+14);$("calAl").value=d.toISOString().slice(0,10)}
+ const dal=$("calDal").value, al=$("calAl").value;
+ const list=eventi.filter(e=>String(e.data||"")>=dal && String(e.data||"")<=al)
+   .sort((a,b)=>String(a.data||"").localeCompare(String(b.data||"")) || String(a.ora||"").localeCompare(String(b.ora||"")));
+ $("listaCalendario").innerHTML=list.map(e=>`<div class="card"><h3>${e.clienteNome||"Cliente"}</h3><p class="meta">${fmt(e.data)} ore ${e.ora||"-"} · ${e.stato||"Prenotata"}</p><button class="btn gold" onclick="apriGoogleCalendarEvento113('${e.id}')">Google Calendar</button></div>`).join("")||'<div class="empty">Nessuna lezione in questo intervallo.</div>';
+};
+window.apriGoogleCalendarEvento113=(id)=>{
+ const ev=eventi.find(e=>e.id===id); if(!ev)return;
+ const f=d=>d.toISOString().replace(/[-:]/g,"").split(".")[0]+"Z";
+ window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent("Lezione PT - "+(ev.clienteNome||"Cliente"))}&dates=${f(eventStart(ev))}/${f(eventEnd(ev))}&details=${encodeURIComponent("SB Personal Coach")}`,"_blank");
+};
+window.apriGoogleCalendarEvento=window.apriGoogleCalendarEvento113;
+
+window.inviaAccessoCliente=id=>{
+ const c=byId113(id); if(!c)return alert("Cliente non trovato.");
+ const base=location.href.split("/").slice(0,-1).join("/");
+ const link=base+"/cliente.html?id="+encodeURIComponent(id);
+ const phone=String(c.telefono||"").replace(/\D/g,"");
+ const msg=encodeURIComponent(`Ciao ${c.nome||""}, ecco il link per accedere alla tua Area Cliente Premium:\n${link}`);
+ if(phone) window.open(`https://wa.me/${phone}?text=${msg}`,"_blank");
+ else {navigator.clipboard?.writeText(link); window.open(link,"_blank");}
+};
+
+window.renderContabilita=()=>{
+ if(!$("contMese").value)$("contMese").value=monthNow113();
+ const mese=$("contMese").value, range=Number($("contMesi")?.value||1), target=monthNum113(mese);
+ const inRange=m=>{const n=monthNum113(m);return range===1?n===target:(n<=target && n>target-range)};
+ const cls=clienti.filter(c=>(c.stato||"attivo")!=="inattivo" && inRange(cMonth113(c)));
+ const inc=cls.reduce((s,c)=>s+cPaid113(c),0), val=cls.reduce((s,c)=>s+cVal113(c),0), res=cls.reduce((s,c)=>s+cResidEuro113(c),0);
+ $("contIncassato").textContent=euro(inc);
+ $("contDaIncassare").textContent=euro(res);
+ $("contValorePacchetti").textContent=euro(val);
+ $("contTotaleStorico").textContent=euro(val);
+ $("contClientiResiduo").innerHTML=cls.filter(c=>cResidEuro113(c)>0).map(c=>`<div class="check"><h3>${nome(c)}</h3><p class="meta">Pagato ${euro(cPaid113(c))} · Dovuto ${euro(cVal113(c))}</p><span class="badge bad">Residuo ${euro(cResidEuro113(c))}</span></div>`).join("")||'<div class="empty">Nessun residuo nel periodo.</div>';
+ $("contPacchettiAttivi").innerHTML=cls.map(c=>`<div class="check"><h3>${nome(c)}</h3><p class="meta">Inizio ${fmt(c.inizio)} · ${c.lezioniResidue ?? residue(c)} residue su ${c.lezioniTotali||0}</p><span class="badge ok">${euro(cVal113(c))}</span></div>`).join("")||'<div class="empty">Nessun pacchetto nel periodo.</div>';
+ $("contMovimenti").innerHTML=cls.map(c=>`<div class="check"><h3>${nome(c)}</h3><p class="meta">Pacchetto assegnato a ${fmt(c.inizio)} · pagato ${euro(cPaid113(c))}</p><span class="badge ok">${euro(cVal113(c))}</span></div>`).join("")||'<div class="empty">Nessun pacchetto nel periodo.</div>';
+};
+
+function patchButtons113(){
+ document.querySelectorAll(".card").forEach(card=>{
+   const title=card.querySelector("h2,h3")?.textContent?.trim();
+   const c=clienti.find(x=>nome(x)===title);
+   if(!c)return;
+   card.querySelectorAll("button").forEach(btn=>{
+     const t=btn.textContent.trim().toLowerCase();
+     if(t.includes("+ lezione"))btn.onclick=(e)=>{e.preventDefault();window.lezione(c.id)};
+     if(t.includes("restituisci"))btn.onclick=(e)=>{e.preventDefault();window.restituisci(c.id)};
+     if(t.includes("invia accesso"))btn.onclick=(e)=>{e.preventDefault();window.inviaAccessoCliente(c.id)};
+   });
+ });
+}
+const renderOld113=render;
+render=()=>{renderOld113();setTimeout(patchButtons113,50);};
+setTimeout(patchButtons113,500);
 
 </script>
 </body>
