@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>SB Personal Coach Gestionale 11.4</title>
+<title>SB Personal Coach Gestionale 11.5</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--dark:#101827;--blue:#17233a;--gold:#d5ad52;--bg:#f4f6f8;--card:#fff;--muted:#667085;--ok:#13915f;--bad:#c0392b;--warn:#c47d00}
@@ -50,8 +50,8 @@ hr{border:0;border-top:1px solid #e5e7eb;margin:12px 0}
   <div class="header-inner">
     <img src="logo.jpeg" class="logo" onerror="this.style.display='none'">
     <div>
-      <h1>SB Personal Coach Gestionale 11.4</h1>
-      <div class="subtitle">Fix Tasti + Link Cliente · 11.4</div>
+      <h1>SB Personal Coach Gestionale 11.5</h1>
+      <div class="subtitle">Regolamento Cliente · 11.5</div>
     </div>
   </div>
   <nav id="nav">
@@ -379,6 +379,7 @@ function clientCard(c){
    <h2>${nome(c)}</h2>
    <p class="meta">${c.servizio||""} · ${inactive?"Inattivo":"Attivo"}</p>
    <p class="meta"><b>${scheduleSummary(c)}</b></p>
+   <p class="meta">${c.regolamentoAccettato ? "📋 Regolamento accettato il " + (c.regolamentoAccettatoAtLabel || "-") : "📋 Regolamento non ancora accettato"}</p>
    <span class="badge ${r<=3?"warn":"ok"}">${r} residue su ${c.lezioniTotali||0}</span>${res>0?`<span class="badge bad">Residuo ${euro(res)}</span>`:""}
    <div class="actions">
      <button type="button" class="btn whatsapp" onclick="window.open('https://wa.me/${String(c.telefono||"").replace(/\\D/g,"")}','_blank')">WhatsApp</button>

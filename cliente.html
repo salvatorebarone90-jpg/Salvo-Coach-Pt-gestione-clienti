@@ -2,26 +2,93 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Area Cliente Premium 11.4</title>
+<title>Area Cliente Premium 11.5</title>
 <style>
-body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:#f4f6f8;margin:0;color:#111827}
-header{background:#101827;color:#fff;padding:20px}
-main{padding:14px;max-width:900px;margin:auto}
-.card{background:#fff;border-radius:18px;padding:16px;margin:12px 0;box-shadow:0 8px 24px rgba(16,24,39,.08)}
-.badge{display:inline-block;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:800;background:#dcfce7;color:#166534;margin:3px}
-.meta{color:#667085;font-size:13px}
+:root{--dark:#101827;--blue:#17233a;--gold:#d5ad52;--bg:#f4f6f8;--card:#fff;--muted:#667085;--brown:#7c2d12}
+*{box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);margin:0;color:#111827}
+header{background:linear-gradient(135deg,var(--dark),var(--blue));color:#fff;padding:28px 16px;text-align:center;border-bottom:4px solid var(--gold)}
+.logo{width:150px;max-width:55%;display:block;margin:0 auto 14px;opacity:.95}
+header h1{font-size:28px;margin:0 0 8px}
+header p{margin:0;color:#d1d5db;font-size:16px}
+main{padding:16px;max-width:900px;margin:auto}
+.card{background:var(--card);border-radius:18px;padding:18px;margin:14px 0;box-shadow:0 8px 24px rgba(16,24,39,.08)}
+.card h2{margin:0 0 10px;font-size:24px}
+.card h3{margin:14px 0 6px;font-size:19px}
+.meta{color:var(--muted);font-size:15px;line-height:1.45}
+.badge{display:inline-block;border-radius:999px;padding:7px 11px;font-size:13px;font-weight:800;background:#dcfce7;color:#166534;margin:3px}
 .badge.warn{background:#fef3c7;color:#92400e}.badge.bad{background:#fee2e2;color:#991b1b}
+.reg-box{background:#fff7ed;border:1px solid #f0d88c;border-radius:18px;padding:16px;color:var(--brown)}
+.reg-box p{line-height:1.45;margin:6px 0 16px}
+.accept-box{display:flex;gap:12px;align-items:flex-start;background:#f8fafc;border:1px solid #d8dee9;border-radius:14px;padding:14px;margin:16px 0}
+.accept-box input{width:28px;height:28px;flex:0 0 auto}
+.accept-box label{font-size:17px;font-weight:800;line-height:1.3}
+.btn{border:0;border-radius:14px;padding:14px 16px;font-size:17px;font-weight:900;cursor:pointer;width:100%}
+.gold{background:linear-gradient(135deg,#d5ad52,#f7d878);color:#111827}
+.alert{background:#fef3c7;color:#7c2d12;border-radius:16px;padding:14px 16px;font-weight:800;margin:14px 0}
+.hidden{display:none!important}
+.locked-content{opacity:.35;pointer-events:none}
+.footer-reg{font-size:13px;color:#667085;margin-top:14px}
+@media(min-width:800px){header h1{font-size:34px}.card{padding:24px}}
 </style>
 </head>
 <body>
-<header><h1>Area Cliente</h1><p>SB Personal Coach · Area Premium</p></header>
+<header>
+  <img src="logo.jpeg" class="logo" onerror="this.style.display='none'">
+  <h1>Area Cliente Premium</h1>
+  <p>Lezioni · Check · Calendario · Regolamento</p>
+</header>
+
 <main>
-<div class="card"><h2 id="nome">Caricamento...</h2><p id="info" class="meta"></p></div>
-<div class="card"><h2>Lezioni</h2><div id="lezioni"></div></div>
+  <section id="regolamentoSection" class="card">
+    <h2>📋 Regolamento</h2>
+    <p class="meta">Per proseguire è necessario leggere e accettare il regolamento del percorso.</p>
+
+    <div class="reg-box">
+      <h3>📅 Annullamento lezioni</h3>
+      <p>Le lezioni possono essere annullate esclusivamente con almeno <b>24 ore di anticipo</b>. In caso contrario la lezione verrà considerata effettuata.</p>
+
+      <h3>🩺 Certificato medico</h3>
+      <p>Il certificato medico deve essere sempre valido e aggiornato per tutta la durata del percorso.</p>
+
+      <h3>🎯 Pacchetto lezioni</h3>
+      <p>Le lezioni devono essere utilizzate entro la data di scadenza indicata nella scheda cliente. Le lezioni non utilizzate entro tale data saranno considerate perse.</p>
+
+      <h3>📈 Frequenza delle lezioni</h3>
+      <p>I pacchetti Personal Training prevedono una frequenza compresa tra <b>2 e 4 lezioni settimanali</b>. La frequenza concordata al momento dell'acquisto rimane valida per tutta la durata del pacchetto e non comporta proroghe della scadenza.</p>
+
+      <h3>💳 Pagamenti</h3>
+      <p>Non sono previste rateizzazioni, pagamenti posticipati o saldi a fine percorso, salvo accordi specifici presi con il coach.</p>
+
+      <h3>⏸️ Sospensione del percorso</h3>
+      <p>Eventuali assenze, vacanze o interruzioni personali non prorogano automaticamente la scadenza del pacchetto.</p>
+
+      <h3>⏰ Ritardi</h3>
+      <p>In caso di ritardo del cliente, la lezione terminerà comunque all'orario previsto per non compromettere gli appuntamenti successivi.</p>
+
+      <h3>🔄 Recuperi</h3>
+      <p>Le richieste di recupero sono soggette alla disponibilità e all'approvazione del coach e non sono garantite.</p>
+    </div>
+
+    <div id="acceptBox" class="accept-box">
+      <input id="regCheck" type="checkbox">
+      <label for="regCheck">Dichiaro di aver letto e accettato integralmente il regolamento.</label>
+    </div>
+    <p class="meta">L'accettazione verrà registrata con data, ora e versione del regolamento.</p>
+    <button id="acceptBtn" class="btn gold" onclick="accettaRegolamento()">Accetto e continua</button>
+    <div id="regAlert" class="alert">🟡 Azione richiesta: accettare il regolamento per utilizzare l'Area Cliente.</div>
+    <p id="regAcceptedInfo" class="footer-reg hidden"></p>
+  </section>
+
+  <section id="clienteContent" class="locked-content">
+    <div class="card"><h2 id="nome">Caricamento...</h2><p id="info" class="meta"></p></div>
+    <div class="card"><h2>Lezioni</h2><div id="lezioni"></div></div>
+  </section>
 </main>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, doc, getDoc, collection, getDocs, collectionGroup, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, getDoc, updateDoc, collection, getDocs, collectionGroup, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
 
 const app=initializeApp(firebaseConfig);
@@ -29,30 +96,91 @@ const db=getFirestore(app);
 const params=new URLSearchParams(location.search);
 const id=params.get("id");
 const uid=params.get("uid");
+let currentClient=null;
+let currentClientRef=null;
+let ownerUid=uid;
+const REG_VERSION="11.5";
 
 function fmt(d){if(!d)return"-";const [y,m,day]=String(d).slice(0,10).split("-");return day&&m&&y?`${day}/${m}/${y}`:d}
 function nome(c){return `${c.nome||""} ${c.cognome||""}`.trim()}
 function statoClass(st){return ["Effettuata","Recuperata"].includes(st)?"":(["Assente","Annullata","Annullata dal cliente"].includes(st)?"bad":"warn")}
+function nowLabel(){
+ const d=new Date();
+ return d.toLocaleDateString("it-IT")+" ore "+d.toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"});
+}
+function unlockArea(){
+ document.getElementById("clienteContent").classList.remove("locked-content");
+ document.getElementById("regAlert").classList.add("hidden");
+ document.getElementById("acceptBox").classList.add("hidden");
+ document.getElementById("acceptBtn").classList.add("hidden");
+}
+function lockArea(){
+ document.getElementById("clienteContent").classList.add("locked-content");
+ document.getElementById("regAlert").classList.remove("hidden");
+ document.getElementById("acceptBox").classList.remove("hidden");
+ document.getElementById("acceptBtn").classList.remove("hidden");
+}
+function updateRegolamentoUI(){
+ if(!currentClient)return;
+ if(currentClient.regolamentoAccettato){
+   unlockArea();
+   const text="✅ Regolamento accettato il "+(currentClient.regolamentoAccettatoAtLabel||"-")+" · versione "+(currentClient.regolamentoVersione||REG_VERSION);
+   const el=document.getElementById("regAcceptedInfo");
+   el.textContent=text;
+   el.classList.remove("hidden");
+ }else{
+   lockArea();
+ }
+}
+window.accettaRegolamento=async()=>{
+ if(!document.getElementById("regCheck").checked){
+   alert("Devi spuntare la casella di accettazione.");
+   return;
+ }
+ if(!currentClientRef){
+   alert("Cliente non trovato.");
+   return;
+ }
+ const label=nowLabel();
+ await updateDoc(currentClientRef,{
+   regolamentoAccettato:true,
+   regolamentoAccettatoAtLabel:label,
+   regolamentoAccettatoAt:new Date().toISOString(),
+   regolamentoAccettatoTimestamp:serverTimestamp(),
+   regolamentoVersione:REG_VERSION
+ });
+ currentClient.regolamentoAccettato=true;
+ currentClient.regolamentoAccettatoAtLabel=label;
+ currentClient.regolamentoVersione=REG_VERSION;
+ updateRegolamentoUI();
+};
 
 async function load(){
  try{
    if(!id){document.getElementById("nome").textContent="Link non valido";return}
 
-   let c=null, ownerUid=uid;
+   let c=null;
    if(uid){
-     const snap=await getDoc(doc(db,"users",uid,"clienti",id));
-     if(snap.exists()) c={id:snap.id,...snap.data()};
+     const ref=doc(db,"users",uid,"clienti",id);
+     const snap=await getDoc(ref);
+     if(snap.exists()){
+       c={id:snap.id,...snap.data()};
+       currentClientRef=ref;
+     }
    }
 
    if(!c){
      const qs=await getDocs(query(collectionGroup(db,"clienti"),where("__name__","==",id)));
      if(!qs.empty){
-       c={id:qs.docs[0].id,...qs.docs[0].data()};
-       ownerUid=qs.docs[0].ref.parent.parent.id;
+       const ds=qs.docs[0];
+       c={id:ds.id,...ds.data()};
+       ownerUid=ds.ref.parent.parent.id;
+       currentClientRef=ds.ref;
      }
    }
 
    if(!c){document.getElementById("nome").textContent="Cliente non trovato";return}
+   currentClient=c;
 
    document.getElementById("nome").textContent=nome(c);
    document.getElementById("info").innerHTML=`<span class="badge">${c.lezioniResidue||0} residue su ${c.lezioniTotali||0}</span><br>Periodo: ${fmt(c.inizio)} → ${fmt(c.scadenza)}<br>${c.servizio||""}`;
@@ -64,6 +192,7 @@ async function load(){
    }
 
    document.getElementById("lezioni").innerHTML=evs.length?evs.map(e=>`<div class="card"><b>${fmt(e.data)} ore ${e.ora||"-"}</b><p class="meta">Stato: ${e.stato||"Prenotata"}</p><span class="badge ${statoClass(e.stato||"Prenotata")}">${e.stato||"Prenotata"}</span></div>`).join(""):"<p class='meta'>Nessuna lezione trovata.</p>";
+   updateRegolamentoUI();
  }catch(e){
    document.getElementById("nome").textContent="Errore caricamento";
    document.getElementById("info").textContent=e.message;

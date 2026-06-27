@@ -1,8 +1,17 @@
-SB PERSONAL COACH GESTIONALE 11.4 - FIX TASTI + LINK CLIENTE
+SB PERSONAL COACH GESTIONALE 11.5 - REGOLAMENTO CLIENTE
 
-Fix:
-1. + Lezione e Restituisci riscritti con funzioni globali stabili.
-2. Le card cliente ora hanno data-client-id e pulsanti collegati direttamente.
-3. Invio accesso cliente apre WhatsApp con messaggio e link.
-4. Link cliente ora include uid + id: cliente.html?uid=...&id=...
-5. Area Cliente legge direttamente il documento corretto e non resta su Caricamento.
+Novità:
+- Regolamento visualizzato in Area Cliente come nella vecchia versione.
+- Blocco Area Cliente finché il regolamento non viene accettato.
+- Checkbox obbligatoria.
+- Pulsante: Accetto e continua.
+- Avviso giallo se il regolamento non è accettato.
+- Salvataggio data, ora e versione del regolamento.
+- In Area Cliente resta visibile il riepilogo dell'accettazione.
+- Nella sezione Clienti del coach compare lo stato del regolamento.
+
+Non sono stati toccati i fix della 11.4:
+- + Lezione
+- Restituisci
+- Invio accesso cliente
+- Link cliente uid + id
