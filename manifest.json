@@ -1,15 +1,8 @@
 {
-  "name": "SB Personal Coach Gestionale 10.0 RC18",
+  "name": "SB Personal Coach Gestionale 11.0",
   "short_name": "SB Coach",
   "start_url": "index.html",
   "display": "standalone",
   "background_color": "#f4f6f8",
-  "theme_color": "#101827",
-  "icons": [
-    {
-      "src": "logo.jpeg",
-      "sizes": "512x512",
-      "type": "image/jpeg"
-    }
-  ]
+  "theme_color": "#101827"
 }

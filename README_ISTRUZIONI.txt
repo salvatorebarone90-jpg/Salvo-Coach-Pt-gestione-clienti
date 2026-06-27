@@ -1,11 +1,22 @@
-SB PERSONAL COACH GESTIONALE 10.0 RC18 - TASTI CLIENTI + REGISTRO
+SB PERSONAL COACH GESTIONALE 11.0 CLEAN EDITION
 
-Fix:
-- Funzionamento tasti cliente anche nella sezione Clienti.
-- Ripristinati: + Lezione, Restituisci, Rinnova, Modifica, Inattivo, Elimina cliente, Invia accesso.
-- Registro Cliente: il filtro aggiorna realmente numeri e lista lezioni.
-- Rimossa sezione Lead.
+Questa non è una patch della RC19.
+È una base pulita e modulare.
 
-Test:
-1. Sezione Clienti: prova ogni tasto.
-2. Registro Cliente: cambia cliente e verifica che cambino date e valori.
+Incluso:
+- Clienti
+- Tasti cliente funzionanti
+- Calendario solo futuro
+- Smart Coach solo lezioni di oggi
+- Registro Cliente
+- Da contattare solo WhatsApp
+- Rinnovi con X
+- Contabilità
+- Backup JSON
+- Area Cliente base
+
+Regole fondamentali:
+- Lo storico non viene toccato.
+- Modifica calendario parte sempre da domani.
+- Smart Coach mostra solo lezioni di oggi terminate.
+- Assente/Effettuata scalano credito.

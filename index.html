@@ -1,2355 +1,373 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="it">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>SB Personal Coach Gestionale 10.0 RC18</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>SB Personal Coach Gestionale 11.0</title>
 <link rel="manifest" href="manifest.json">
 <style>
-:root{--n:#101827;--g:#d5ad52;--b:#f4f6f8}
-*{box-sizing:border-box}body{margin:0;background:var(--b);font-family:-apple-system,BlinkMacSystemFont,Segoe UI,Arial;color:#111827}
-header{background:linear-gradient(145deg,#101827,#1b2434);border-bottom:4px solid var(--g);padding:18px 12px;position:sticky;top:0;z-index:9}
-.logo{display:block;width:210px;max-width:72%;margin:0 auto 8px}h1{margin:0;text-align:center;color:white;font-size:18px}header p{text-align:center;color:#d1d5db;margin:5px 0 0;font-size:12px}
-nav{display:flex;gap:8px;overflow:auto;background:white;padding:10px;position:sticky;top:112px;z-index:8;border-bottom:1px solid #e5e7eb}
-nav button{border:0;border-radius:999px;background:#eef2f7;color:var(--n);font-weight:800;padding:10px 12px;white-space:nowrap}
-nav button.active{background:var(--n);color:white;border:2px solid var(--g)}
-main{max-width:1050px;margin:auto;padding:12px}.section{display:none}.section.active{display:block}
-.card{background:white;border-radius:18px;padding:14px;margin:12px 0;box-shadow:0 4px 14px #0001}
-h2{font-size:18px;color:var(--n);margin:0 0 12px}h3{margin:0;color:var(--n)}
-.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.kpi{background:white;border-radius:16px;padding:14px;border-top:4px solid var(--g);box-shadow:0 4px 14px #0001}
-.kpi strong{display:block;font-size:25px;color:var(--n)}.kpi span{font-size:12px;color:#6b7280;font-weight:800}
-label{display:block;font-size:12px;font-weight:900;color:#334155;margin:10px 0 4px}
-input,select,textarea{width:100%;border:1px solid #cbd5e1;border-radius:12px;padding:12px;font-size:16px;background:white}
-textarea{min-height:80px}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.btn{border:0;border-radius:13px;padding:12px 14px;font-size:15px;font-weight:900;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:7px;cursor:pointer}
-.full{width:100%;margin-top:10px}.primary{background:var(--n);color:white}.gold{background:var(--g);color:#111}.light{background:#eef2f7;color:var(--n)}.red{background:#fee2e2;color:#991b1b}.green{background:#25D366;color:white}
-.badge{display:inline-block;border-radius:999px;padding:6px 9px;font-size:12px;font-weight:900;margin:5px 4px 2px 0}
-.ok{background:#dcfce7;color:#166534}.warn{background:#fef3c7;color:#92400e}.bad{background:#fee2e2;color:#991b1b}.info{background:#dbeafe;color:#1e40af}.black{background:#e5e7eb;color:#111827}
-.meta{font-size:13px;color:#6b7280;line-height:1.45;margin:6px 0}.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
-.hidden{display:none!important}.empty{text-align:center;color:#6b7280;padding:20px 6px;font-size:14px}
-.filters{display:flex;gap:8px;overflow:auto;margin:8px 0}.filters button{border:0;border-radius:999px;padding:9px 11px;font-weight:900;background:#eef2f7;color:var(--n);white-space:nowrap}.filters button.active{background:var(--g);color:#111}
-.daygrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.mini{font-size:12px;color:#64748b}
-#statusBox{font-size:13px;margin-top:10px;color:#6b7280}
-@media(max-width:580px){.row,.daygrid{grid-template-columns:1fr}.grid{grid-template-columns:repeat(2,1fr)}main{padding:10px}}
+:root{--dark:#101827;--blue:#17233a;--gold:#d5ad52;--bg:#f4f6f8;--card:#fff;--muted:#667085;--ok:#13915f;--bad:#c0392b;--warn:#c47d00}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:#111827}
+header{background:linear-gradient(135deg,var(--dark),var(--blue));color:#fff;padding:18px 14px;position:sticky;top:0;z-index:20;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+.header-inner{display:flex;align-items:center;gap:12px;max-width:1150px;margin:auto}
+.logo{width:52px;height:52px;border-radius:50%;object-fit:cover;background:#fff}
+h1{font-size:20px;margin:0}
+.subtitle{font-size:12px;color:#e5e7eb;margin-top:3px}
+nav{display:flex;gap:8px;overflow-x:auto;max-width:1150px;margin:14px auto 0;padding-bottom:2px}
+nav button{border:0;border-radius:999px;padding:10px 14px;background:rgba(255,255,255,.14);color:#fff;font-weight:700;white-space:nowrap}
+nav button.active{background:var(--gold);color:#111827}
+main{max-width:1150px;margin:auto;padding:14px}
+.section{display:none}
+.section.active{display:block}
+.card{background:var(--card);border-radius:18px;padding:16px;margin:12px 0;box-shadow:0 8px 24px rgba(16,24,39,.08)}
+.card h2{margin:0 0 8px;font-size:20px}
+.card h3{margin:0 0 6px;font-size:17px}
+.meta{color:var(--muted);font-size:13px;line-height:1.35}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px}
+.kpi{background:#fff;border-radius:18px;padding:16px;box-shadow:0 8px 22px rgba(16,24,39,.07)}
+.kpi strong{font-size:25px;display:block}
+.kpi span{font-size:12px;color:var(--muted)}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}
+label{font-size:12px;font-weight:800;color:#344054;display:block;margin:8px 0 5px}
+input,select,textarea{width:100%;padding:12px;border:1px solid #d0d5dd;border-radius:12px;font-size:15px;background:#fff}
+textarea{min-height:80px}
+.btn{border:0;border-radius:12px;padding:11px 13px;font-weight:800;margin:4px 4px 4px 0;cursor:pointer}
+.btn.full{width:100%;margin:8px 0 0}
+.gold{background:var(--gold);color:#111827}.dark{background:var(--dark);color:#fff}.light{background:#e8edf5;color:#17233a}.red{background:#ffe3e0;color:#a62018}.green{background:#dcfce7;color:#166534}.whatsapp{background:#25D366;color:#fff}
+.badge{display:inline-block;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:800;margin:3px}
+.badge.ok{background:#dcfce7;color:#166534}.badge.bad{background:#fee2e2;color:#991b1b}.badge.warn{background:#fef3c7;color:#92400e}.badge.info{background:#e0f2fe;color:#075985}
+.check{border:1px solid #e5e7eb;border-radius:14px;padding:12px;margin:10px 0;background:#fff}
+.empty{padding:18px;text-align:center;color:var(--muted)}
+.actions{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.hidden{display:none!important}
+.small{font-size:12px}
+hr{border:0;border-top:1px solid #e5e7eb;margin:12px 0}
 </style>
 </head>
 <body>
-<header><img src="logo.jpeg" class="logo"><h1>Gestionale Clienti 10.0 RC18 Coach</h1><p>Tasti Clienti · Registro RC18</p></header>
+<header>
+  <div class="header-inner">
+    <img src="logo.jpeg" class="logo" onerror="this.style.display='none'">
+    <div>
+      <h1>SB Personal Coach Gestionale 11.0</h1>
+      <div class="subtitle">Clean Edition · stabile e modulare</div>
+    </div>
+  </div>
+  <nav id="nav">
+    <button data-tab="dashboard" class="active">Dashboard</button>
+    <button data-tab="clienti">Clienti</button>
+    <button data-tab="calendario">Calendario</button>
+    <button data-tab="registro">Registro Cliente</button>
+    <button data-tab="contattare">Da contattare</button>
+    <button data-tab="rinnovi">Rinnovi</button>
+    <button data-tab="contabilita">Contabilità</button>
+    <button data-tab="backup">Backup</button>
+  </nav>
+</header>
 
-<div id="loginView" class="card" style="max-width:430px;margin:18px auto">
-<h2>🔐 Accesso Coach</h2>
-<label>Email</label><input id="loginEmail" type="email" autocomplete="username">
-<label>Password</label><input id="loginPassword" type="password" autocomplete="current-password">
-<button id="loginBtn" class="btn primary full">Accedi</button>
-<button id="signupBtn" class="btn gold full">Crea account coach</button>
-<div id="statusBox">Pronto.</div>
-</div>
-
-<div id="appView" class="hidden">
-<nav>
-<button class="active" data-tab="dashboard">Dashboard</button>
-<button data-tab="clienti">Clienti</button>
-<button data-tab="contatti">Da contattare</button>
-<button data-tab="calendario">Calendario</button>
-<button data-tab="registro">Registro Cliente</button>
-<button data-tab="recuperi">Recuperi</button>
-<button data-tab="check">Check</button>
-<button data-tab="rinnovi">Rinnovi</button>
-<button data-tab="contabilita">Contabilità</button>
-<button data-tab="messaggi">Messaggi</button>
-<button data-tab="checkpro">Check Pro</button>
-<button data-tab="googlecal">Google Calendar</button>
-<button data-tab="backup">Backup</button>
-</nav>
-
-<main>
-
-<section id="bacheca" class="section">
-<div class="card">
-<h2>📢 Bacheca avvisi</h2>
-<p class="meta">Crea comunicazioni visibili nell'Area Cliente. Ideale per chiusure, check, pagamenti, variazioni orari e comunicazioni generali.</p>
-
-<label>Titolo avviso</label>
-<input id="avvisoTitolo" placeholder="Es. Chiusura estiva">
-
-<label>Messaggio</label>
-<textarea id="avvisoMessaggio" rows="5" placeholder="Scrivi qui il messaggio per i clienti..."></textarea>
-
-<label>Priorità</label>
-<select id="avvisoTipo">
-<option value="info">Info</option>
-<option value="urgente">Urgente</option>
-<option value="pagamento">Pagamento</option>
-<option value="check">Check</option>
-</select>
-
-<button class="btn gold full" onclick="salvaAvviso()">Pubblica avviso</button>
-</div>
-
-<div class="card">
-<h2>📌 Avvisi pubblicati</h2>
-<div id="listaAvvisiCoach"></div>
-</div>
+<main id="app">
+<section id="login" class="section">
+  <div class="card">
+    <h2>Accesso Coach</h2>
+    <label>Email</label><input id="loginEmail" type="email">
+    <label>Password</label><input id="loginPassword" type="password">
+    <button class="btn gold full" onclick="login()">Accedi</button>
+    <p id="loginStatus" class="meta"></p>
+  </div>
 </section>
 
-
-<section id="notifiche" class="section">
-<div class="card">
-<h2>🔔 Centro Notifiche</h2>
-<p class="meta">Tutte le azioni che richiedono attenzione: lezioni da confermare, saldi, certificati, recuperi e check.</p>
-<div id="listaNotifiche"></div>
-</div>
+<section id="dashboard" class="section active">
+  <div class="card">
+    <h2>👋 Smart Coach</h2>
+    <div id="smartCoachBox"></div>
+  </div>
+  <div class="grid">
+    <div class="kpi"><strong id="kClienti">0</strong><span>Clienti attivi</span></div>
+    <div class="kpi"><strong id="kOggi">0</strong><span>Lezioni oggi</span></div>
+    <div class="kpi"><strong id="kDaConf">0</strong><span>Da confermare oggi</span></div>
+    <div class="kpi"><strong id="kResidui">€0</strong><span>Da incassare</span></div>
+  </div>
 </section>
 
-<section id="economia" class="section">
-<div class="card">
-<h2>💰 Centro Economico</h2>
-<p class="meta">Registra entrate, controlla incassi mensili e saldi ancora aperti.</p>
-
-<div class="row">
-<div><label>Cliente</label><select id="pagCliente"></select></div>
-<div><label>Data pagamento</label><input id="pagData" type="date"></div>
-</div>
-
-<div class="row">
-<div><label>Importo incassato €</label><input id="pagImporto" type="number" step="0.01" placeholder="Es. 150"></div>
-<div><label>Metodo</label><select id="pagMetodo"><option>Bonifico</option><option>Contanti</option><option>Carta</option><option>PayPal</option><option>Altro</option></select></div>
-</div>
-
-<label>Note</label>
-<textarea id="pagNote" rows="3" placeholder="Es. Acconto, saldo, rinnovo..."></textarea>
-<button class="btn gold full" onclick="salvaPagamento()">Registra pagamento</button>
-</div>
-
-<div class="grid">
-<div class="kpi"><strong id="kIncassoOggi">€0</strong><span>Incassato oggi</span></div>
-<div class="kpi"><strong id="kIncassoMese">€0</strong><span>Incassato mese</span></div>
-<div class="kpi"><strong id="kIncassoAnno">€0</strong><span>Incassato anno</span></div>
-<div class="kpi"><strong id="kDaIncassareEco">€0</strong><span>Da incassare</span></div>
-</div>
-
-<div class="card"><h2>📅 Filtro mese</h2><input id="ecoMese" type="month"><button class="btn light full" onclick="renderEconomia()">Aggiorna filtro</button></div>
-<div class="card"><h2>📊 Incassi per mese</h2><div id="graficoMesi"></div></div>
-<div class="card"><h2>📌 Saldi aperti</h2><div id="listaDaIncassareEco"></div></div>
-<div class="card"><h2>🧾 Storico pagamenti</h2><div id="listaPagamenti"></div></div>
+<section id="clienti" class="section">
+  <div class="card">
+    <h2 id="formTitle">Nuovo Cliente</h2>
+    <input id="clienteId" type="hidden">
+    <div class="row">
+      <div><label>Nome</label><input id="nome"></div>
+      <div><label>Cognome</label><input id="cognome"></div>
+    </div>
+    <div class="row">
+      <div><label>Telefono / WhatsApp</label><input id="telefono"></div>
+      <div><label>Email</label><input id="emailCliente"></div>
+    </div>
+    <div class="row">
+      <div><label>Servizio</label><select id="servizio"><option>Personal Training</option><option>Coaching Online</option><option>Nutrizione</option><option>BIA</option><option>Plicometria</option><option>Preparazione gara</option><option>Altro</option></select></div>
+      <div><label>Lezioni totali</label><input id="lezioniTotali" type="number" value="12"></div>
+    </div>
+    <div class="row">
+      <div><label>Frequenza settimanale</label><input id="frequenza" type="number" value="2"></div>
+      <div><label>Durata lezione minuti</label><input id="durata" type="number" value="60"></div>
+    </div>
+    <div class="row">
+      <div><label>Giorni settimana</label><input id="giorni" placeholder="Lunedì,Mercoledì,Venerdì"></div>
+      <div><label>Orari</label><input id="orari" placeholder="10:30,18:00"></div>
+    </div>
+    <div class="row">
+      <div><label>Data inizio pacchetto</label><input id="inizio" type="date"></div>
+      <div><label>Scadenza/Fine pacchetto</label><input id="scadenza" type="date"></div>
+    </div>
+    <div class="row">
+      <div><label>Dovuto €</label><input id="dovuto" type="number" step="0.01"></div>
+      <div><label>Pagato €</label><input id="pagato" type="number" step="0.01"></div>
+    </div>
+    <label>Note</label><textarea id="note"></textarea>
+    <div id="newActions">
+      <button class="btn gold full" onclick="creaCliente()">Crea cliente + genera calendario</button>
+    </div>
+    <div id="editActions" class="hidden">
+      <button class="btn green" onclick="salvaSaldoCliente()">💰 Modifica solo saldo</button>
+      <button class="btn gold" onclick="aggiornaCalendarioFuturo()">📅 Aggiorna calendario futuro</button>
+      <button class="btn light" onclick="ricalcolaContatoreCliente()">🔄 Ricalcola contatore</button>
+      <button class="btn dark" onclick="salvaDatiCliente()">💾 Salva dati cliente</button>
+      <button class="btn light" onclick="pulisciForm()">Nuovo cliente</button>
+    </div>
+    <p class="meta">Regola calendario: modifiche a giorni/orari/frequenza partono sempre da domani. Oggi e storico non vengono toccati.</p>
+  </div>
+  <div id="listaClienti"></div>
 </section>
 
-<section id="audit" class="section">
-<div class="card">
-<h2>🧾 Audit Log</h2>
-<p class="meta">Registro attività automatico: pagamenti, lezioni, annullamenti e modifiche importanti.</p>
-<div id="listaAudit"></div>
-</div>
+<section id="calendario" class="section">
+  <div class="card">
+    <h2>📅 Calendario</h2>
+    <div class="row">
+      <div><label>Dal</label><input id="calDal" type="date"></div>
+      <div><label>Al</label><input id="calAl" type="date"></div>
+    </div>
+    <button class="btn gold full" onclick="renderCalendario()">Aggiorna calendario</button>
+  </div>
+  <div id="listaCalendario"></div>
 </section>
 
+<section id="registro" class="section">
+  <div class="card">
+    <h2>📚 Registro Cliente</h2>
+    <p class="meta">Storico completo: inizio/fine pacchetto, lezioni, stati, residue.</p>
+    <label>Seleziona cliente</label>
+    <select id="registroCliente" onchange="renderRegistro()"></select>
+  </div>
+  <div class="grid">
+    <div class="kpi"><strong id="regTotali">0</strong><span>Lezioni pacchetto</span></div>
+    <div class="kpi"><strong id="regFatte">0</strong><span>Consumate</span></div>
+    <div class="kpi"><strong id="regResidue">0</strong><span>Residue</span></div>
+    <div class="kpi"><strong id="regPeriodo">-</strong><span>Periodo</span></div>
+  </div>
+  <div class="card"><h2>🗓️ Lezioni</h2><div id="registroLista"></div></div>
+</section>
 
+<section id="contattare" class="section">
+  <div class="card"><h2>💬 Da contattare</h2><div id="listaContattare"></div></div>
+</section>
+
+<section id="rinnovi" class="section">
+  <div class="card"><h2>🔁 Storico rinnovi</h2><div id="listaRinnovi"></div></div>
+</section>
 
 <section id="contabilita" class="section">
   <div class="card">
-    <h2>💰 Contabilità mensile</h2>
-    <p class="meta">Riepilogo economico reale: incassato, da incassare e valore pacchetti attivi.</p>
-    <label>Mese</label>
-    <input id="contMese" type="month">
-    <button class="btn gold full" onclick="renderContabilitaRC10()">Aggiorna contabilità</button>
+    <h2>💰 Contabilità</h2>
+    <label>Mese</label><input id="contMese" type="month">
+    <button class="btn gold full" onclick="renderContabilita()">Aggiorna</button>
   </div>
-
   <div class="grid">
     <div class="kpi"><strong id="contIncassato">€0</strong><span>Incassato mese</span></div>
     <div class="kpi"><strong id="contDaIncassare">€0</strong><span>Da incassare</span></div>
     <div class="kpi"><strong id="contValorePacchetti">€0</strong><span>Valore pacchetti</span></div>
     <div class="kpi"><strong id="contTotaleStorico">€0</strong><span>Totale storico</span></div>
   </div>
+  <div class="card"><h2>📌 Clienti con residuo</h2><div id="contClientiResiduo"></div></div>
+  <div class="card"><h2>📦 Pacchetti attivi</h2><div id="contPacchettiAttivi"></div></div>
+  <div class="card"><h2>🧾 Movimenti</h2><div id="contMovimenti"></div></div>
+</section>
 
+<section id="backup" class="section">
   <div class="card">
-    <h2>📌 Clienti con residuo</h2>
-    <div id="contClientiResiduo"></div>
-  </div>
-
-  <div class="card">
-    <h2>📦 Pacchetti attivi</h2>
-    <div id="contPacchettiAttivi"></div>
-  </div>
-
-  <div class="card">
-    <h2>🧾 Movimenti registrati</h2>
-    <div id="contMovimenti"></div>
+    <h2>💾 Backup</h2>
+    <button class="btn gold full" onclick="esportaBackup()">Esporta backup JSON</button>
   </div>
 </section>
-
-
-<section id="registro" class="section">
-  <div class="card"><h2>📚 Registro Cliente</h2><p class="meta">Storico completo del cliente: inizio/fine pacchetto e tutte le lezioni.</p><label>Seleziona cliente</label><select id="registroCliente" onchange="renderRegistroClienteRC18()"></select><button class="btn gold full" onclick="renderRegistroClienteRC16()">Aggiorna registro</button></div>
-  <div class="grid"><div class="kpi"><strong id="regTotali">0</strong><span>Lezioni pacchetto</span></div><div class="kpi"><strong id="regFatte">0</strong><span>Consumate</span></div><div class="kpi"><strong id="regResidue">0</strong><span>Residue</span></div><div class="kpi"><strong id="regPeriodo">-</strong><span>Periodo pacchetto</span></div></div>
-  <div class="card"><h2>🗓️ Lezioni del cliente</h2><div id="registroLista"></div></div>
-</section>
-
-<section id="dashboard" class="section active">
-<div class="card premium" id="smartCoachBox"><h2>👋 Smart Coach</h2><div id="smartCoachSummary"></div><div id="smartConfirmBanner"></div></div>
-<div class="card" style="display:flex;justify-content:space-between;align-items:center"><div><b id="userEmail"></b><br><span class="meta">Database cloud Firestore</span></div><button id="logoutBtn" class="btn red">Esci</button></div>
-<div class="card">
-<h2>📱 Area Cliente</h2>
-<p class="meta">Link generale area cliente:</p>
-<input id="clientAreaUrl" readonly>
-<button id="copyClientAreaBtn" class="btn gold full">Copia link generale</button>
-<p class="meta">Dentro ogni cliente trovi <b>Invia accesso cliente</b> con link personale diretto.</p>
-<p id="copyStatus" class="meta"></p>
-</div>
-<div class="grid">
-<div class="kpi"><strong id="kClienti">0</strong><span>Clienti attivi</span></div>
-<div class="kpi"><strong id="kInattivi">0</strong><span>Clienti inattivi</span></div>
-<div class="kpi"><strong id="kContatti">0</strong><span>Da contattare</span></div>
-<div class="kpi"><strong id="kLezioniOggi">0</strong><span>Lezioni oggi</span></div>
-<div class="kpi"><strong id="kLezioniDomani">0</strong><span>Lezioni domani</span></div>
-<div class="kpi"><strong id="kIncassi">€0</strong><span>Da incassare</span></div>
-<div class="kpi"><strong id="kQuasiFiniti">0</strong><span>Pacchetti quasi finiti</span></div>
-<div class="kpi"><strong id="kCert">0</strong><span>Certificati in scadenza</span></div>
-</div>
-<div class="card"><h2>📌 Priorità automatiche</h2><div id="priorita"></div><div id="recuperiAlert" class="meta"></div></div>
-</section>
-
-<section id="clienti" class="section">
-<div class="card"><h2>➕ Nuovo / modifica cliente</h2><input type="hidden" id="editId">
-<div class="row"><div><label>Nome</label><input id="nome"></div><div><label>Cognome</label><input id="cognome"></div></div>
-<div class="row"><div><label>Email</label><input id="emailCliente"></div><div><label>WhatsApp</label><input id="telefono" placeholder="393331234567"></div></div>
-<div class="row"><div><label>Data nascita</label><input id="dataNascita" type="date"></div><div><label>Sesso</label><select id="sesso"><option>Maschio</option><option>Femmina</option><option>Altro</option></select></div></div>
-<div class="row"><div><label>Tipologia</label><select id="servizio"><option>Personal Training</option><option>Nutrizione</option><option>Coaching Online</option><option>Preparazione Gara</option><option>PT + Nutrizione</option><option>Combinato</option><option>Small Group</option><option>BIA / Plicometria</option></select></div><div><label>Provenienza</label><select id="provenienza"><option>Instagram</option><option>Passaparola</option><option>Cliente esistente</option><option>Sponsor</option><option>Altro</option></select></div></div>
-<div class="row"><div><label>Pacchetto lezioni</label><select id="pacchetto"><option value="0">Nessuno</option><option value="8">8</option><option value="10">10</option><option value="12" selected>12</option><option value="16">16</option><option value="manuale">Personalizzato</option></select></div><div><label>Frequenza settimanale</label><select id="frequenza"><option value="1">1</option><option value="2" selected>2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option></select></div></div>
-<div class="row" id="manualeBox" style="display:none"><div><label>Numero lezioni</label><input id="pacchettoManuale" type="number"></div></div>
-<div class="row"><div><label>Modalità</label><select id="modalitaPrenotazione"><option>Orario fisso</option><option>Prenotazione libera</option></select></div><div><label>Durata lezione</label><select id="durataLezione"><option value="60">60 minuti</option><option value="90">90 minuti</option><option value="30">30 minuti</option><option value="custom">Personalizzata</option></select></div></div>
-<div class="row"><div><label>Durata personalizzata minuti</label><input id="durataCustom" type="number" placeholder="Es. 75"></div><div><label>Data inizio</label><input id="inizio" type="date"></div></div>
-
-<label>Orari fissi automatici</label>
-<div class="daygrid">
-<div><label>Lunedì</label><input id="slot1" placeholder="09:00"></div>
-<div><label>Martedì</label><input id="slot2" placeholder="18:00"></div>
-<div><label>Mercoledì</label><input id="slot3" placeholder="08:30"></div>
-<div><label>Giovedì</label><input id="slot4" placeholder="18:00"></div>
-<div><label>Venerdì</label><input id="slot5" placeholder="10:00"></div>
-<div><label>Sabato</label><input id="slot6" placeholder=""></div>
-</div>
-<p class="mini">I testi grigi sono esempi. Vengono usati solo i campi compilati davvero.</p>
-
-<div class="row"><div><label>Data certificato medico</label><input id="certificatoData" type="date"></div><div><label>Dovuto €</label><input id="dovuto" type="number"></div></div>
-<div class="row"><div><label>Pagato €</label><input id="pagato" type="number"></div><div><label>Check attivo</label><select id="checkAttivo"><option>No</option><option>Sì</option></select></div></div>
-<div class="row"><div><label>Frequenza check</label><select id="checkFreq"><option value="4">4 settimane</option><option value="5">5 settimane</option><option value="6">6 settimane</option><option value="custom">Personalizzata</option></select></div><div><label>Freq. custom settimane</label><input id="checkFreqCustom" type="number"></div></div>
-<div class="row"><div><label>Ultimo check</label><input id="ultimoCheck" type="date"></div></div>
-<label>Anamnesi / note interne</label><textarea id="anamnesi"></textarea><label>Note</label><textarea id="note"></textarea>
-<button id="saveClientBtn" class="btn primary full">Crea cliente + genera calendario</button>
-<button id="updateSaldoBtn" class="btn gold full" style="display:none">💰 Modifica solo saldo</button>
-<button id="regenBtn" class="btn gold full" style="display:none">📅 Aggiorna calendario</button>
-<button id="resetLessonsBtn" class="btn light full" style="display:none">🔄 Ricalcola contatore</button>
-<button id="clearBtn" class="btn light full">Pulisci</button></div>
-<input id="search" placeholder="Cerca cliente..."><div class="filters" id="clientFilters"></div><div id="listaClienti"></div>
-</section>
-
-<section id="contatti" class="section"><div class="card"><h2>💬 Da contattare</h2><div id="listaContatti"></div></div></section>
-
-<section id="calendario" class="section"><div class="card"><h2>📅 Calendario lezioni</h2>
-<label>Cliente</label><select id="calCliente"></select><div class="row"><div><label>Data</label><input id="calData" type="date"></div><div><label>Ora</label><input id="calOra" type="time"></div></div>
-<div class="row"><div><label>Tipo</label><select id="calTipo"><option>Lezione PT</option><option>Check</option><option>Consulenza</option><option>Recupero</option></select></div><div><label>Stato</label><select id="calStato"><option>Prenotata</option><option>Disponibile</option><option>Occupata</option><option>Bloccata</option><option>Effettuata</option><option>Assente</option><option>Recuperata</option><option>Annullata</option></select></div></div>
-<button id="saveEventBtn" class="btn primary full">Salva evento manuale</button></div>
-<div class="card"><h2>🗓️ Prossimi eventi</h2><div id="listaEventi"></div></div></section>
-
-
-<section id="recuperi" class="section">
-<div class="card">
-<h2>🔄 Recuperi lezioni</h2>
-<p class="meta">Qui trovi le richieste di recupero inviate dai clienti dall'Area Cliente.</p>
-<div id="listaRecuperi"></div>
-</div>
-</section>
-
-<section id="check" class="section"><div class="card"><h2>📏 Nuovo check</h2><label>Cliente</label><select id="checkCliente"></select><div class="row"><div><label>Data check</label><input id="checkData" type="date"></div><div><label>Peso kg</label><input id="checkPeso" type="number" step="0.1"></div></div><label>Note</label><textarea id="checkNote"></textarea><button id="saveCheckBtn" class="btn primary full">Salva check</button></div><div id="listaCheck"></div></section>
-<section id="rinnovi" class="section"><div class="card"><h2>🔁 Storico rinnovi</h2><div id="listaRinnovi"></div></div></section>
-
-<section id="googlecal" class="section">
-<div class="card">
-<h2>📆 Google Calendar / Widget iPhone</h2>
-<p class="meta">
-Da questa sezione puoi esportare tutte le lezioni automatiche e manuali in formato calendario.
-Metodo rapido: usa il pulsante Google Calendar sui singoli eventi.
-Metodo completo: scarica il file .ics e importalo in Google Calendar o Apple Calendario.
-</p>
-<button id="exportIcsBtn" class="btn gold full">Esporta agenda .ics</button>
-<button id="copyCalGuideBtn" class="btn light full">Mostra istruzioni Google Calendar</button>
-<div id="googleGuide" class="meta" style="display:none;white-space:pre-wrap;margin-top:12px"></div>
-</div>
-<div class="card">
-<h2>🔗 Prossime lezioni da aggiungere</h2>
-<div id="listaGoogleEventi"></div>
-</div>
-</section>
-
-
-<section id="messaggi" class="section">
-<div class="card">
-<h2>💬 Messaggi modificabili</h2>
-<p class="meta">Qui puoi personalizzare i testi WhatsApp. Sono salvati nel database e puoi modificarli quando vuoi.</p>
-<label>Rinnovo pacchetto</label>
-<textarea id="tplRinnovo" placeholder="Ciao {nome}, ti restano {lezioniResidue} lezioni..."></textarea>
-<label>Saldo da pagare</label>
-<textarea id="tplSaldo" placeholder="Ciao {nome}, risulta un saldo residuo di €{residuo}..."></textarea>
-<label>Check da programmare</label>
-<textarea id="tplCheck" placeholder="Ciao {nome}, è arrivato il momento del prossimo check..."></textarea>
-<label>Certificato medico</label>
-<textarea id="tplCertificato" placeholder="Ciao {nome}, il certificato medico è in scadenza..."></textarea>
-<label>Compleanno</label>
-<textarea id="tplCompleanno" placeholder="Tanti auguri {nome}!"></textarea>
-<button id="saveTemplatesBtn" class="btn primary full">Salva messaggi</button>
-<button id="resetTemplatesBtn" class="btn light full">Ripristina testi base</button>
-</div>
-</section>
-
-<section id="checkpro" class="section">
-<div class="card">
-<h2>📋 Check Pro / Note cliente</h2>
-<p class="meta">Seleziona un cliente e salva note, peso, misure, pliche e indicazioni interne. Tutto resta salvato in Firebase.</p>
-<label>Cliente</label>
-<select id="proCliente"></select>
-<div class="row">
-<div><label>Data</label><input id="proData" type="date"></div>
-<div><label>Peso kg</label><input id="proPeso" type="number" step="0.1"></div>
-</div>
-<label>Misure / circonferenze</label>
-<textarea id="proMisure" placeholder="Vita, fianchi, coscia, braccio..."></textarea>
-<label>Pliche</label>
-<textarea id="proPliche" placeholder="Pettorale, tricipitale, sottoscapolare, addominale, sovrailiaca..."></textarea>
-<label>Note alimentazione / allenamento</label>
-<textarea id="proNote" placeholder="Modifiche dieta, feedback fame, sonno, stress, compliance..."></textarea>
-<label>Messaggio rapido da inviare</label>
-<textarea id="proMessaggio" placeholder="Messaggio personalizzato per il cliente..."></textarea>
-<button id="saveCheckProBtn" class="btn primary full">Salva Check Pro</button>
-</div>
-<div class="card">
-<h2>🗂️ Storico Check Pro</h2>
-<div id="listaCheckPro"></div>
-</div>
-</section>
-
-<section id="backup" class="section"><div class="card"><h2>🗄️ Backup</h2><button id="backupBtn" class="btn gold full">Scarica backup JSON</button></div></section>
-</main></div>
+</main>
 
 <script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, doc, addDoc, setDoc, deleteDoc, getDocs, onSnapshot, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import { getFirestore, collection, doc, setDoc, deleteDoc, onSnapshot, addDoc, serverTimestamp, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 const app=initializeApp(firebaseConfig);
 const auth=getAuth(app);
 const db=getFirestore(app);
 
-let clienteOriginaleForm=null;
-window.__skipAutoGenerateCalendar=false;
-let user=null, clienti=[], eventi=[], checks=[], leads=[], rinnovi=[], recuperi=[], avvisi=[], pagamenti=[], auditLogs=[], filtro="Tutti";
-let checkPro=[], templates={};
-const defaultTemplates={
- rinnovo:"Ciao {nome}, ti ricordo che il tuo pacchetto è quasi terminato. Ti restano {lezioniResidue} lezioni. Fammi sapere se vuoi procedere con il rinnovo.",
- saldo:"Ciao {nome}, risulta un saldo residuo di €{residuo}.",
- check:"Ciao {nome}, è arrivato il momento di programmare il prossimo check.",
- certificato:"Ciao {nome}, ti ricordo che il certificato medico è in scadenza.",
- compleanno:"Tanti auguri {nome}! 🎉"
-};
-const $=(id)=>document.getElementById(id);
-const status=(msg)=>{$("statusBox").textContent=msg};
+let user=null, clienti=[], eventi=[], rinnovi=[], pagamenti=[];
+const $=id=>document.getElementById(id);
+const path=name=>collection(db,"users",user.uid,name);
+const docPath=(name,id)=>doc(db,"users",user.uid,name,id);
 
-$("loginBtn").addEventListener("click", async()=>{try{status("Accesso in corso...");await signInWithEmailAndPassword(auth,$("loginEmail").value.trim(),$("loginPassword").value)}catch(e){status("Errore: "+e.message);alert(e.message)}})
-$("signupBtn").addEventListener("click", async()=>{try{status("Creazione account...");await createUserWithEmailAndPassword(auth,$("loginEmail").value.trim(),$("loginPassword").value)}catch(e){status("Errore: "+e.message);alert(e.message)}})
-$("logoutBtn").addEventListener("click",()=>signOut(auth));
-document.querySelectorAll("nav button").forEach(btn=>btn.addEventListener("click",()=>{document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));$(btn.dataset.tab).classList.add("active");document.querySelectorAll("nav button").forEach(b=>b.classList.remove("active"));btn.classList.add("active");render()}));
-
-onAuthStateChanged(auth,u=>{user=u;if(!u){$("loginView").classList.remove("hidden");$("appView").classList.add("hidden");return}$("loginView").classList.add("hidden");$("appView").classList.remove("hidden");$("userEmail").textContent=u.email;subscribe()});
-
-function path(n){return collection(db,"users",user.uid,n)}
-function docPath(n,id){return doc(db,"users",user.uid,n,id)}
-function subscribe(){
- onSnapshot(path("clienti"),s=>{clienti=s.docs.map(d=>({id:d.id,...d.data()}));render()});
- onSnapshot(path("eventi"),s=>{eventi=s.docs.map(d=>({id:d.id,...d.data()}));autoScalaLezioni();render()});
- onSnapshot(path("checks"),s=>{checks=s.docs.map(d=>({id:d.id,...d.data()}));render()});
- onSnapshot(path("leads"),s=>{leads=s.docs.map(d=>({id:d.id,...d.data()}));render()});
- onSnapshot(path("rinnovi"),s=>{rinnovi=s.docs.map(d=>({id:d.id,...d.data()}));render()});
- onSnapshot(path("recuperi"),s=>{recuperi=s.docs.map(d=>({id:d.id,...d.data()}));render()});
- onSnapshot(path("avvisi"),s=>{avvisi=s.docs.map(d=>({id:d.id,...d.data()}));render()});
- onSnapshot(path("pagamenti"),s=>{pagamenti=s.docs.map(d=>({id:d.id,...d.data()}));render()});
- onSnapshot(path("auditLogs"),s=>{auditLogs=s.docs.map(d=>({id:d.id,...d.data()}));render()});
- onSnapshot(path("checkPro"),s=>{checkPro=s.docs.map(d=>({id:d.id,...d.data()}));render()});
- onSnapshot(doc(db,"users",user.uid,"settings","templates"),s=>{templates=s.exists()?s.data():{...defaultTemplates};render()});
-}
-
-function pad(n){return String(n).padStart(2,"0")}
-function parts(dateStr){const [y,m,d]=String(dateStr||"").split("-").map(Number);return {y,m,d}}
-function makeDate(p){return new Date(p.y,p.m-1,p.d,12,0,0)}
-function localISO(date){return date.getFullYear()+"-"+pad(date.getMonth()+1)+"-"+pad(date.getDate())}
-function parseLocalDate(s){return makeDate(parts(s))}
-function fmt(d){return d?parseLocalDate(d).toLocaleDateString("it-IT"):"-"}
-function addDays(date,days){let d=new Date(date);d.setDate(d.getDate()+days);return d}
-function addMonthsStr(dateStr,m){let d=parseLocalDate(dateStr);d.setMonth(d.getMonth()+m);return localISO(d)}
-function dayOfWeekISO(dateStr){return parseLocalDate(dateStr).getDay()}
-function daysLeft(date){if(!date)return 999;let o=new Date();o.setHours(12,0,0,0);let s=parseLocalDate(date);return Math.ceil((s-o)/86400000)}
-function pack(){return $("pacchetto").value==="manuale"?Number($("pacchettoManuale").value||0):Number($("pacchetto").value)}
-function calcExpiry(start,lessons,freq){return lessons&&start?localISO(addDays(parseLocalDate(start),Math.ceil((lessons/freq)*7))):""}
-function nextCheckObj(o){if(o.checkAttivo!=="Sì"||!o.ultimoCheck)return "";let w=o.checkFreq==="custom"?Number(o.checkFreqCustom||0):Number(o.checkFreq||0);return w?localISO(addDays(parseLocalDate(o.ultimoCheck),w*7)):""}
-function lessonDuration(){return $("durataLezione").value==="custom"?Number($("durataCustom").value||60):Number($("durataLezione").value)}
-
-function normalizeTime(t){
- t=String(t||"").trim();
- if(!t)return "";
- const m=t.match(/^(\d{1,2}):(\d{2})$/);
- if(!m)return "";
- const h=Number(m[1]), min=Number(m[2]);
- if(h<0||h>23||min<0||min>59)return "";
- return pad(h)+":"+pad(min);
-}
-function fixedSlots(){
- return [1,2,3,4,5,6].map(d=>({day:d,time:normalizeTime($("slot"+d).value)})).filter(s=>s.time);
-}
-
-$("pacchetto").addEventListener("change",()=>$("manualeBox").style.display=$("pacchetto").value==="manuale"?"grid":"none");
-$("search").addEventListener("input",render);
-$("clearBtn").addEventListener("click",pulisciForm);
-$("saveClientBtn").addEventListener("click",salvaCliente);
-if($("updateSaldoBtn"))$("updateSaldoBtn").addEventListener("click",aggiornaSoloSaldo);
-$("regenBtn").addEventListener("click",rigeneraCalendarioCliente);
-$("resetLessonsBtn").addEventListener("click",ripristinaLezioniResidue);
-$("saveEventBtn").addEventListener("click",salvaEventoManuale);
-$("saveCheckBtn").addEventListener("click",salvaCheck);
-$("saveLeadBtn").addEventListener("click",salvaLead);
-$("backupBtn").addEventListener("click",exportDB);
-if($("copyClientAreaBtn"))$("copyClientAreaBtn").addEventListener("click",copyClientAreaLink);
-if($("saveTemplatesBtn"))$("saveTemplatesBtn").addEventListener("click",salvaTemplates);
-if($("resetTemplatesBtn"))$("resetTemplatesBtn").addEventListener("click",resetTemplates);
-if($("saveCheckProBtn"))$("saveCheckProBtn").addEventListener("click",salvaCheckPro);
-$("exportIcsBtn").addEventListener("click",exportICS);
-$("copyCalGuideBtn").addEventListener("click",showGoogleGuide);
-
-[$("inizio"),$("calData"),$("checkData")].forEach(x=>x.valueAsDate=new Date());
-if($("proData"))$("proData").valueAsDate=new Date();
-
-function pulisciForm(){
- ["editId","nome","cognome","emailCliente","telefono","dataNascita","pacchettoManuale","dovuto","pagato","note","anamnesi","certificatoData","ultimoCheck","checkFreqCustom","durataCustom","slot1","slot2","slot3","slot4","slot5","slot6"].forEach(id=>$(id).value="");
- $("inizio").valueAsDate=new Date();$("pacchetto").value="12";$("frequenza").value="2";$("manualeBox").style.display="none";
- aggiornaPulsantiClienteRC11();
-}
-
-async function deleteAutoEvents(clienteId, onlyFuture=true){
- const snap=await getDocs(query(path("eventi"),where("clienteId","==",clienteId),where("autoGenerato","==",true)));
- const today=localISO(new Date());
- const jobs=[];
- snap.forEach(d=>{
-   const ev=d.data();
-   if(!onlyFuture || !ev.data || ev.data>=today) jobs.push(deleteDoc(docPath("eventi",d.id)));
- });
- await Promise.all(jobs);
-}
-
-async function generateFixedEvents(clienteId,c){
- if(c.modalitaPrenotazione!=="Orario fisso"||!c.lezioniTotali||!c.inizio)return;
- const slots=(c.slotFissi||[]).map(s=>({day:Number(s.day),time:normalizeTime(s.time)})).filter(s=>s.time&&s.day>=1&&s.day<=6);
- if(!slots.length)return;
- let count=0;
- let cursor=parseLocalDate(c.inizio);
- let guard=0;
- while(count<c.lezioniTotali && guard<365){
-   const currentISO=localISO(cursor);
-   const dow=dayOfWeekISO(currentISO);
-   const slot=slots.find(s=>s.day===dow);
-   if(slot){
-     await addDoc(path("eventi"),{
-       clienteId,
-       clienteNome:(c.nome||"")+" "+(c.cognome||""),
-       data:currentISO,
-       ora:slot.time,
-       tipo:"Lezione PT",
-       stato:"Prenotata",
-       scalata:false,
-       autoGenerato:true,
-       durata:c.durataMinuti||60,
-       createdAt:serverTimestamp()
-     });
-     count++;
-   }
-   cursor=addDays(cursor,1);
-   guard++;
- }
-}
-
-async function salvaCliente(){
- let id=$("editId").value, lez=pack(), freq=Number($("frequenza").value);
- if(!$("nome").value.trim()||!$("cognome").value.trim()||!$("telefono").value.trim()){alert("Compila nome, cognome e telefono");return}
- let old=clienti.find(c=>c.id===id);
- let obj={
-   nome:$("nome").value.trim(), cognome:$("cognome").value.trim(), email:$("emailCliente").value.trim(), telefono:$("telefono").value.trim(),
-   dataNascita:$("dataNascita").value, sesso:$("sesso").value, servizio:$("servizio").value, provenienza:$("provenienza").value,
-   stato: old?.stato || "attivo", lezioniTotali:lez, lezioniFatte:old?old.lezioniFatte||0:0, lezioniResidue:old?Math.max(0,lez-(old.lezioniFatte||0)):lez,
-   frequenza:freq, modalitaPrenotazione:$("modalitaPrenotazione").value, durataMinuti:lessonDuration(), slotFissi:fixedSlots(),
-   inizio:$("inizio").value, scadenza:calcExpiry($("inizio").value,lez,freq),
-   certificatoData:$("certificatoData").value, certificatoScadenza:$("certificatoData").value?addMonthsStr($("certificatoData").value,12):"",
-   dovuto:Number($("dovuto").value||0), pagato:Number($("pagato").value||0),
-   checkAttivo:$("checkAttivo").value, checkFreq:$("checkFreq").value, checkFreqCustom:$("checkFreqCustom").value,
-   ultimoCheck:$("ultimoCheck").value, prossimoCheck:nextCheckObj({checkAttivo:$("checkAttivo").value,checkFreq:$("checkFreq").value,checkFreqCustom:$("checkFreqCustom").value,ultimoCheck:$("ultimoCheck").value}),
-   note:$("note").value, anamnesi:$("anamnesi").value, updatedAt:serverTimestamp()
- };
- let savedId=id;
- if(id){await setDoc(docPath("clienti",id),obj,{merge:true})}
- else{let ref=await addDoc(path("clienti"),obj);savedId=ref.id;await generateFixedEvents(savedId,obj)}
- pulisciForm();
-}
-
-async function rigeneraCalendarioCliente(){
- const id=$("editId").value;
- if(!id){alert("Apri prima un cliente con Modifica, poi aggiorna il calendario.");return}
- const c=clienti.find(x=>x.id===id);
- if(!c){alert("Cliente non trovato.");return}
- if(!confirm("Aggiornare il calendario? Verranno eliminate e ricreate solo le lezioni future automatiche. Saldo, storico e contatore non vengono azzerati."))return;
- const lez=pack();
- const updated={
-   ...c,
-   slotFissi:fixedSlots(),
-   durataMinuti:lessonDuration(),
-   inizio:$("inizio").value,
-   lezioniTotali:lez,
-   frequenza:Number($("frequenza").value),
-   scadenza:calcExpiry($("inizio").value,lez,Number($("frequenza").value)),
-   updatedAt:serverTimestamp()
- };
- await setDoc(docPath("clienti",id),updated,{merge:true});
- await deleteAutoEvents(id,true);
- await generateFixedEvents(id,updated);
- if(typeof ricalcolaContatoreCliente==="function")await ricalcolaContatoreCliente(id);
- alert("Calendario futuro aggiornato. Saldo e storico mantenuti.");
-}
-
-async function ripristinaLezioniResidue(){
- const id=$("editId").value;
- if(!id){alert("Apri prima un cliente con Modifica.");return}
- if(!confirm("Ricalcolare il contatore in base alle lezioni effettuate/assenti/recuperate?"))return;
- if(typeof ricalcolaContatoreCliente==="function"){await ricalcolaContatoreCliente(id);}
- else{const c=clienti.find(x=>x.id===id); if(c) await setDoc(docPath("clienti",id),{lezioniResidue:c.lezioniTotali||0,updatedAt:serverTimestamp()},{merge:true});}
- alert("Contatore ricalcolato.");
-}
-
-async function salvaEventoManuale(){
- if(!$("calCliente").value)return alert("Seleziona cliente");
- let c=clienti.find(x=>x.id===$("calCliente").value);
- await addDoc(path("eventi"),{clienteId:c.id,clienteNome:c.nome+" "+c.cognome,data:$("calData").value,ora:normalizeTime($("calOra").value),tipo:$("calTipo").value,stato:$("calStato").value,scalata:false,autoGenerato:false,durata:c.durataMinuti||60,createdAt:serverTimestamp()});
- $("calOra").value="";
-}
-
-async function autoScalaLezioni(){
- const now=new Date();
- for(const ev of eventi){
-   if(!ev.data||!ev.ora||!ev.clienteId)continue;
-   const dt=parseEventDateTime(ev);
-   if(!dt)continue;
-   const end=new Date(dt.getTime()+Number(ev.durata||60)*60000);
-   const confirmAfter=new Date(end.getTime()+2*60*60000);
-   const hours=(dt-now)/36e5;
-   if(hours<=24 && ["Prenotata","Occupata"].includes(ev.stato)){
-     await setDoc(docPath("eventi",ev.id),{stato:"Bloccata",bloccataEntro24h:true,updatedAt:serverTimestamp()},{merge:true});
-   }
-   if(now>=confirmAfter && ["Prenotata","Occupata","Bloccata"].includes(ev.stato)){
-     await setDoc(docPath("eventi",ev.id),{stato:"Da confermare",updatedAt:serverTimestamp()},{merge:true});
-   }
- }
-}
-
-async function salvaCheck(){
- if(!$("checkCliente").value)return alert("Seleziona cliente");
- let c=clienti.find(x=>x.id===$("checkCliente").value);
- await addDoc(path("checks"),{clienteId:c.id,clienteNome:c.nome+" "+c.cognome,data:$("checkData").value,peso:Number($("checkPeso").value||0),note:$("checkNote").value,createdAt:serverTimestamp()});
- await setDoc(docPath("clienti",c.id),{ultimoCheck:$("checkData").value,prossimoCheck:nextCheckObj({...c,ultimoCheck:$("checkData").value})},{merge:true});
- $("checkNote").value="";
-}
-async function salvaLead(){if(!$("leadNome").value.trim())return;await addDoc(path("leads"),{nome:$("leadNome").value.trim(),telefono:$("leadTelefono").value.trim(),data:localISO(new Date()),createdAt:serverTimestamp()});$("leadNome").value="";$("leadTelefono").value=""}
-
-window.lezione=async(id)=>{let c=clienti.find(x=>x.id===id);if(!c||c.lezioniResidue<=0)return;await setDoc(docPath("clienti",id),{lezioniFatte:(c.lezioniFatte||0)+1,lezioniResidue:(c.lezioniResidue||0)-1},{merge:true})}
-window.restituisci=async(id)=>{let c=clienti.find(x=>x.id===id);if(!c)return;await setDoc(docPath("clienti",id),{lezioniFatte:Math.max(0,(c.lezioniFatte||0)-1),lezioniResidue:(c.lezioniResidue||0)+1},{merge:true})}
-window.rinnova=async(id)=>{let c=clienti.find(x=>x.id===id);if(!c)return;await addDoc(path("rinnovi"),{cliente:c.nome+" "+c.cognome,servizio:c.servizio,pacchetto:c.lezioniTotali,data:localISO(new Date()),importo:c.dovuto||0,createdAt:serverTimestamp()});let start=localISO(new Date());await setDoc(docPath("clienti",id),{stato:"attivo",lezioniFatte:0,lezioniResidue:c.lezioniTotali,inizio:start,scadenza:calcExpiry(start,c.lezioniTotali,c.frequenza)},{merge:true})}
-window.inattivo=async(id)=>{if(!confirm("Vuoi rendere inattivo questo cliente? Lo storico verrà conservato."))return;await setDoc(docPath("clienti",id),{stato:"inattivo",updatedAt:serverTimestamp()},{merge:true});render()}
-window.riattiva=async(id)=>{await setDoc(docPath("clienti",id),{stato:"attivo",updatedAt:serverTimestamp()},{merge:true});render()}
-window.eliminaCliente=async(id)=>{const c=clienti.find(x=>x.id===id);if(!c)return;if(!confirm("Eliminare definitivamente "+(c.nome||"")+" "+(c.cognome||"")+"? Questa azione non può essere annullata."))return;const evs=await getDocs(query(path("eventi"),where("clienteId","==",id)));const chs=await getDocs(query(path("checks"),where("clienteId","==",id)));await Promise.all([...evs.docs.map(d=>deleteDoc(docPath("eventi",d.id))),...chs.docs.map(d=>deleteDoc(docPath("checks",d.id))),deleteDoc(docPath("clienti",id))]);render()}
-
-window.editCliente=(id)=>{
- let c=clienti.find(x=>x.id===id);if(!c)return;
- $("editId").value=c.id;$("nome").value=c.nome||"";$("cognome").value=c.cognome||"";$("emailCliente").value=c.email||"";$("telefono").value=c.telefono||"";$("dataNascita").value=c.dataNascita||"";$("sesso").value=c.sesso||"Maschio";$("servizio").value=c.servizio||"Personal Training";$("provenienza").value=c.provenienza||"Instagram";
- $("pacchetto").value=[0,8,10,12,16].includes(c.lezioniTotali)?String(c.lezioniTotali):"manuale";if($("pacchetto").value==="manuale"){$("manualeBox").style.display="grid";$("pacchettoManuale").value=c.lezioniTotali||""}else{$("manualeBox").style.display="none"}
- $("frequenza").value=c.frequenza||2;$("modalitaPrenotazione").value=c.modalitaPrenotazione||"Orario fisso";$("inizio").value=c.inizio||"";$("certificatoData").value=c.certificatoData||"";$("dovuto").value=c.dovuto||0;$("pagato").value=c.pagato||0;$("checkAttivo").value=c.checkAttivo||"No";$("checkFreq").value=c.checkFreq||"4";$("checkFreqCustom").value=c.checkFreqCustom||"";$("ultimoCheck").value=c.ultimoCheck||"";$("note").value=c.note||"";$("anamnesi").value=c.anamnesi||"";
- [1,2,3,4,5,6].forEach(d=>$("slot"+d).value="");
- (c.slotFissi||[]).forEach(s=>{if($("slot"+s.day))$("slot"+s.day).value=s.time});
- $("durataLezione").value=[30,60,90].includes(Number(c.durataMinuti))?String(c.durataMinuti):"custom";$("durataCustom").value=[30,60,90].includes(Number(c.durataMinuti))?"":(c.durataMinuti||"");
- window.scrollTo({top:130,behavior:"smooth"});
- aggiornaPulsantiClienteRC11();
-}
-
-async function restituisciCreditoEvento(id, nuovoStato, extra={}){
- const ev = eventi.find(x=>x.id===id);
- if(!ev)return;
- const updateEv = {stato:nuovoStato, scalata:false, creditoRestituito:true, updatedAt:serverTimestamp(), ...extra};
- await setDoc(docPath("eventi",id),updateEv,{merge:true});
- await sincronizzaContatoreCliente(ev.clienteId,id,nuovoStato);
-}
-
-async function consumaCreditoEvento(id, nuovoStato){
- const ev = eventi.find(x=>x.id===id);
- if(!ev)return;
- await setDoc(docPath("eventi",id),{
-   stato:nuovoStato,
-   scalata:true,
-   creditoRestituito:false,
-   updatedAt:serverTimestamp()
- },{merge:true});
- await sincronizzaContatoreCliente(ev.clienteId,id,nuovoStato);
-}
-
-window.eventoEffettuato=async(id)=>await consumaCreditoEvento(id,"Effettuata");
-window.eventoPerso=async(id)=>await consumaCreditoEvento(id,"Assente");
-window.eventoRecuperata=async(id)=>await setDoc(docPath("eventi",id),{stato:"Recuperata",updatedAt:serverTimestamp()},{merge:true});
-window.eventoAnnullata=async(id)=>await restituisciCreditoEvento(id,"Annullata",{annullataDaCoach:true,annullataIl:new Date().toISOString()});
-window.delEvento=async(id)=>{
- const ev=eventi.find(x=>x.id===id);
- if(!confirm("Eliminare evento?"))return;
- if(ev&&ev.clienteId&&ev.scalata&&!ev.creditoRestituito){
-   const c=clienti.find(x=>x.id===ev.clienteId);
-   if(c){
-     await setDoc(docPath("clienti",c.id),{
-       lezioniFatte:Math.max(0,(c.lezioniFatte||0)-1),
-       lezioniResidue:(c.lezioniResidue||0)+1,
-       updatedAt:serverTimestamp()
-     },{merge:true});
-   }
- }
- await deleteDoc(docPath("eventi",id));
- if(ev&&ev.clienteId)await sincronizzaContatoreCliente(ev.clienteId,id,"Eliminata");
-};
-
-
-function cleanText(s){return String(s||"").replace(/[\\,;\\n]/g," ").trim()}
-function eventDateObj(ev){
- if(!ev.data)return null;
- const [y,m,d]=ev.data.split("-").map(Number);
- let h=9,mi=0;
- if(ev.ora&&ev.ora.includes(":")){const p=ev.ora.split(":").map(Number);h=p[0]||0;mi=p[1]||0}
- return new Date(y,m-1,d,h,mi,0);
-}
-function googleCalendarUrl(ev){
- const start=eventDateObj(ev); if(!start)return "#";
- const dur=Number(ev.durata||60);
- const end=new Date(start.getTime()+dur*60000);
- const fmtG=d=>d.toISOString().replace(/[-:]/g,"").split(".")[0]+"Z";
- const title=encodeURIComponent((ev.tipo||"Lezione PT")+" - "+(ev.clienteNome||"Cliente"));
- const details=encodeURIComponent("Evento generato da SB Personal Coach Gestionale. Stato: "+(ev.stato||"Prenotata"));
- return "https://calendar.google.com/calendar/render?action=TEMPLATE&text="+title+"&dates="+fmtG(start)+"/"+fmtG(end)+"&details="+details;
-}
-function icsDate(d){return d.toISOString().replace(/[-:]/g,"").split(".")[0]+"Z"}
-function escapeICS(s){return String(s||"").replace(/\\/g,"\\\\").replace(/;/g,"\\;").replace(/,/g,"\\,").replace(/\n/g,"\\n")}
-function exportICS(){
- const valid=eventi.filter(e=>e.data&&e.ora&&e.clienteNome&&e.tipo);
- if(!valid.length){alert("Nessun evento valido da esportare.");return}
- let ics=["BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//SB Personal Coach//Gestionale 7.1//IT","CALSCALE:GREGORIAN","METHOD:PUBLISH"];
- valid.sort((a,b)=>(a.data+a.ora).localeCompare(b.data+b.ora)).forEach(ev=>{
-   const st=eventDateObj(ev); if(!st)return;
-   const en=new Date(st.getTime()+Number(ev.durata||60)*60000);
-   ics.push("BEGIN:VEVENT");
-   ics.push("UID:"+ev.id+"@sbpersonalcoach");
-   ics.push("DTSTAMP:"+icsDate(new Date()));
-   ics.push("DTSTART:"+icsDate(st));
-   ics.push("DTEND:"+icsDate(en));
-   ics.push("SUMMARY:"+escapeICS((ev.tipo||"Lezione PT")+" - "+(ev.clienteNome||"Cliente")));
-   ics.push("DESCRIPTION:"+escapeICS("Stato: "+(ev.stato||"Prenotata")+" - Generato da SB Personal Coach Gestionale"));
-   ics.push("END:VEVENT");
- });
- ics.push("END:VCALENDAR");
- const blob=new Blob([ics.join("\r\n")],{type:"text/calendar;charset=utf-8"});
- const a=document.createElement("a");
- a.href=URL.createObjectURL(blob);
- a.download="sb_personal_coach_agenda.ics";
- a.click();
-}
-function showGoogleGuide(){
- const box=$("googleGuide");
- box.style.display=box.style.display==="none"?"block":"none";
- box.textContent=`ISTRUZIONI RAPIDE
-
-OPZIONE 1 - Singola lezione
-1. Vai in Calendario.
-2. Premi “Google Calendar” sull’evento.
-3. Si apre Google Calendar.
-4. Salva l’evento.
-5. Lo vedrai nel widget iPhone.
-
-OPZIONE 2 - Tutta l’agenda
-1. Premi “Esporta agenda .ics”.
-2. Apri il file con Calendario iPhone oppure importalo in Google Calendar.
-3. Gli eventi compariranno nel calendario.
-
-IMPORTANTE
-Questa versione esporta gli eventi, ma non fa ancora sincronizzazione bidirezionale automatica.
-Per quella servirà collegare Google Cloud / OAuth nella versione successiva.`;
-}
-
-
-function fillTemplate(t,c){
- const residuo=Math.max(0,(c.dovuto||0)-(c.pagato||0));
- return String(t||"")
-  .replaceAll("{nome}",c.nome||"")
-  .replaceAll("{cognome}",c.cognome||"")
-  .replaceAll("{lezioniResidue}",c.lezioniResidue||0)
-  .replaceAll("{residuo}",residuo)
-  .replaceAll("{scadenza}",fmt(c.scadenza))
-  .replaceAll("{servizio}",c.servizio||"");
-}
-function chooseTemplate(c){
- if(Math.max(0,(c.dovuto||0)-(c.pagato||0))>0)return templates.saldo||defaultTemplates.saldo;
- if(lezioniResidueSmart(c)<=3&&c.lezioniTotali>0)return templates.rinnovo||defaultTemplates.rinnovo;
- if(c.checkAttivo==="Sì"&&daysLeft(c.prossimoCheck)<=7)return templates.check||defaultTemplates.check;
- if(daysLeft(c.certificatoScadenza)<=7)return templates.certificato||defaultTemplates.certificato;
- return "Ciao {nome}, ti scrivo per aggiornarti sul tuo percorso.";
-}
-async function salvaTemplates(){
- const obj={
-  rinnovo:$("tplRinnovo").value,
-  saldo:$("tplSaldo").value,
-  check:$("tplCheck").value,
-  certificato:$("tplCertificato").value,
-  compleanno:$("tplCompleanno").value,
-  updatedAt:serverTimestamp()
- };
- await setDoc(doc(db,"users",user.uid,"settings","templates"),obj,{merge:true});
- alert("Messaggi salvati.");
-}
-async function resetTemplates(){
- if(!confirm("Ripristinare i testi base?"))return;
- await setDoc(doc(db,"users",user.uid,"settings","templates"),defaultTemplates,{merge:true});
- alert("Testi base ripristinati.");
-}
-async function salvaCheckPro(){
- if(!$("proCliente").value)return alert("Seleziona cliente");
- const c=clienti.find(x=>x.id===$("proCliente").value);
- if(!c)return;
- await addDoc(path("checkPro"),{
-  clienteId:c.id,
-  clienteNome:(c.nome||"")+" "+(c.cognome||""),
-  data:$("proData").value,
-  peso:Number($("proPeso").value||0),
-  misure:$("proMisure").value,
-  pliche:$("proPliche").value,
-  note:$("proNote").value,
-  messaggio:$("proMessaggio").value,
-  createdAt:serverTimestamp()
- });
- await setDoc(docPath("clienti",c.id),{
-  ultimoCheck:$("proData").value,
-  prossimoCheck:nextCheckObj({...c,ultimoCheck:$("proData").value}),
-  updatedAt:serverTimestamp()
- },{merge:true});
- $("proPeso").value="";$("proMisure").value="";$("proPliche").value="";$("proNote").value="";$("proMessaggio").value="";
- alert("Check Pro salvato.");
-}
-window.delCheckPro=async(id)=>{if(confirm("Eliminare questo Check Pro?"))await deleteDoc(docPath("checkPro",id))}
-function waCheckPro(ch){
- const c=clienti.find(x=>x.id===ch.clienteId);
- const phone=String(c?.telefono||"").replace(/\D/g,"");
- return "https://wa.me/"+phone+"?text="+encodeURIComponent(ch.messaggio||"Ciao, ti aggiorno sul check.");
-}
-
-
-
-
-
-function appRootLink(){const base=location.href.split("#")[0].split("?")[0];return base.substring(0,base.lastIndexOf("/")+1)}
-function clientAreaLink(){return appRootLink()+"cliente.html"}
-function directClientLink(c){return clientAreaLink()+"?id="+encodeURIComponent(c.id)}
-async function copyClientAreaLink(){
- const link=clientAreaLink();
- try{if(navigator.clipboard&&navigator.clipboard.writeText){await navigator.clipboard.writeText(link)}else{const t=document.createElement("input");t.value=link;document.body.appendChild(t);t.select();document.execCommand("copy");t.remove()} if($("copyStatus"))$("copyStatus").textContent="Link copiato negli appunti."}
- catch(e){if($("copyStatus"))$("copyStatus").textContent=link}
-}
-function accessoClienteMsg(c){return `Ciao ${c.nome||""},
-
-questa è la tua area cliente personale:
-
-${directClientLink(c)}
-
-Da qui puoi controllare:
-• lezioni residue
-• prossimi appuntamenti
-• check e note
-• scadenza pacchetto/certificato
-
-Salvatore Barone Personal Coach`}
-function waAccessoCliente(c){return `https://wa.me/${String(c.telefono||"").replace(/\D/g,"")}?text=${encodeURIComponent(accessoClienteMsg(c))}`}
-
-function wa(c){return `https://wa.me/${String(c.telefono||"").replace(/\D/g,"")}?text=${encodeURIComponent(fillTemplate(chooseTemplate(c),c))}`}
-function contacts(){return clienti.filter(c=>c.stato!=="inattivo"&&(daysLeft(c.scadenza)<=7||(lezioniResidueSmart(c)<=3&&c.lezioniTotali>0)||Math.max(0,(c.dovuto||0)-(c.pagato||0))>0||daysLeft(c.certificatoScadenza)<=30||(c.checkAttivo==="Sì"&&daysLeft(c.prossimoCheck)<=7)))}
-function statusClient(c){if(c.stato==="inattivo")return["info","Inattivo"];if(daysLeft(c.scadenza)<0&&c.lezioniTotali>0)return["bad","Scaduto"];if(daysLeft(c.scadenza)<=7&&c.lezioniTotali>0)return["warn","Scadenza 7gg"];return["ok","Attivo"]}
-function slotText(c){return (c.slotFissi||[]).map(s=>["Dom","Lun","Mar","Mer","Gio","Ven","Sab"][s.day]+" "+s.time).join(", ")}
-
-function cardDaContattare(c){
- const res=Math.max(0,Number(c.dovuto||0)-Number(c.pagato||0));
- return `<div class="card">
-  <h2>${(c.nome||"")+" "+(c.cognome||"")}</h2>
-  <p class="meta">${c.tipo||""}${res>0?` · Residuo ${euro(res)}`:""}</p>
-  <button class="btn whatsapp full" onclick="wa('${c.whatsapp||c.telefono||""}')">💬 WhatsApp</button>
- </div>`;
-}
-
-
-function cardDaContattareClean(c){
- const res=Math.max(0,Number(c.dovuto||0)-Number(c.pagato||0));
- return `<div class="card"><h3>${c.nome||""} ${c.cognome||""}</h3>
-  <p class="meta">${c.servizio||c.tipo||""}${res>0?` · Residuo €${res}`:""}</p>
-  <a class="btn green full" href="${wa(c)}" target="_blank">💬 WhatsApp</a>
- </div>`;
-}
-function aggiornaPulsantiClienteRC11(){
- const isEdit=Boolean($("editId")&&$("editId").value);
- if($("saveClientBtn")){$("saveClientBtn").style.display=isEdit?"none":"block";$("saveClientBtn").textContent="Crea cliente + genera calendario";}
- if($("updateSaldoBtn"))$("updateSaldoBtn").style.display=isEdit?"block":"none";
- if($("regenBtn"))$("regenBtn").style.display=isEdit?"block":"none";
- if($("resetLessonsBtn"))$("resetLessonsBtn").style.display=isEdit?"block":"none";
-}
-async function aggiornaSoloSaldo(){
- const id=$("editId")?.value;
- if(!id){alert("Apri prima un cliente con Modifica.");return}
- const dovuto=Number($("dovuto").value||0);
- const pagato=Number($("pagato").value||0);
- await setDoc(docPath("clienti",id),{dovuto,pagato,updatedAt:serverTimestamp()},{merge:true});
- try{await audit("saldo","Saldo cliente aggiornato",{clienteId:id,dovuto,pagato})}catch(e){}
- status("Saldo aggiornato. Calendario e contatore non modificati.");
-}
-window.aggiornaSoloSaldo=aggiornaSoloSaldo;
-window.aggiornaPulsantiClienteRC11=aggiornaPulsantiClienteRC11;
-
-function card(c){let res=Math.max(0,(c.dovuto||0)-(c.pagato||0)),s=statusClient(c),residueSmart=lezioniResidueSmart(c);let inactive=c.stato==="inattivo";return `<div class="card"><h3>${c.nome||""} ${c.cognome||""}</h3><p class="meta">${c.servizio||""} · ${c.modalitaPrenotazione||""} · durata ${c.durataMinuti||60} min<br>${slotText(c)}</p><span class="badge ${s[0]}">${s[1]}</span><span class="badge ${residueSmart<=3&&c.lezioniTotali>0?'warn':'ok'}">${residueSmart} residue su ${c.lezioniTotali||0}</span><span class="badge ${res>0?'bad':'ok'}">${res>0?'Residuo €'+res:'Pagato'}</span><p class="meta">Scadenza pacchetto: ${fmt(c.scadenza)} · Certificato: ${fmt(c.certificatoScadenza)} · Check: ${fmt(c.prossimoCheck)}</p><a class="btn green full" href="${wa(c)}" target="_blank">💬 WhatsApp</a><div class="actions"><button class="btn light" onclick="lezione('${c.id}')">+ Lezione</button><button class="btn light" onclick="restituisci('${c.id}')">Restituisci</button><button class="btn gold" onclick="rinnova('${c.id}')">Rinnova</button><button class="btn light" onclick="editCliente('${c.id}')">Modifica</button>${inactive?`<button class="btn gold" onclick="riattiva('${c.id}')">Riattiva</button>`:`<button class="btn red" onclick="inattivo('${c.id}')">Inattivo</button>`}<a class="btn gold" href="${waAccessoCliente(c)}" target="_blank">Invia accesso cliente</a><button class="btn red" onclick="eliminaCliente('${c.id}')">Elimina cliente</button></div></div>`}
-
-
-function statoRecuperoBadge(stato){
- const s=String(stato||"in attesa").toLowerCase();
- if(s.includes("approv")) return "ok";
- if(s.includes("rifiut")) return "bad";
- return "warn";
-}
-async function approvaRecupero(id){
- await setDoc(docPath("recuperi",id),{stato:"approvato",updatedAt:serverTimestamp()},{merge:true});
- status("Recupero approvato.");
-}
-async function rifiutaRecupero(id){
- await setDoc(docPath("recuperi",id),{stato:"rifiutato",updatedAt:serverTimestamp()},{merge:true});
- status("Recupero rifiutato.");
-}
-async function eliminaRecupero(id){
- if(!confirm("Eliminare questa richiesta di recupero?")) return;
- await deleteDoc(docPath("recuperi",id));
- status("Richiesta recupero eliminata.");
-}
-function renderRecuperi(){
- if(!$("listaRecuperi")) return;
- const list=recuperi.slice().sort((a,b)=>(b.createdAtText||b.dataRichiesta||"").localeCompare(a.createdAtText||a.dataRichiesta||""));
- $("listaRecuperi").innerHTML=list.length?list.map(r=>`<div class="card recupero-card">
-  <h3>${r.clienteNome||"Cliente"}</h3>
-  <span class="badge ${statoRecuperoBadge(r.stato)}">${r.stato||"in attesa"}</span>
-  <p class="meta"><b>Lezione:</b> ${fmt(r.dataLezione)} ore ${r.ora||"-"}<br><b>Richiesta:</b> ${fmt(r.dataRichiesta)||"-"}</p>
-  ${r.noteCliente?`<p class="meta"><b>Nota cliente:</b><br>${String(r.noteCliente).replaceAll("\n","<br>")}</p>`:""}
-  <div class="actions">
-    <button class="btn light" onclick="approvaRecupero('${r.id}')">Approva</button>
-    <button class="btn red" onclick="rifiutaRecupero('${r.id}')">Rifiuta</button>
-    <button class="btn red" onclick="eliminaRecupero('${r.id}')">Elimina</button>
-  </div>
-</div>`).join(""):`<div class="empty">Nessuna richiesta recupero.</div>`;
- if($("recuperiAlert")){
-   const pending=recuperi.filter(r=>String(r.stato||"in attesa").toLowerCase()==="in attesa").length;
-   $("recuperiAlert").innerHTML=pending?`🔄 <b>${pending}</b> recuperi da gestire.`:"";
- }
-}
-window.approvaRecupero=approvaRecupero;
-window.rifiutaRecupero=rifiutaRecupero;
-window.eliminaRecupero=eliminaRecupero;
-
-
-function badgeAvviso(tipo){
- const t=String(tipo||"info").toLowerCase();
- if(t==="urgente") return "bad";
- if(t==="pagamento") return "warn";
- if(t==="check") return "ok";
- return "info";
-}
-async function salvaAvviso(){
- const titolo=$("avvisoTitolo").value.trim();
- const messaggio=$("avvisoMessaggio").value.trim();
- const tipo=$("avvisoTipo").value;
- if(!titolo || !messaggio){status("Inserisci titolo e messaggio."); return;}
- await addDoc(path("avvisi"),{
-   titolo,
-   messaggio,
-   tipo,
-   attivo:true,
-   data:today(),
-   createdAtText:new Date().toISOString(),
-   createdAt:serverTimestamp()
- });
- $("avvisoTitolo").value="";
- $("avvisoMessaggio").value="";
- status("Avviso pubblicato.");
-}
-async function disattivaAvviso(id){
- await setDoc(docPath("avvisi",id),{attivo:false,updatedAt:serverTimestamp()},{merge:true});
- status("Avviso disattivato.");
-}
-async function eliminaAvviso(id){
- if(!confirm("Eliminare questo avviso?")) return;
- await deleteDoc(docPath("avvisi",id));
- status("Avviso eliminato.");
-}
-function renderAvvisiCoach(){
- if(!$("listaAvvisiCoach")) return;
- const list=avvisi.slice().sort((a,b)=>(b.createdAtText||"").localeCompare(a.createdAtText||""));
- $("listaAvvisiCoach").innerHTML=list.length?list.map(a=>`<div class="card">
-  <h3>${a.titolo||"Avviso"}</h3>
-  <span class="badge ${badgeAvviso(a.tipo)}">${a.tipo||"info"}</span>
-  <span class="badge ${a.attivo===false?"bad":"ok"}">${a.attivo===false?"non attivo":"attivo"}</span>
-  <p class="meta">${String(a.messaggio||"").replaceAll("\\n","<br>")}</p>
-  <div class="actions">
-    <button class="btn light" onclick="disattivaAvviso('${a.id}')">Disattiva</button>
-    <button class="btn red" onclick="eliminaAvviso('${a.id}')">Elimina</button>
-  </div>
-</div>`).join(""):`<div class="empty">Nessun avviso pubblicato.</div>`;
-}
-window.salvaAvviso=salvaAvviso;
-window.disattivaAvviso=disattivaAvviso;
-window.eliminaAvviso=eliminaAvviso;
-
+function todayISO(){return new Date().toISOString().slice(0,10)}
+function tomorrowISO(){const d=new Date();d.setDate(d.getDate()+1);return d.toISOString().slice(0,10)}
+function fmt(d){if(!d||d==="-"||String(d).length<8)return d||"-";const [y,m,day]=String(d).slice(0,10).split("-");return `${day}/${m}/${y}`}
+function euro(n){return "€"+Number(n||0).toLocaleString("it-IT",{minimumFractionDigits:0,maximumFractionDigits:2})}
+function nome(c){return `${c.nome||""} ${c.cognome||""}`.trim()}
+function daysFromFreq(total,freq){return Math.ceil((Number(total||0)/Math.max(1,Number(freq||1)))*7)}
+function calcExpiry(start,total,freq){const d=new Date(start);d.setDate(d.getDate()+daysFromFreq(total,freq));return d.toISOString().slice(0,10)}
+function normDay(s){return String(s||"").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")}
+const dayMap={domenica:0,lunedi:1,lunedì:1,martedi:2,martedì:2,mercoledi:3,mercoledì:3,giovedi:4,giovedì:4,venerdi:5,venerdì:5,sabato:6};
+function parseDays(s){return String(s||"").split(/[,\n;]/).map(x=>dayMap[normDay(x)]).filter(x=>x!==undefined)}
+function parseHours(s){return String(s||"").split(/[,\n;]/).map(x=>x.trim()).filter(Boolean)}
+function eventStart(ev){const [y,m,d]=String(ev.data||"").split("-").map(Number);let h=9,mi=0;if(ev.ora){const p=String(ev.ora).split(":").map(Number);h=p[0]||0;mi=p[1]||0}return new Date(y,m-1,d,h,mi,0)}
+function eventEnd(ev){return new Date(eventStart(ev).getTime()+Number(ev.durata||60)*60000)}
+function historical(st){return ["Effettuata","Assente","Recuperata","Annullata","Annullata dal cliente"].includes(st||"")}
+function consumes(st){return ["Effettuata","Assente","Recuperata"].includes(st||"")}
+function fatte(id){return eventi.filter(e=>e.clienteId===id&&consumes(e.stato)).length}
+function residue(c){return Math.max(0,Number(c.lezioniTotali||0)-fatte(c.id))}
+function valore(c){return Number(c.dovuto||0)}
+function pagato(c){return Number(c.pagato||0)}
+function residuoEuro(c){return Math.max(0,valore(c)-pagato(c))}
 
 function showTab(tab){
  document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
- const el=document.getElementById(tab);
- if(el)el.classList.add("active");
- document.querySelectorAll("[data-tab]").forEach(b=>b.classList.toggle("active",b.dataset.tab===tab));
+ document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("active",b.dataset.tab===tab));
+ const el=$(tab); if(el)el.classList.add("active");
+ render();
 }
-window.showTab=showTab;
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
 
+window.login=async()=>{
+ try{await signInWithEmailAndPassword(auth,$("loginEmail").value,$("loginPassword").value)}
+ catch(e){$("loginStatus").textContent=e.message}
+};
 
-function statoConsumaCredito(stato){
- return ["Effettuata","Assente","Recuperata"].includes(stato);
-}
-function lezioniFatteSmart(clienteId, overrideId=null, overrideStato=null){
- return eventi.filter(e=>e.clienteId===clienteId).filter(e=>{
-   const st = e.id===overrideId ? overrideStato : (e.stato||"Prenotata");
-   return statoConsumaCredito(st);
- }).length;
-}
-function lezioniResidueSmart(c, overrideId=null, overrideStato=null){
- const fatte = lezioniFatteSmart(c.id, overrideId, overrideStato);
- return Math.max(0, Number(c.lezioniTotali||0)-fatte);
-}
-async function sincronizzaContatoreCliente(clienteId, overrideId=null, overrideStato=null){
- const c = clienti.find(x=>x.id===clienteId);
- if(!c)return;
- const fatte = lezioniFatteSmart(clienteId, overrideId, overrideStato);
- const residue = Math.max(0, Number(c.lezioniTotali||0)-fatte);
- await setDoc(docPath("clienti",clienteId),{
-   lezioniFatte:fatte,
-   lezioniResidue:residue,
-   updatedAt:serverTimestamp()
- },{merge:true});
+onAuthStateChanged(auth,u=>{
+ user=u;
+ if(!u){document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));$("login").classList.add("active");return}
+ document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));$("dashboard").classList.add("active");
+ subscribe();
+});
+
+function subscribe(){
+ onSnapshot(path("clienti"),s=>{clienti=s.docs.map(d=>({id:d.id,...d.data()}));render()});
+ onSnapshot(path("eventi"),s=>{eventi=s.docs.map(d=>({id:d.id,...d.data()}));render()});
+ onSnapshot(path("rinnovi"),s=>{rinnovi=s.docs.map(d=>({id:d.id,...d.data()}));render()});
+ onSnapshot(path("pagamenti"),s=>{pagamenti=s.docs.map(d=>({id:d.id,...d.data()}));render()});
 }
 
-
-async function ricalcolaContatoreCliente(clienteId){
- const c = clienti.find(x=>x.id===clienteId);
- if(!c)return;
- const fatte = lezioniFatteSmart(clienteId);
- const residue = Math.max(0, Number(c.lezioniTotali||0)-fatte);
- await setDoc(docPath("clienti",clienteId),{
-   lezioniFatte:fatte,
-   lezioniResidue:residue,
-   updatedAt:serverTimestamp()
- },{merge:true});
- return {fatte,residue};
-}
-async function ricalcolaTuttiContatori(){
- if(!confirm("Ricalcolare i contatori di tutti i clienti?"))return;
- let count=0;
- for(const c of clienti){
-   await ricalcolaContatoreCliente(c.id);
-   count++;
- }
- await audit("contatori","Ricalcolo contatori completato",{totaleClienti:count});
- status("Contatori ricalcolati per "+count+" clienti.");
-}
-window.ricalcolaContatoreCliente=ricalcolaContatoreCliente;
-window.ricalcolaTuttiContatori=ricalcolaTuttiContatori;
-
-
-function campiCalendarioDaClienteForm(){
+function formData(){
+ const total=Number($("lezioniTotali").value||0), freq=Number($("frequenza").value||1), start=$("inizio").value||todayISO();
  return {
-   frequenza:Number($("frequenza")?.value||0),
-   giorni:String($("giorni")?.value||"").trim(),
-   orari:String($("orari")?.value||"").trim(),
-   durata:Number($("durata")?.value||60),
-   inizio:String($("inizio")?.value||""),
-   fine:String($("fine")?.value||"")
- };
-}
-
-async function rigeneraCalendarioDaPulsante(){
- const id=$("clienteId")?.value;
- if(!id){status("Prima salva il cliente.");return}
- if(!confirm("Rigenerare il calendario automatico? Verranno eliminate solo le lezioni future non storiche. Le lezioni effettuate/assenti/recuperate/annullate rimarranno intatte."))return;
- await backupCalendarioCliente(id);
- await eliminaLezioniFutureNonStoriche(id);
- await rigeneraCalendarioAutomatico(id,true);
- await ricalcolaContatoreCliente(id);
- status("Calendario futuro rigenerato.");
-}
-window.rigeneraCalendarioDaPulsante=rigeneraCalendarioDaPulsante;
-
-function calendarioCambiato(){
- if(!clienteOriginaleForm)return false;
- const now=campiCalendarioDaClienteForm();
- const old={
-   frequenza:Number(clienteOriginaleForm.frequenza||0),
-   giorni:String(clienteOriginaleForm.giorni||"").trim(),
-   orari:String(clienteOriginaleForm.orari||"").trim(),
-   durata:Number(clienteOriginaleForm.durata||60),
-   inizio:String(clienteOriginaleForm.inizio||""),
-   fine:String(clienteOriginaleForm.fine||"")
- };
- return JSON.stringify(now)!==JSON.stringify(old);
-}
-function clienteInModifica(){
- return Boolean($("clienteId")?.value);
-}
-
-function aggiornaTestoPulsanteCliente(){
- const isEdit = Boolean($("clienteId")?.value);
- const b = $("btnSalvaCliente");
- const br = $("btnRigeneraCalendario");
- if(b){
-   b.textContent = isEdit ? "💾 Salva modifiche" : "Crea cliente + genera calendario";
- }
- if(br){
-   br.textContent = "📅 Aggiorna calendario futuro";
-   br.style.display = isEdit ? "block" : "none";
+  nome:$("nome").value.trim(),cognome:$("cognome").value.trim(),telefono:$("telefono").value.trim(),emailCliente:$("emailCliente").value.trim(),
+  servizio:$("servizio").value,lezioniTotali:total,frequenza:freq,durata:Number($("durata").value||60),giorni:$("giorni").value,orari:$("orari").value,
+  inizio:start,scadenza:$("scadenza").value||calcExpiry(start,total,freq),dovuto:Number($("dovuto").value||0),pagato:Number($("pagato").value||0),note:$("note").value,
+  updatedAt:serverTimestamp()
  }
 }
-window.aggiornaTestoPulsanteCliente=aggiornaTestoPulsanteCliente;
-
-async function backupCalendarioCliente(clienteId){
- const evs=eventi.filter(e=>e.clienteId===clienteId);
- await addDoc(path("calendarBackups"),{
-   clienteId,
-   createdAtText:new Date().toISOString(),
-   createdAt:serverTimestamp(),
-   eventi:evs
- });
-}
-function statoStoricoLezione(stato){
- return ["Effettuata","Assente","Recuperata","Annullata","Annullata dal cliente"].includes(stato);
-}
-async function eliminaLezioniFutureNonStoriche(clienteId){
- const today=localISO(new Date());
- const fut=eventi.filter(e=>e.clienteId===clienteId && e.data>=today && !statoStoricoLezione(e.stato||"Prenotata"));
- for(const ev of fut){
-   await deleteDoc(docPath("eventi",ev.id));
+async function generaEventi(clienteId,c,startDate){
+ const days=parseDays(c.giorni), hours=parseHours(c.orari);
+ if(!days.length||!hours.length)return;
+ let created=0, d=new Date(startDate);
+ const max=Number(c.lezioniTotali||0);
+ while(created<max && created<200){
+   if(days.includes(d.getDay())){
+     const hour=hours[created%hours.length]||hours[0];
+     await addDoc(path("eventi"),{clienteId,clienteNome:nome(c),data:d.toISOString().slice(0,10),ora:hour,durata:Number(c.durata||60),stato:"Prenotata",storico:false,scalata:false,createdAt:serverTimestamp()});
+     created++;
+   }
+   d.setDate(d.getDate()+1);
  }
 }
-async function salvaClienteSicuro(){
- const isEdit=clienteInModifica();
- const changed=isEdit && calendarioCambiato();
- if(isEdit && changed){
-   if(!confirm("Hai modificato giorni/orari/frequenza/durata o date. Le lezioni future verranno rigenerate, mentre storico e contatore resteranno invariati. Procedere?"))return;
- }
- window.__skipAutoGenerateCalendar=isEdit;
- await salvaCliente();
- window.__skipAutoGenerateCalendar=false;
- const id=$("clienteId")?.value;
- if(isEdit && changed && id){
-   await backupCalendarioCliente(id);
-   await eliminaLezioniFutureNonStoriche(id);
-   await rigeneraCalendarioAutomatico(id,true);
-   await ricalcolaContatoreCliente(id);
-   status("Modifiche salvate e calendario futuro aggiornato.");
- }else if(isEdit){
-   status("Modifiche salvate senza rigenerare il calendario.");
- }
+window.creaCliente=async()=>{
+ const c=formData();
+ if(!c.nome)return alert("Inserisci nome");
+ c.lezioniFatte=0;c.lezioniResidue=Number(c.lezioniTotali||0);c.stato="attivo";c.createdAt=serverTimestamp();
+ const ref=await addDoc(path("clienti"),c);
+ await generaEventi(ref.id,{...c,id:ref.id},c.inizio);
+ pulisciForm();
+};
+function setEditMode(isEdit){$("newActions").classList.toggle("hidden",isEdit);$("editActions").classList.toggle("hidden",!isEdit);$("formTitle").textContent=isEdit?"Modifica Cliente":"Nuovo Cliente"}
+window.pulisciForm=()=>{["clienteId","nome","cognome","telefono","emailCliente","giorni","orari","inizio","scadenza","dovuto","pagato","note"].forEach(id=>{if($(id))$(id).value=""});$("lezioniTotali").value=12;$("frequenza").value=2;$("durata").value=60;setEditMode(false)}
+window.editCliente=id=>{
+ const c=clienti.find(x=>x.id===id); if(!c)return;
+ $("clienteId").value=id;["nome","cognome","telefono","emailCliente","servizio","lezioniTotali","frequenza","durata","giorni","orari","inizio","scadenza","dovuto","pagato","note"].forEach(k=>{if($(k))$(k).value=c[k]??""});
+ setEditMode(true);showTab("clienti");window.scrollTo({top:0,behavior:"smooth"});
 }
-window.salvaClienteSicuro=salvaClienteSicuro;
-window.aggiornaTestoPulsanteCliente=aggiornaTestoPulsanteCliente;
+window.salvaDatiCliente=async()=>{const id=$("clienteId").value;if(!id)return;await setDoc(docPath("clienti",id),formData(),{merge:true});alert("Dati cliente salvati.")}
+window.salvaSaldoCliente=async()=>{const id=$("clienteId").value;if(!id)return;await setDoc(docPath("clienti",id),{dovuto:Number($("dovuto").value||0),pagato:Number($("pagato").value||0),updatedAt:serverTimestamp()},{merge:true});alert("Saldo aggiornato.")}
+window.ricalcolaContatoreCliente=async()=>{const id=$("clienteId").value;if(!id)return;const c=clienti.find(x=>x.id===id);await setDoc(docPath("clienti",id),{lezioniFatte:fatte(id),lezioniResidue:residue(c),updatedAt:serverTimestamp()},{merge:true});alert("Contatore ricalcolato.")}
 
+window.aggiornaCalendarioFuturo=async()=>{
+ const id=$("clienteId").value;if(!id)return;
+ const cOld=clienti.find(x=>x.id===id);if(!cOld)return;
+ if(!confirm("Aggiornare il calendario SOLO da domani in poi? Oggi e lo storico non verranno toccati."))return;
+ const beforeF=fatte(id), beforeR=residue(cOld);
+ const tomorrow=tomorrowISO();
+ for(const ev of eventi.filter(e=>e.clienteId===id && e.data>=tomorrow && !historical(e.stato))){await deleteDoc(docPath("eventi",ev.id))}
+ const c={...cOld,...formData(),id};
+ await setDoc(docPath("clienti",id),{...formData(),lezioniFatte:beforeF,lezioniResidue:beforeR},{merge:true});
+ await generaEventi(id,c,tomorrow);
+ alert("Calendario futuro aggiornato. Storico e contatore invariati.");
+}
 
-function getRinnoviMovimenti(){
- return (rinnovi||[]).map(r=>({
-   id:r.id,
-   tipo:"rinnovo",
-   data:r.data||r.createdAtText?.slice(0,10)||"",
-   mese:(r.data||r.createdAtText?.slice(0,10)||"").slice(0,7),
-   clienteNome:r.clienteNome||r.nomeCliente||r.nome||clienteNomeById(r.clienteId),
-   clienteId:r.clienteId||"",
-   servizio:r.tipo||r.servizio||"Personal Training",
-   importo:Number(r.importo||r.prezzo||r.costo||0),
-   descrizione:`Rinnovo · ${r.lezioni||r.lezioniTotali||""} lezioni`
- }));
-}
-function getPagamentiMovimenti(){
- return (pagamenti||[]).map(p=>({
-   id:p.id,
-   tipo:"pagamento",
-   data:p.data||p.createdAtText?.slice(0,10)||"",
-   mese:p.mese||(p.data||"").slice(0,7),
-   clienteNome:p.clienteNome||clienteNomeById(p.clienteId),
-   clienteId:p.clienteId||"",
-   servizio:p.servizio||"Altro",
-   importo:Number(p.importo||0),
-   descrizione:p.note||p.metodo||"Pagamento"
- }));
-}
-function getMovimentiContabili(){
- return [...getRinnoviMovimenti(),...getPagamentiMovimenti()].filter(m=>m.importo>0);
-}
-async function eliminaRinnovo(id){
- const r=(rinnovi||[]).find(x=>x.id===id);
- if(!r)return;
- if(!confirm("Eliminare questo rinnovo dallo storico?"))return;
- await deleteDoc(docPath("rinnovi",id));
- await audit("rinnovo","Rinnovo eliminato",{rinnovoId:id,clienteId:r.clienteId||"",importo:Number(r.importo||r.prezzo||r.costo||0)});
- status("Rinnovo eliminato.");
-}
-window.eliminaRinnovo=eliminaRinnovo;
+window.lezione=async id=>{const c=clienti.find(x=>x.id===id);if(!c)return;if(!confirm("Scalare 1 lezione manualmente?"))return;await setDoc(docPath("clienti",id),{lezioniFatte:Number(c.lezioniFatte||0)+1,lezioniResidue:Math.max(0,Number(c.lezioniResidue||0)-1)},{merge:true})}
+window.restituisci=async id=>{const c=clienti.find(x=>x.id===id);if(!c)return;if(!confirm("Restituire 1 lezione?"))return;await setDoc(docPath("clienti",id),{lezioniFatte:Math.max(0,Number(c.lezioniFatte||0)-1),lezioniResidue:Number(c.lezioniResidue||0)+1},{merge:true})}
+window.inattivo=async id=>{const c=clienti.find(x=>x.id===id);if(!c)return;const nuovo=(c.stato||"attivo")==="inattivo"?"attivo":"inattivo";await setDoc(docPath("clienti",id),{stato:nuovo},{merge:true})}
+window.rinnova=async id=>{const c=clienti.find(x=>x.id===id);if(!c)return;if(!confirm("Rinnovare pacchetto?"))return;const start=todayISO();await addDoc(path("rinnovi"),{cliente:nome(c),clienteId:id,pacchetto:c.lezioniTotali,data:start,importo:valore(c),createdAt:serverTimestamp()});await setDoc(docPath("clienti",id),{stato:"attivo",lezioniFatte:0,lezioniResidue:Number(c.lezioniTotali||0),inizio:start,scadenza:calcExpiry(start,c.lezioniTotali,c.frequenza)},{merge:true})}
+window.eliminaCliente=async id=>{const c=clienti.find(x=>x.id===id);if(!c)return;if(!confirm("Eliminare cliente?"))return;await deleteDoc(docPath("clienti",id))}
+window.inviaAccessoCliente=id=>{const url=location.origin+location.pathname.replace("index.html","")+"cliente.html?id="+id;navigator.clipboard?.writeText(url);alert("Link copiato.")}
 
-function renderContabilita(){
- if(!$("contMovimenti"))return;
- const now=new Date();
- const today=localISO(now);
- if($("contMese")&&!$("contMese").value)$("contMese").value=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0");
- const mese=$("contMese")?.value||"";
- const servizio=$("contServizio")?.value||"";
- const mov=getMovimentiContabili().filter(m=>!servizio||m.servizio===servizio);
- const movMese=mov.filter(m=>m.mese===mese);
- const anno=String(now.getFullYear());
- const sum=a=>a.reduce((s,m)=>s+Number(m.importo||0),0);
- $("contOggi").textContent=euro(sum(mov.filter(m=>m.data===today)));
- $("contMeseTot").textContent=euro(sum(movMese));
- $("contAnno").textContent=euro(sum(mov.filter(m=>String(m.data||"").startsWith(anno))));
- $("contTotale").textContent=euro(sum(mov));
-
- const byServ={};
- movMese.forEach(m=>{byServ[m.servizio||"Altro"]=(byServ[m.servizio||"Altro"]||0)+m.importo});
- const servs=Object.keys(byServ).sort((a,b)=>byServ[b]-byServ[a]);
- $("contPerServizio").innerHTML=servs.length?servs.map(s=>`<p><b>${s}</b><br><span class="badge ok">${euro(byServ[s])}</span></p>`).join(""):`<div class="empty">Nessun movimento nel mese selezionato.</div>`;
-
- const list=movMese.sort((a,b)=>(b.data||"").localeCompare(a.data||""));
- $("contMovimenti").innerHTML=list.length?list.map(m=>`<div class="check">
-   <h3>${m.clienteNome||"Cliente"} ${m.tipo==="rinnovo"?`<button class="btn red" style="float:right;width:auto;padding:6px 10px" onclick="eliminaRinnovo('${m.id}')">✕</button>`:""}</h3>
-   <p class="meta">${fmt(m.data)} · ${m.servizio||"Altro"} · ${m.descrizione||""}</p>
-   <span class="badge ok">${euro(m.importo)}</span>
- </div>`).join(""):`<div class="empty">Nessun movimento nel mese selezionato.</div>`;
-}
-window.renderContabilita=renderContabilita;
-
-function euro(n){return "€"+Number(n||0).toLocaleString("it-IT",{minimumFractionDigits:0,maximumFractionDigits:2})}
-function meseKey(d){return String(d||"").slice(0,7)}
-function todayISO(){return localISO(new Date())}
-function clienteNomeById(id){const c=clienti.find(x=>x.id===id);return c?(c.nome||"")+" "+(c.cognome||""):"Cliente"}
-function parseEventDateTime(ev){
- if(!ev.data)return null;
- const [y,m,d]=String(ev.data).split("-").map(Number);
- let h=9,mi=0;
- if(ev.ora&&String(ev.ora).includes(":")){const p=String(ev.ora).split(":").map(Number);h=p[0]||0;mi=p[1]||0}
- return new Date(y,m-1,d,h,mi,0);
-}
 function lezioniDaConfermare(){
- const now=new Date();
+ const now=new Date(), today=todayISO();
  return eventi.filter(ev=>{
-   const dt=parseEventDateTime(ev);
-   if(!dt || !["Prenotata","Bloccata","Occupata","Da confermare"].includes(ev.stato||"Prenotata"))return false;
-   const end=new Date(dt.getTime()+Number(ev.durata||60)*60000);
-   const confirmAfter=new Date(end.getTime()+2*60*60000);
-   return ev.stato==="Da confermare" || now>=confirmAfter;
- });
-}
-async function aggiornaDaConfermare(){
- const list=lezioniDaConfermare().filter(ev=>ev.stato!=="Da confermare");
- for(const ev of list){
-   await setDoc(docPath("eventi",ev.id),{stato:"Da confermare",updatedAt:serverTimestamp()},{merge:true});
- }
-}
-async function audit(tipo,descrizione,extra={}){
- try{await addDoc(path("auditLogs"),{tipo,descrizione,data:todayISO(),createdAtText:new Date().toISOString(),createdAt:serverTimestamp(),...extra})}catch(e){console.warn("audit",e)}
-}
-async function confermaEffettuata(id){await consumaCreditoEvento(id,"Effettuata");await audit("lezione","Lezione confermata come effettuata",{eventoId:id});status("Lezione confermata come effettuata.");}
-async function confermaAssente(id){await consumaCreditoEvento(id,"Assente");await audit("lezione","Lezione confermata come assente",{eventoId:id});status("Lezione confermata come assente.");}
-async function confermaTutteEffettuate(){
- const list=lezioniDaConfermare();
- if(!list.length)return status("Nessuna lezione da confermare.");
- if(!confirm("Confermare tutte le lezioni come effettuate?"))return;
- for(const ev of list){await consumaCreditoEvento(ev.id,"Effettuata");}
- await audit("lezioni","Confermate tutte le lezioni da confermare",{totale:list.length});
- status("Lezioni confermate.");
-}
-function renderSmartCoach(){
- if(!$("smartCoachSummary"))return;
- const oggi=todayISO();
- const listConf=lezioniDaConfermare();
- const lezOggi=eventi.filter(e=>e.data===oggi && !["Annullata","Annullata dal cliente"].includes(e.stato)).length;
- const daConf=listConf.length;
- const daInc=clienti.reduce((s,c)=>s+Math.max(0,Number(c.dovuto||0)-Number(c.pagato||0)),0);
- const cert=clienti.filter(c=>daysLeft(c.certificatoScadenza)<=30).length;
- const rec=recuperi.filter(r=>String(r.stato||"in attesa").toLowerCase()==="in attesa").length;
- $("smartCoachSummary").innerHTML=`<div class="grid">
-  <div class="kpi"><strong>${lezOggi}</strong><span>Lezioni oggi</span></div>
-  <div class="kpi"><strong>${daConf}</strong><span>Da confermare</span></div>
-  <div class="kpi"><strong>${euro(daInc)}</strong><span>Da incassare</span></div>
-  <div class="kpi"><strong>${cert}</strong><span>Certificati</span></div>
- </div><p class="meta">🔄 Recuperi in attesa: <b>${rec}</b></p>`;
- if($("smartConfirmBanner")){
-   $("smartConfirmBanner").innerHTML=daConf?`<div class="card" style="background:#fff7df;border:1px solid #e3bd5a;margin-top:12px">
-    <h2>⏳ Lezioni da confermare</h2>
-    <p class="meta">Hai ${daConf} lezione/i da confermare.</p>
-    ${listConf.slice(0,5).map(ev=>`<div class="check"><b>${ev.clienteNome||clienteNomeById(ev.clienteId)}</b><br><span class="meta">${fmt(ev.data)} ore ${ev.ora||"-"}</span><div class="actions"><button class="btn light" onclick="confermaEffettuata('${ev.id}')">Effettuata</button><button class="btn red" onclick="confermaAssente('${ev.id}')">Assente</button></div></div>`).join("")}
-    <button class="btn gold full" onclick="confermaTutteEffettuate()">Conferma tutte come effettuate</button>
-   </div>`:"";
- }
-}
-
-function renderNotifiche(){
- if(!$("listaNotifiche"))return;
- const parts=[];
- const daConf=lezioniDaConfermare();
- if(daConf.length){
-   parts.push(`<div class="card"><h2>⏳ Lezioni da confermare</h2><button class="btn gold full" onclick="confermaTutteEffettuate()">Conferma tutte come effettuate</button>${daConf.map(ev=>`<div class="check"><h3>${ev.clienteNome||clienteNomeById(ev.clienteId)}</h3><p class="meta">${fmt(ev.data)} ore ${ev.ora||"-"} · ${ev.stato||"Da confermare"}</p><div class="actions"><button class="btn light" onclick="confermaEffettuata('${ev.id}')">Effettuata</button><button class="btn red" onclick="confermaAssente('${ev.id}')">Assente</button></div></div>`).join("")}</div>`);
- }
- const saldi=clienti.map(c=>({c,res:Math.max(0,Number(c.dovuto||0)-Number(c.pagato||0))})).filter(x=>x.res>0).sort((a,b)=>b.res-a.res);
- if(saldi.length)parts.push(`<div class="card"><h2>💰 Saldi aperti</h2>${saldi.slice(0,10).map(x=>`<p><b>${(x.c.nome||"")+" "+(x.c.cognome||"")}</b><br><span class="badge bad">${euro(x.res)} da saldare</span></p>`).join("")}</div>`);
- const cert=clienti.filter(c=>daysLeft(c.certificatoScadenza)<=30);
- if(cert.length)parts.push(`<div class="card"><h2>🩺 Certificati in scadenza</h2>${cert.slice(0,10).map(c=>`<p><b>${(c.nome||"")+" "+(c.cognome||"")}</b><br><span class="badge warn">${fmt(c.certificatoScadenza)}</span></p>`).join("")}</div>`);
- const rec=recuperi.filter(r=>String(r.stato||"in attesa").toLowerCase()==="in attesa");
- if(rec.length)parts.push(`<div class="card"><h2>🔄 Recuperi richiesti</h2>${rec.slice(0,10).map(r=>`<p><b>${r.clienteNome||"Cliente"}</b><br><span class="meta">${fmt(r.dataLezione)} ore ${r.ora||"-"}</span></p>`).join("")}</div>`);
- $("listaNotifiche").innerHTML=parts.length?parts.join(""):`<div class="empty">Nessuna notifica importante.</div>`;
-}
-function renderSelectPagamenti(){
- if(!$("pagCliente"))return;
- $("pagCliente").innerHTML=clienti.filter(c=>c.stato!=="inattivo").map(c=>`<option value="${c.id}">${(c.nome||"")+" "+(c.cognome||"")}</option>`).join("");
- if($("pagData")&&!$("pagData").value)$("pagData").valueAsDate=new Date();
- if($("ecoMese")&&!$("ecoMese").value){const d=new Date();$("ecoMese").value=d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")}
-}
-async function salvaPagamento(){
- const clienteId=$("pagCliente").value;
- const c=clienti.find(x=>x.id===clienteId);
- if(!c)return status("Seleziona cliente.");
- const importo=Number($("pagImporto").value||0);
- if(!importo||importo<=0)return status("Inserisci un importo valido.");
- const data=$("pagData").value||todayISO();
- await addDoc(path("pagamenti"),{clienteId:c.id,clienteNome:(c.nome||"")+" "+(c.cognome||""),data,mese:meseKey(data),importo,metodo:$("pagMetodo").value,note:$("pagNote").value,createdAtText:new Date().toISOString(),createdAt:serverTimestamp()});
- await setDoc(docPath("clienti",c.id),{pagato:Number(c.pagato||0)+importo,updatedAt:serverTimestamp()},{merge:true});
- await audit("pagamento","Pagamento registrato",{clienteId:c.id,clienteNome:(c.nome||"")+" "+(c.cognome||""),importo,metodo:$("pagMetodo").value});
- $("pagImporto").value="";$("pagNote").value="";status("Pagamento registrato.");
-}
-async function eliminaPagamento(id){
- const p=pagamenti.find(x=>x.id===id);if(!p)return;
- if(!confirm("Eliminare questo pagamento? Verrà sottratto dal totale pagato del cliente."))return;
- const c=clienti.find(x=>x.id===p.clienteId);
- if(c)await setDoc(docPath("clienti",c.id),{pagato:Math.max(0,Number(c.pagato||0)-Number(p.importo||0)),updatedAt:serverTimestamp()},{merge:true});
- await deleteDoc(docPath("pagamenti",id));await audit("pagamento","Pagamento eliminato",{pagamentoId:id,importo:p.importo});status("Pagamento eliminato.");
-}
-function renderEconomia(){
- renderSelectPagamenti();
- if(!$("listaPagamenti"))return;
- const oggi=todayISO();
- const anno=String(new Date().getFullYear());
- const filtro=$("ecoMese")?.value||"";
- const incOggi=pagamenti.filter(p=>p.data===oggi).reduce((s,p)=>s+Number(p.importo||0),0);
- const incMese=pagamenti.filter(p=>!filtro||p.mese===filtro).reduce((s,p)=>s+Number(p.importo||0),0);
- const incAnno=pagamenti.filter(p=>String(p.data||"").startsWith(anno)).reduce((s,p)=>s+Number(p.importo||0),0);
- const daInc=clienti.reduce((s,c)=>s+Math.max(0,Number(c.dovuto||0)-Number(c.pagato||0)),0);
- $("kIncassoOggi").textContent=euro(incOggi);$("kIncassoMese").textContent=euro(incMese);$("kIncassoAnno").textContent=euro(incAnno);$("kDaIncassareEco").textContent=euro(daInc);
- const aperti=clienti.map(c=>({c,res:Math.max(0,Number(c.dovuto||0)-Number(c.pagato||0))})).filter(x=>x.res>0).sort((a,b)=>b.res-a.res);
- $("listaDaIncassareEco").innerHTML=aperti.length?aperti.map(x=>`<p><b>${(x.c.nome||"")+" "+(x.c.cognome||"")}</b><br><span class="badge bad">Da saldare ${euro(x.res)}</span><span class="meta"> Dovuto ${euro(x.c.dovuto||0)} · Pagato ${euro(x.c.pagato||0)}</span></p>`).join(""):`<div class="empty">Nessun saldo aperto.</div>`;
- const list=pagamenti.slice().sort((a,b)=>(b.data||"").localeCompare(a.data||""));
- $("listaPagamenti").innerHTML=list.length?list.map(p=>`<div class="card"><h3>${p.clienteNome||clienteNomeById(p.clienteId)}</h3><span class="badge ok">${euro(p.importo)}</span><span class="badge info">${p.metodo||"Metodo"}</span><p class="meta"><b>Data:</b> ${fmt(p.data)}<br>${p.note?("<b>Note:</b> "+String(p.note).replaceAll("\\n","<br>")):""}</p><button class="btn red" onclick="eliminaPagamento('${p.id}')">Elimina</button></div>`).join(""):`<div class="empty">Nessun pagamento registrato.</div>`;
- const byMonth={};pagamenti.forEach(p=>{const k=p.mese||meseKey(p.data);byMonth[k]=(byMonth[k]||0)+Number(p.importo||0)});
- const months=Object.keys(byMonth).sort();const max=Math.max(1,...Object.values(byMonth));
- $("graficoMesi").innerHTML=months.length?months.map(m=>{const perc=Math.round((byMonth[m]/max)*100);return `<p><b>${m}</b> · ${euro(byMonth[m])}</p><div style="height:12px;background:#eef2f7;border-radius:999px;overflow:hidden;margin-bottom:10px"><div style="height:12px;width:${perc}%;background:#d5ad52"></div></div>`}).join(""):`<div class="empty">Nessun dato economico.</div>`;
-}
-function renderAudit(){
- if(!$("listaAudit"))return;
- const list=auditLogs.slice().sort((a,b)=>(b.createdAtText||"").localeCompare(a.createdAtText||"")).slice(0,100);
- $("listaAudit").innerHTML=list.length?list.map(l=>`<div class="check"><h3>${l.tipo||"Evento"}</h3><p class="meta">${l.descrizione||"-"}<br>${l.createdAtText?new Date(l.createdAtText).toLocaleString("it-IT"):""}</p></div>`).join(""):`<div class="empty">Nessuna attività registrata.</div>`;
-}
-window.salvaPagamento=salvaPagamento;window.eliminaPagamento=eliminaPagamento;window.confermaEffettuata=confermaEffettuata;window.confermaAssente=confermaAssente;window.confermaTutteEffettuate=confermaTutteEffettuate;
-
-function render(){
- setTimeout(refreshRC18,100);
- 
- 
-
- if($("clientAreaUrl"))$("clientAreaUrl").value=clientAreaLink();
- const opts=clienti.map(c=>`<option value="${c.id}">${c.nome||""} ${c.cognome||""}</option>`).join("");
- $("checkCliente").innerHTML=opts;$("calCliente").innerHTML=opts;if($("proCliente"))$("proCliente").innerHTML=opts;
- const active=clienti.filter(c=>c.stato!=="inattivo"), inactive=clienti.filter(c=>c.stato==="inattivo"), dc=contacts(), today=localISO(new Date()), tomorrow=localISO(addDays(new Date(),1));
- $("kClienti").textContent=active.length;$("kInattivi").textContent=inactive.length;$("kContatti").textContent=dc.length;
- $("kLezioniOggi").textContent=eventi.filter(e=>e.data===today).length;$("kLezioniDomani").textContent=eventi.filter(e=>e.data===tomorrow).length;
- $("kIncassi").textContent="€"+active.reduce((s,c)=>s+Math.max(0,(c.dovuto||0)-(c.pagato||0)),0);
- $("kQuasiFiniti").textContent=active.filter(c=>lezioniResidueSmart(c)<=3&&c.lezioniTotali>0).length;
- $("kCert").textContent=active.filter(c=>daysLeft(c.certificatoScadenza)<=30).length;
- $("priorita").innerHTML=dc.length?dc.slice(0,8).map(c=>`<p><b>${c.nome} ${c.cognome||""}</b><br><span class="meta">${c.lezioniResidue||0} residue su ${c.lezioniTotali||0} · residuo €${Math.max(0,(c.dovuto||0)-(c.pagato||0))}</span></p>`).join(""):`<div class="empty">Nessuna priorità.</div>`;
- const filters=["Tutti","Attivi","Inattivi","Personal Training","Coaching Online","Nutrizione","Preparazione Gara","Small Group","Da contattare"];
- $("clientFilters").innerHTML=filters.map(f=>`<button class="${filtro===f?'active':''}" onclick="setFiltro('${f}')">${f}</button>`).join("");
- let q=($("search").value||"").toLowerCase();let list=clienti.filter(c=>((c.nome||"")+" "+(c.cognome||"")+" "+(c.servizio||"")).toLowerCase().includes(q));
- if(filtro==="Attivi")list=active; else if(filtro==="Inattivi")list=inactive; else if(filtro==="Da contattare")list=dc; else if(filtro!=="Tutti")list=list.filter(c=>c.servizio===filtro);
- $("listaClienti").innerHTML=list.length?list.map(card).join(""):`<div class="empty">Nessun cliente.</div>`;
- $("listaContatti").innerHTML=dc.length?dc.map(cardDaContattareClean).join(""):`<div class="empty">Nessun cliente da contattare.</div>`;
- $("listaEventi").innerHTML=eventi.length?eventi.slice().filter(e=>!e.data||e.data>=today).sort((a,b)=>(a.data+a.ora).localeCompare(b.data+b.ora)).map(e=>`<div class="card"><b>${e.tipo}</b> · <span class="badge ${e.stato==='Bloccata'?'black':e.stato==='Assente'?'bad':e.stato==='Effettuata'?'ok':'warn'}">${e.stato}</span><p class="meta">${e.clienteNome||""} · ${fmt(e.data)} ore ${e.ora||"-"} · ${e.durata||60} min ${e.scalata?'· scalata':''} ${e.autoGenerato?'· auto':''}</p><div class="actions"><button class="btn light" onclick="eventoEffettuato('${e.id}')">Effettuata</button><button class="btn red" onclick="eventoPerso('${e.id}')">Assente</button><button class="btn light" onclick="eventoRecuperata('${e.id}')">Recuperata</button><button class="btn light" onclick="eventoAnnullata('${e.id}')">Annullata</button><a class="btn gold" href="${googleCalendarUrl(e)}" target="_blank">Google Calendar</a><button class="btn red" onclick="delEvento('${e.id}')">Elimina</button></div></div>`).join(""):`<div class="empty">Nessun evento.</div>`;
- 
- if($("listaGoogleEventi"))$("listaGoogleEventi").innerHTML=eventi.filter(e=>e.data&&e.ora&&e.clienteNome).slice().filter(e=>!e.data||e.data>=today).sort((a,b)=>(a.data+a.ora).localeCompare(b.data+b.ora)).slice(0,20).map(e=>`<div class="card"><b>${e.tipo||"Lezione PT"}</b><p class="meta">${e.clienteNome||""} · ${fmt(e.data)} ore ${e.ora||"-"}</p><a class="btn gold full" href="${googleCalendarUrl(e)}" target="_blank">Aggiungi a Google Calendar</a></div>`).join("")||`<div class="empty">Nessun evento valido.</div>`;
-
- $("listaCheck").innerHTML=checks.length?checks.map(ch=>`<div class="card"><h3>${ch.clienteNome}</h3><p class="meta">${fmt(ch.data)} · ${ch.note||""}</p></div>`).join(""):`<div class="empty">Nessun check.</div>`;
- 
- if($("tplRinnovo")){
-  $("tplRinnovo").value=templates.rinnovo||defaultTemplates.rinnovo;
-  $("tplSaldo").value=templates.saldo||defaultTemplates.saldo;
-  $("tplCheck").value=templates.check||defaultTemplates.check;
-  $("tplCertificato").value=templates.certificato||defaultTemplates.certificato;
-  $("tplCompleanno").value=templates.compleanno||defaultTemplates.compleanno;
- }
- if($("listaCheckPro")){
-  $("listaCheckPro").innerHTML=checkPro.length?checkPro.slice().sort((a,b)=>(b.data||"").localeCompare(a.data||"")).map(ch=>`<div class="card"><h3>${ch.clienteNome||"Cliente"}</h3><span class="badge info">${fmt(ch.data)}</span>${ch.peso?`<span class="badge ok">${ch.peso} kg</span>`:""}<p class="meta"><b>Misure:</b><br>${(ch.misure||"-").replaceAll("\\n","<br>")}</p><p class="meta"><b>Pliche:</b><br>${(ch.pliche||"-").replaceAll("\\n","<br>")}</p><p class="meta"><b>Note:</b><br>${(ch.note||"-").replaceAll("\\n","<br>")}</p>${ch.messaggio?`<a class="btn green full" href="${waCheckPro(ch)}" target="_blank">Invia messaggio check</a>`:""}<button class="btn red full" onclick="delCheckPro('${ch.id}')">Elimina Check Pro</button></div>`).join(""):`<div class="empty">Nessun Check Pro salvato.</div>`;
- }
-
- $("listaRinnovi").innerHTML=rinnovi.length?rinnovi.map(r=>`<p><b>${r.cliente}</b> · ${r.pacchetto} lezioni<br><span class="meta">${fmt(r.data)} · €${r.importo||0}</span></p>`).join(""):`<div class="empty">Nessun rinnovo.</div>`;
- renderRecuperi();
- renderAvvisiCoach();
- renderSmartCoach();
- renderNotifiche();
- renderEconomia();
- renderAudit();
- renderContabilita();
-}
-window.setFiltro=(f)=>{filtro=f;render()}
-function exportDB(){let blob=new Blob([JSON.stringify({clienti,eventi,checks,checkPro,leads,rinnovi,recuperi,avvisi,pagamenti,auditLogs,templates,exported:new Date().toISOString()},null,2)],{type:"application/json"});let a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="backup_sb_coach_6_1_2.json";a.click()}
-
-
-
-function nomeClienteRc8(c){return ((c.nome||"")+" "+(c.cognome||"")).trim()}
-function clienteNomeByIdRc8(id){const c=(clienti||[]).find(x=>x.id===id);return c?nomeClienteRc8(c):"Cliente"}
-function cardDaContattareRc8(c){
- const res=Math.max(0,Number(c.dovuto||0)-Number(c.pagato||0));
- return `<div class="card">
-  <h2>${nomeClienteRc8(c)}</h2>
-  <p class="meta">${c.tipo||""}${res>0?` · Residuo ${euro(res)}`:""}</p>
-  <button class="btn whatsapp full" onclick="wa('${c.whatsapp||c.telefono||""}')">💬 WhatsApp</button>
- </div>`;
-}
-async function eliminaRinnovoRc8(id){
- const r=(rinnovi||[]).find(x=>x.id===id);
- if(!r)return;
- if(!confirm("Vuoi eliminare questo rinnovo dallo storico?"))return;
- await deleteDoc(docPath("rinnovi",id));
- try{await audit("rinnovo","Rinnovo eliminato",{rinnovoId:id,clienteId:r.clienteId||"",importo:Number(r.importo||r.prezzo||r.costo||0)})}catch(e){}
- status("Rinnovo eliminato.");
-}
-window.eliminaRinnovo=eliminaRinnovoRc8;
-window.eliminaRinnovoRc8=eliminaRinnovoRc8;
-
-function renderRinnoviRc8(){
- const sec=document.getElementById("rinnovi");
- if(!sec)return;
- const firstCard=sec.querySelector(".card");
- if(!firstCard)return;
- const list=(rinnovi||[]).slice().sort((a,b)=>(b.data||b.createdAtText||"").localeCompare(a.data||a.createdAtText||""));
- const body=list.length?list.map(r=>{
-   const nome=r.clienteNome||r.nomeCliente||r.nome||clienteNomeByIdRc8(r.clienteId);
-   const lez=r.lezioni||r.lezioniTotali||r.numeroLezioni||"";
-   const imp=Number(r.importo||r.prezzo||r.costo||0);
-   const data=r.data||String(r.createdAtText||"").slice(0,10)||"";
-   return `<div class="check" style="position:relative;padding-right:56px">
-    <button class="btn red" style="position:absolute;right:10px;top:10px;width:auto;padding:6px 10px" onclick="eliminaRinnovoRc8('${r.id}')">✕</button>
-    <h3>${nome}</h3>
-    <p class="meta">${lez?lez+" lezioni · ":""}${data?fmt(data)+" · ":""}${euro(imp)}</p>
-   </div>`;
- }).join(""):`<div class="empty">Nessun rinnovo registrato.</div>`;
- firstCard.innerHTML=`<h2>🔁 Storico rinnovi</h2>${body}`;
-}
-window.renderRinnoviRc8=renderRinnoviRc8;
-
-function movimentiContabiliRc8(){
- const rn=(rinnovi||[]).map(r=>({
-   id:r.id,tipo:"rinnovo",data:r.data||String(r.createdAtText||"").slice(0,10)||"",
-   mese:String(r.data||String(r.createdAtText||"").slice(0,10)||"").slice(0,7),
-   nome:r.clienteNome||r.nomeCliente||r.nome||clienteNomeByIdRc8(r.clienteId),
-   servizio:r.tipo||r.servizio||"Personal Training",
-   importo:Number(r.importo||r.prezzo||r.costo||0),
-   desc:"Rinnovo"
- }));
- const pg=(pagamenti||[]).map(p=>({
-   id:p.id,tipo:"pagamento",data:p.data||String(p.createdAtText||"").slice(0,10)||"",
-   mese:p.mese||String(p.data||"").slice(0,7),
-   nome:p.clienteNome||clienteNomeByIdRc8(p.clienteId),
-   servizio:p.servizio||"Altro",
-   importo:Number(p.importo||0),
-   desc:p.note||p.metodo||"Pagamento"
- }));
- return [...rn,...pg].filter(x=>x.importo>0);
-}
-function renderContabilitaPulita(){
- const box=$("contMovimenti");
- if(!box)return;
- const now=new Date();
- const today=localISO(now);
- if($("contMese")&&!$("contMese").value)$("contMese").value=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0");
- const mese=$("contMese")?.value||"";
- const anno=String(now.getFullYear());
- const mov=movimentiContabiliRc8();
- const movMese=mov.filter(m=>m.mese===mese);
- const sum=a=>a.reduce((s,m)=>s+Number(m.importo||0),0);
- if($("contOggi"))$("contOggi").textContent=euro(sum(mov.filter(m=>m.data===today)));
- if($("contMeseTot"))$("contMeseTot").textContent=euro(sum(movMese));
- if($("contAnno"))$("contAnno").textContent=euro(sum(mov.filter(m=>String(m.data||"").startsWith(anno))));
- if($("contTotale"))$("contTotale").textContent=euro(sum(mov));
- const byServ={}; movMese.forEach(m=>{byServ[m.servizio]=(byServ[m.servizio]||0)+m.importo});
- if($("contPerServizio")){
-  const servs=Object.keys(byServ).sort((a,b)=>byServ[b]-byServ[a]);
-  $("contPerServizio").innerHTML=servs.length?servs.map(s=>`<p><b>${s}</b><br><span class="badge ok">${euro(byServ[s])}</span></p>`).join(""):`<div class="empty">Nessun movimento nel mese selezionato.</div>`;
- }
- const list=movMese.sort((a,b)=>(b.data||"").localeCompare(a.data||""));
- box.innerHTML=list.length?list.map(m=>`<div class="check" style="position:relative;padding-right:56px">
-   ${m.tipo==="rinnovo"?`<button class="btn red" style="position:absolute;right:10px;top:10px;width:auto;padding:6px 10px" onclick="eliminaRinnovoRc8('${m.id}')">✕</button>`:""}
-   <h3>${m.nome}</h3>
-   <p class="meta">${fmt(m.data)} · ${m.servizio} · ${m.desc}</p>
-   <span class="badge ok">${euro(m.importo)}</span>
- </div>`).join(""):`<div class="empty">Nessun movimento nel mese selezionato.</div>`;
-}
-window.renderContabilita=renderContabilitaPulita;
-window.renderContabilitaPulita=renderContabilitaPulita;
-
-function forzaDaContattareRc8(){
- const sec=document.getElementById("dacontattare") || document.getElementById("da-contattare") || document.getElementById("contattare");
- if(!sec)return;
- const firstCard=sec.querySelector(".card");
- if(!firstCard)return;
- const active=(clienti||[]).filter(c=>Math.max(0,Number(c.dovuto||0)-Number(c.pagato||0))>0 || c.daContattare || c.contattare || c.status==="da_contattare");
- const arr=active.length?active:(clienti||[]).filter(c=>c.stato!=="inattivo");
- firstCard.innerHTML=`<h2>💬 Da contattare</h2>${arr.map(cardDaContattareRc8).join("")||'<div class="empty">Nessun cliente da contattare.</div>'}`;
-}
-window.forzaDaContattareRc8=forzaDaContattareRc8;
-
-setInterval(()=>{try{forzaDaContattareRc8();renderRinnoviRc8();renderContabilitaPulita()}catch(e){}},700);
-
-function euroRC9(n){return "€"+Number(n||0).toLocaleString("it-IT",{minimumFractionDigits:0,maximumFractionDigits:2})}
-function nomeClienteRC9(c){return ((c.nome||"")+" "+(c.cognome||"")).trim()}
-function clienteNomeByIdRC9(id){const c=(clienti||[]).find(x=>x.id===id);return c?nomeClienteRC9(c):"Cliente"}
-function renderDaContattareRC9(){
- const sec=document.getElementById("dacontattare")||document.getElementById("da-contattare")||document.getElementById("contattare");
- if(!sec)return;
- const marked=(clienti||[]).filter(c=>c.daContattare||c.contattare||c.status==="da_contattare");
- const arr=marked.length?marked:(clienti||[]).filter(c=>c.stato!=="inattivo"&&Math.max(0,Number(c.dovuto||0)-Number(c.pagato||0))>0);
- sec.innerHTML=`<div class="card"><h2>💬 Da contattare</h2>${arr.map(c=>{
-   const res=Math.max(0,Number(c.dovuto||0)-Number(c.pagato||0));
-   return `<div class="card"><h2>${nomeClienteRC9(c)}</h2><p class="meta">${c.tipo||""}${res>0?` · Residuo ${euroRC9(res)}`:""}</p><button class="btn whatsapp full" onclick="wa('${c.whatsapp||c.telefono||""}')">💬 WhatsApp</button></div>`
- }).join("")||'<div class="empty">Nessun cliente da contattare.</div>'}</div>`;
-}
-async function eliminaRinnovoRC9(id){
- const r=(rinnovi||[]).find(x=>x.id===id);
- if(!r)return;
- if(!confirm("Vuoi eliminare questo rinnovo?"))return;
- await deleteDoc(docPath("rinnovi",id));
- try{await audit("rinnovo","Rinnovo eliminato",{rinnovoId:id,clienteId:r.clienteId||"",importo:Number(r.importo||r.prezzo||r.costo||0)})}catch(e){}
- status("Rinnovo eliminato.");
-}
-window.eliminaRinnovoRC9=eliminaRinnovoRC9;
-function renderRinnoviRC9(){
- const sec=document.getElementById("rinnovi");
- if(!sec)return;
- const list=(rinnovi||[]).slice().sort((a,b)=>(b.data||b.createdAtText||"").localeCompare(a.data||a.createdAtText||""));
- const body=list.length?list.map(r=>{
-   const nome=r.clienteNome||r.nomeCliente||r.nome||clienteNomeByIdRC9(r.clienteId);
-   const lez=r.lezioni||r.lezioniTotali||r.numeroLezioni||"";
-   const imp=Number(r.importo||r.prezzo||r.costo||0);
-   const data=r.data||String(r.createdAtText||"").slice(0,10)||"";
-   return `<div class="check" style="position:relative;padding-right:58px"><button class="btn red" style="position:absolute;right:10px;top:10px;width:auto;padding:6px 10px" onclick="eliminaRinnovoRC9('${r.id}')">✕</button><h3>${nome}</h3><p class="meta">${lez?lez+" lezioni · ":""}${data?fmt(data)+" · ":""}${euroRC9(imp)}</p></div>`;
- }).join(""):`<div class="empty">Nessun rinnovo registrato.</div>`;
- sec.innerHTML=`<div class="card"><h2>🔁 Storico rinnovi</h2>${body}</div>`;
-}
-function movimentiRC9(){
- const rn=(rinnovi||[]).map(r=>({tipo:"rinnovo",id:r.id,data:r.data||String(r.createdAtText||"").slice(0,10)||"",mese:String(r.data||String(r.createdAtText||"").slice(0,10)||"").slice(0,7),nome:r.clienteNome||r.nomeCliente||r.nome||clienteNomeByIdRC9(r.clienteId),servizio:r.tipo||r.servizio||"Personal Training",importo:Number(r.importo||r.prezzo||r.costo||0),desc:"Rinnovo"}));
- const pg=(pagamenti||[]).map(p=>({tipo:"pagamento",id:p.id,data:p.data||String(p.createdAtText||"").slice(0,10)||"",mese:p.mese||String(p.data||"").slice(0,7),nome:p.clienteNome||clienteNomeByIdRC9(p.clienteId),servizio:p.servizio||"Altro",importo:Number(p.importo||0),desc:p.note||p.metodo||"Pagamento"}));
- return [...rn,...pg].filter(m=>m.importo>0);
-}
-function renderContabilitaRC9(){
- if(!$("contMovimenti"))return;
- const now=new Date(),today=localISO(now);
- if($("contMese")&&!$("contMese").value)$("contMese").value=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0");
- const mese=$("contMese").value,anno=String(now.getFullYear()),mov=movimentiRC9(),movMese=mov.filter(m=>m.mese===mese),sum=a=>a.reduce((s,m)=>s+Number(m.importo||0),0);
- $("contOggi").textContent=euroRC9(sum(mov.filter(m=>m.data===today)));
- $("contMeseTot").textContent=euroRC9(sum(movMese));
- $("contAnno").textContent=euroRC9(sum(mov.filter(m=>String(m.data||"").startsWith(anno))));
- $("contTotale").textContent=euroRC9(sum(mov));
- const by={};movMese.forEach(m=>by[m.servizio]=(by[m.servizio]||0)+m.importo);
- const servs=Object.keys(by).sort((a,b)=>by[b]-by[a]);
- $("contPerServizio").innerHTML=servs.length?servs.map(s=>`<p><b>${s}</b><br><span class="badge ok">${euroRC9(by[s])}</span></p>`).join(""):`<div class="empty">Nessun movimento nel mese.</div>`;
- $("contMovimenti").innerHTML=movMese.length?movMese.sort((a,b)=>(b.data||"").localeCompare(a.data||"")).map(m=>`<div class="check" style="position:relative;padding-right:58px">${m.tipo==="rinnovo"?`<button class="btn red" style="position:absolute;right:10px;top:10px;width:auto;padding:6px 10px" onclick="eliminaRinnovoRC9('${m.id}')">✕</button>`:""}<h3>${m.nome}</h3><p class="meta">${fmt(m.data)} · ${m.servizio} · ${m.desc}</p><span class="badge ok">${euroRC9(m.importo)}</span></div>`).join(""):`<div class="empty">Nessun movimento nel mese.</div>`;
-}
-window.renderContabilitaRC9=renderContabilitaRC9;
-window.renderContabilita=renderContabilitaRC9;
-window.renderDaContattareRC9=renderDaContattareRC9;
-window.renderRinnoviRC9=renderRinnoviRC9;
-
-
-
-function euroRC10(n){
- return "€"+Number(n||0).toLocaleString("it-IT",{minimumFractionDigits:0,maximumFractionDigits:2});
-}
-function nomeClienteRC10(c){
- return ((c.nome||"")+" "+(c.cognome||"")).trim();
-}
-function clienteNomeByIdRC10(id){
- const c=(clienti||[]).find(x=>x.id===id);
- return c?nomeClienteRC10(c):"Cliente";
-}
-function valoreClienteRC10(c){
- return Number(c.dovuto||c.importoPacchetto||c.prezzo||c.costo||0);
-}
-function pagatoClienteRC10(c){
- return Number(c.pagato||0);
-}
-function residuoClienteRC10(c){
- return Math.max(0, valoreClienteRC10(c)-pagatoClienteRC10(c));
-}
-function clientiDaContattareRC10(){
- const marked=(clienti||[]).filter(c=>c.daContattare||c.contattare||c.status==="da_contattare");
- if(marked.length)return marked;
- return (clienti||[]).filter(c=>c.stato!=="inattivo" && residuoClienteRC10(c)>0);
-}
-function renderDaContattareRC10(){
- const sec=document.getElementById("dacontattare")||document.getElementById("da-contattare")||document.getElementById("contattare");
- if(!sec)return;
- const arr=clientiDaContattareRC10();
- sec.innerHTML=`<div class="card"><h2>💬 Da contattare</h2>${
-   arr.length?arr.map(c=>`<div class="card">
-     <h2>${nomeClienteRC10(c)}</h2>
-     <p class="meta">${c.tipo||""}${residuoClienteRC10(c)>0?` · Residuo ${euroRC10(residuoClienteRC10(c))}`:""}</p>
-     <button class="btn whatsapp full" onclick="wa('${c.whatsapp||c.telefono||""}')">💬 WhatsApp</button>
-   </div>`).join(""):'<div class="empty">Nessun cliente da contattare.</div>'
- }</div>`;
-}
-async function eliminaRinnovoRC10(id){
- const r=(rinnovi||[]).find(x=>x.id===id);
- if(!r)return;
- if(!confirm("Vuoi eliminare questo rinnovo?"))return;
- await deleteDoc(docPath("rinnovi",id));
- try{await audit("rinnovo","Rinnovo eliminato",{rinnovoId:id,clienteId:r.clienteId||"",importo:Number(r.importo||r.prezzo||r.costo||0)})}catch(e){}
- status("Rinnovo eliminato.");
-}
-window.eliminaRinnovoRC10=eliminaRinnovoRC10;
-window.eliminaRinnovoRC9=eliminaRinnovoRC10;
-function renderRinnoviRC10(){
- const sec=document.getElementById("rinnovi");
- if(!sec)return;
- const list=(rinnovi||[]).slice().sort((a,b)=>(b.data||b.createdAtText||"").localeCompare(a.data||a.createdAtText||""));
- const body=list.length?list.map(r=>{
-   const nome=r.clienteNome||r.nomeCliente||r.nome||clienteNomeByIdRC10(r.clienteId);
-   const lez=r.lezioni||r.lezioniTotali||r.numeroLezioni||"";
-   const imp=Number(r.importo||r.prezzo||r.costo||0);
-   const data=r.data||String(r.createdAtText||"").slice(0,10)||"";
-   return `<div class="check" style="position:relative;padding-right:58px">
-      <button class="btn red" style="position:absolute;right:10px;top:10px;width:auto;padding:6px 10px" onclick="eliminaRinnovoRC10('${r.id}')">✕</button>
-      <h3>${nome}</h3>
-      <p class="meta">${lez?lez+" lezioni · ":""}${data?fmt(data)+" · ":""}${euroRC10(imp)}</p>
-   </div>`;
- }).join(""):`<div class="empty">Nessun rinnovo registrato.</div>`;
- sec.innerHTML=`<div class="card"><h2>🔁 Storico rinnovi</h2>${body}</div>`;
-}
-function movimentiRegistratiRC10(){
- const rn=(rinnovi||[]).map(r=>({
-   tipo:"rinnovo",
-   id:r.id,
-   data:r.data||String(r.createdAtText||"").slice(0,10)||"",
-   mese:String(r.data||String(r.createdAtText||"").slice(0,10)||"").slice(0,7),
-   nome:r.clienteNome||r.nomeCliente||r.nome||clienteNomeByIdRC10(r.clienteId),
-   importo:Number(r.importo||r.prezzo||r.costo||0),
-   desc:"Rinnovo"
- }));
- const pg=(pagamenti||[]).map(p=>({
-   tipo:"pagamento",
-   id:p.id,
-   data:p.data||String(p.createdAtText||"").slice(0,10)||"",
-   mese:p.mese||String(p.data||"").slice(0,7),
-   nome:p.clienteNome||clienteNomeByIdRC10(p.clienteId),
-   importo:Number(p.importo||0),
-   desc:p.note||p.metodo||"Pagamento"
- }));
- return [...rn,...pg].filter(m=>m.importo>0);
-}
-function renderContabilitaRC10(){
- const box=document.getElementById("contMovimenti");
- if(!box)return;
- const now=new Date();
- if($("contMese")&&!$("contMese").value){
-   $("contMese").value=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0");
- }
- const mese=$("contMese")?.value||"";
- const mov=movimentiRegistratiRC10();
- const movMese=mov.filter(m=>m.mese===mese);
- const sum=a=>a.reduce((s,m)=>s+Number(m.importo||0),0);
-
- const clientiAttivi=(clienti||[]).filter(c=>c.stato!=="inattivo");
- const valorePacchetti=clientiAttivi.reduce((s,c)=>s+valoreClienteRC10(c),0);
- const daIncassare=clientiAttivi.reduce((s,c)=>s+residuoClienteRC10(c),0);
- const incassatoMese=sum(movMese);
- const totaleStorico=sum(mov);
-
- if($("contIncassato"))$("contIncassato").textContent=euroRC10(incassatoMese);
- if($("contDaIncassare"))$("contDaIncassare").textContent=euroRC10(daIncassare);
- if($("contValorePacchetti"))$("contValorePacchetti").textContent=euroRC10(valorePacchetti);
- if($("contTotaleStorico"))$("contTotaleStorico").textContent=euroRC10(totaleStorico);
-
- const conResiduo=clientiAttivi.filter(c=>residuoClienteRC10(c)>0).sort((a,b)=>residuoClienteRC10(b)-residuoClienteRC10(a));
- if($("contClientiResiduo")){
-   $("contClientiResiduo").innerHTML=conResiduo.length?conResiduo.map(c=>`<div class="check">
-     <h3>${nomeClienteRC10(c)}</h3>
-     <p class="meta">${c.tipo||""} · Dovuto ${euroRC10(valoreClienteRC10(c))} · Pagato ${euroRC10(pagatoClienteRC10(c))}</p>
-     <span class="badge bad">Residuo ${euroRC10(residuoClienteRC10(c))}</span>
-   </div>`).join(""):`<div class="empty">Nessun residuo aperto.</div>`;
- }
- if($("contPacchettiAttivi")){
-   $("contPacchettiAttivi").innerHTML=clientiAttivi.length?clientiAttivi.map(c=>`<div class="check">
-     <h3>${nomeClienteRC10(c)}</h3>
-     <p class="meta">${c.tipo||""} · ${c.lezioniTotali||0} lezioni · ${c.lezioniResidue||0} residue</p>
-     <span class="badge ok">${euroRC10(valoreClienteRC10(c))}</span>
-   </div>`).join(""):`<div class="empty">Nessun pacchetto attivo.</div>`;
- }
- box.innerHTML=movMese.length?movMese.sort((a,b)=>(b.data||"").localeCompare(a.data||"")).map(m=>`<div class="check" style="position:relative;padding-right:58px">
-   ${m.tipo==="rinnovo"?`<button class="btn red" style="position:absolute;right:10px;top:10px;width:auto;padding:6px 10px" onclick="eliminaRinnovoRC10('${m.id}')">✕</button>`:""}
-   <h3>${m.nome}</h3>
-   <p class="meta">${fmt(m.data)} · ${m.desc}</p>
-   <span class="badge ok">${euroRC10(m.importo)}</span>
- </div>`).join(""):`<div class="empty">Nessun movimento registrato nel mese.</div>`;
-}
-window.renderDaContattareRC10=renderDaContattareRC10;
-window.renderRinnoviRC10=renderRinnoviRC10;
-window.renderContabilitaRC10=renderContabilitaRC10;
-window.renderContabilita=renderContabilitaRC10;
-
-
-
-// RC11_FINAL_FIX_INTERVAL
-
-
-function rc12EventDateTime(ev){
- if(!ev || !ev.data)return null;
- const a=String(ev.data).split("-").map(Number);
- let h=9,mi=0;
- if(ev.ora && String(ev.ora).includes(":")){
-   const p=String(ev.ora).split(":").map(Number);
-   h=p[0]||0; mi=p[1]||0;
- }
- return new Date(a[0],a[1]-1,a[2],h,mi,0);
-}
-function rc12EventEndDateTime(ev){
- const start=rc12EventDateTime(ev);
- if(!start)return null;
- return new Date(start.getTime()+Number(ev.durata||60)*60000);
-}
-function rc12Historical(stato){
- return ["Effettuata","Assente","Recuperata","Annullata","Annullata dal cliente"].includes(stato||"");
-}
-function rc12Consumes(stato){
- return ["Effettuata","Assente","Recuperata"].includes(stato||"");
-}
-function rc12FutureMutable(ev){
- const today=localISO(new Date());
- return ev.data>=today && !rc12Historical(ev.stato||"Prenotata");
-}
-function rc12Fatte(clienteId){
- return (eventi||[]).filter(e=>e.clienteId===clienteId && rc12Consumes(e.stato)).length;
-}
-function rc12Residue(c){
- return Math.max(0,Number(c.lezioniTotali||0)-rc12Fatte(c.id));
-}
-async function rc12Sync(clienteId){
- const c=(clienti||[]).find(x=>x.id===clienteId);
- if(!c)return;
- const fatte=rc12Fatte(clienteId);
- const residue=Math.max(0,Number(c.lezioniTotali||0)-fatte);
- await setDoc(docPath("clienti",clienteId),{lezioniFatte:fatte,lezioniResidue:residue,updatedAt:serverTimestamp()},{merge:true});
-}
-async function rc12SetLesson(id,stato){
- const ev=(eventi||[]).find(x=>x.id===id);
- if(!ev)return;
- await setDoc(docPath("eventi",id),{stato,scalata:rc12Consumes(stato),storico:rc12Historical(stato),updatedAt:serverTimestamp()},{merge:true});
- await rc12Sync(ev.clienteId);
- try{await audit("lezione","Lezione impostata come "+stato,{eventoId:id,clienteId:ev.clienteId})}catch(e){}
- status("Lezione aggiornata: "+stato);
-}
-window.confermaEffettuata=async(id)=>rc12SetLesson(id,"Effettuata");
-window.confermaAssente=async(id)=>rc12SetLesson(id,"Assente");
-window.eventoEffettuato=async(id)=>rc12SetLesson(id,"Effettuata");
-window.eventoPerso=async(id)=>rc12SetLesson(id,"Assente");
-window.eventoRecuperata=async(id)=>rc12SetLesson(id,"Recuperata");
-window.eventoAnnullata=async(id)=>rc12SetLesson(id,"Annullata");
-async function rc12AutoDaConfermare(){
- const now=new Date();
- for(const ev of (eventi||[])){
-   const st=ev.stato||"Prenotata";
-   if(rc12Historical(st))continue;
-   const start=rc12EventDateTime(ev), end=rc12EventEndDateTime(ev);
-   if(!start||!end)continue;
-   const twoAfter=new Date(end.getTime()+2*60*60000);
-   const hours=(start-now)/36e5;
-   if(hours<=24 && ["Prenotata","Programmata","Occupata"].includes(st)){
-     await setDoc(docPath("eventi",ev.id),{stato:"Bloccata",bloccataEntro24h:true,updatedAt:serverTimestamp()},{merge:true});
-   }
-   if(now>=twoAfter && ["Prenotata","Programmata","Occupata","Bloccata"].includes(st)){
-     await setDoc(docPath("eventi",ev.id),{stato:"Da confermare",updatedAt:serverTimestamp()},{merge:true});
-   }
- }
-}
-window.autoScalaLezioni=rc12AutoDaConfermare;
-function rc12DaConfermare(){
- const now=new Date();
- return (eventi||[]).filter(ev=>{
-   const st=ev.stato||"Prenotata";
-   if(st==="Da confermare")return true;
-   if(rc12Historical(st))return false;
-   const end=rc12EventEndDateTime(ev);
-   if(!end)return false;
-   return now>=new Date(end.getTime()+2*60*60000);
- });
-}
-window.lezioniDaConfermare=rc12DaConfermare;
-window.confermaTutteEffettuate=async()=>{
- const list=rc12DaConfermare();
- if(!list.length)return status("Nessuna lezione da confermare.");
- if(!confirm("Confermare tutte come effettuate?"))return;
- for(const ev of list){await rc12SetLesson(ev.id,"Effettuata");}
-};
-async function rc12Backup(clienteId){
- try{await addDoc(path("calendarBackups"),{clienteId,createdAtText:new Date().toISOString(),createdAt:serverTimestamp(),eventi:(eventi||[]).filter(e=>e.clienteId===clienteId)})}catch(e){}
-}
-async function rc12DeleteFuture(clienteId){
- const fut=(eventi||[]).filter(e=>e.clienteId===clienteId && rc12FutureMutable(e));
- for(const ev of fut){await deleteDoc(docPath("eventi",ev.id));}
-}
-async function rc12SafeCalendar(clienteId){
- const c=(clienti||[]).find(x=>x.id===clienteId);
- if(!c)return;
- const beforeFatte=rc12Fatte(clienteId);
- const beforeResidue=rc12Residue(c);
- if(!confirm("Aggiornare SOLO le lezioni future? Storico e contatore resteranno invariati."))return;
- await rc12Backup(clienteId);
- await rc12DeleteFuture(clienteId);
- if(typeof generateFixedEvents==="function"){
-   await generateFixedEvents(clienteId,{...c});
- }else if(typeof generaCalendarioAutomatico==="function"){
-   await generaCalendarioAutomatico(clienteId);
- }else if(typeof rigeneraCalendarioAutomatico==="function"){
-   await rigeneraCalendarioAutomatico(clienteId,true);
- }
- const snap=await getDocs(query(path("eventi"),where("clienteId","==",clienteId)));
- const today=localISO(new Date());
- for(const d of snap.docs){
-   const ev={id:d.id,...d.data()};
-   if(ev.data>=today && !rc12Historical(ev.stato)){
-     await setDoc(docPath("eventi",ev.id),{stato:"Prenotata",scalata:false,storico:false,updatedAt:serverTimestamp()},{merge:true});
-   }
- }
- await setDoc(docPath("clienti",clienteId),{lezioniFatte:beforeFatte,lezioniResidue:beforeResidue,updatedAt:serverTimestamp()},{merge:true});
- status("Calendario futuro aggiornato. Storico e contatore invariati.");
-}
-window.rigeneraCalendarioDaPulsante=async()=>{
- const id=$("clienteId")?.value || $("editId")?.value;
- if(!id)return status("Apri prima un cliente in modifica.");
- await rc12SafeCalendar(id);
-};
-window.aggiornaCalendarioFuturo=rc12SafeCalendar;
-window.ricalcolaContatoreCliente=async(id)=>{await rc12Sync(id);status("Contatore ricalcolato.");};
-window.ricalcolaTuttiContatori=async()=>{if(!confirm("Ricalcolare tutti i contatori?"))return;for(const c of (clienti||[])){await rc12Sync(c.id)}status("Contatori ricalcolati.");};
-
-let __rc13SmartLastHTML="";
-function rc12Smart(){
- const summary=$("smartCoachSummary");
- const outer=document.getElementById("smartCoachBox");
- if(!summary && !outer)return;
- const list=rc12DaConfermare();
- const content=list.length?`<div class="card"><h2>⏳ Lezioni da confermare</h2>${list.map(ev=>`<div class="check"><h3>${ev.clienteNome||"Cliente"}</h3><p class="meta">${fmt(ev.data)} ore ${ev.ora||"-"}</p><button class="btn light" onclick="confermaEffettuata('${ev.id}')">Effettuata</button> <button class="btn red" onclick="confermaAssente('${ev.id}')">Assente</button></div>`).join("")}<button class="btn gold full" onclick="confermaTutteEffettuate()">Conferma tutte come effettuate</button></div>`:`<p class="meta">Nessuna lezione da confermare.</p>`;
- if(content===__rc13SmartLastHTML)return;
- __rc13SmartLastHTML=content;
- if(summary){
-   summary.innerHTML=content;
- }else if(outer){
-   let box=document.getElementById("rc13SmartContent");
-   if(!box){
-     outer.innerHTML='<h2>👋 Smart Coach</h2><div id="rc13SmartContent"></div>';
-     box=document.getElementById("rc13SmartContent");
-   }
-   box.innerHTML=content;
- }
-}
-function rc13RefreshUI(){
- try{rc12Smart()}catch(e){}
- try{if(typeof renderDaContattareRC10==="function")renderDaContattareRC10()}catch(e){}
- try{if(typeof renderRinnoviRC10==="function")renderRinnoviRC10()}catch(e){}
- try{if(typeof renderContabilitaRC10==="function")renderContabilitaRC10()}catch(e){}
- try{if(typeof aggiornaTestoPulsanteCliente==="function")aggiornaTestoPulsanteCliente()}catch(e){}
-}
-window.rc13RefreshUI=rc13RefreshUI;
-setTimeout(rc13RefreshUI,300);
-
-
-
-function rc14TomorrowISO(){
- const d=new Date();
- d.setDate(d.getDate()+1);
- return localISO(d);
-}
-function rc14EventStart(ev){
- if(!ev || !ev.data)return null;
- const a=String(ev.data).split("-").map(Number);
- let h=9,mi=0;
- if(ev.ora && String(ev.ora).includes(":")){
-   const p=String(ev.ora).split(":").map(Number);
-   h=p[0]||0; mi=p[1]||0;
- }
- return new Date(a[0],a[1]-1,a[2],h,mi,0);
-}
-function rc14EventEnd(ev){
- const s=rc14EventStart(ev);
- if(!s)return null;
- return new Date(s.getTime()+Number(ev.durata||60)*60000);
-}
-function rc14Historical(st){
- return ["Effettuata","Assente","Recuperata","Annullata","Annullata dal cliente"].includes(st||"");
-}
-function rc14Consumes(st){
- return ["Effettuata","Assente","Recuperata"].includes(st||"");
-}
-function rc14IsRealFuture(ev){
- const s=rc14EventStart(ev);
- return s && s.getTime()>Date.now();
-}
-function rc14MutableFuture(ev){
- return rc14IsRealFuture(ev) && !rc14Historical(ev.stato||"Prenotata");
-}
-function rc14Fatte(clienteId){
- return (eventi||[]).filter(e=>e.clienteId===clienteId && rc14Consumes(e.stato)).length;
-}
-async function rc14SyncCounter(clienteId, forcedFatte=null, forcedResidue=null){
- const c=(clienti||[]).find(x=>x.id===clienteId);
- if(!c)return;
- const fatte=forcedFatte!==null?forcedFatte:rc14Fatte(clienteId);
- const residue=forcedResidue!==null?forcedResidue:Math.max(0,Number(c.lezioniTotali||0)-fatte);
- await setDoc(docPath("clienti",clienteId),{lezioniFatte:fatte,lezioniResidue:residue,updatedAt:serverTimestamp()},{merge:true});
-}
-async function rc14SetLesson(id,stato){
- const ev=(eventi||[]).find(x=>x.id===id);
- if(!ev)return;
- await setDoc(docPath("eventi",id),{stato,scalata:rc14Consumes(stato),storico:rc14Historical(stato),updatedAt:serverTimestamp()},{merge:true});
- await rc14SyncCounter(ev.clienteId);
- status("Lezione aggiornata: "+stato);
-}
-window.confermaEffettuata=async(id)=>rc14SetLesson(id,"Effettuata");
-window.confermaAssente=async(id)=>rc14SetLesson(id,"Assente");
-window.eventoEffettuato=async(id)=>rc14SetLesson(id,"Effettuata");
-window.eventoPerso=async(id)=>rc14SetLesson(id,"Assente");
-window.eventoRecuperata=async(id)=>rc14SetLesson(id,"Recuperata");
-window.eventoAnnullata=async(id)=>rc14SetLesson(id,"Annullata");
-
-function rc14DaConfermare(){
- const now=new Date();
- return (eventi||[]).filter(ev=>{
-   const st=ev.stato||"Prenotata";
-   if(rc14Historical(st))return false;
-   const end=rc14EventEnd(ev);
-   if(!end)return false;
-   if(st!=="Da confermare" && end.getTime()<now.getTime()-24*60*60*1000)return false;
-   if(st==="Da confermare")return true;
-   return now>=new Date(end.getTime()+2*60*60000);
- });
-}
-window.lezioniDaConfermare=rc14DaConfermare;
-
-async function rc14AutoDaConfermare(){
- const now=new Date();
- for(const ev of (eventi||[])){
-   const st=ev.stato||"Prenotata";
-   if(rc14Historical(st))continue;
-   const start=rc14EventStart(ev),end=rc14EventEnd(ev);
-   if(!start||!end)continue;
-   if(end.getTime()<now.getTime()-24*60*60*1000)continue;
-   const hours=(start-now)/36e5;
-   if(hours<=24 && start>now && ["Prenotata","Programmata","Occupata"].includes(st)){
-     await setDoc(docPath("eventi",ev.id),{stato:"Bloccata",bloccataEntro24h:true,updatedAt:serverTimestamp()},{merge:true});
-   }
-   if(now>=new Date(end.getTime()+2*60*60000) && ["Prenotata","Programmata","Occupata","Bloccata"].includes(st)){
-     await setDoc(docPath("eventi",ev.id),{stato:"Da confermare",updatedAt:serverTimestamp()},{merge:true});
-   }
- }
-}
-window.autoScalaLezioni=rc14AutoDaConfermare;
-
-async function rc14DeleteMutableFuture(clienteId){
- const fut=(eventi||[]).filter(e=>e.clienteId===clienteId && rc14MutableFuture(e));
- for(const ev of fut){ await deleteDoc(docPath("eventi",ev.id)); }
-}
-async function rc14CleanGeneratedPastAndDuplicates(clienteId){
- const snap=await getDocs(query(path("eventi"),where("clienteId","==",clienteId)));
- const seen=new Set();
- const now=Date.now();
- for(const d of snap.docs){
-   const ev={id:d.id,...d.data()};
-   const st=ev.stato||"Prenotata";
-   const start=rc14EventStart(ev);
-   if(!start)continue;
-   if(start.getTime()<=now && !rc14Historical(st)){
-     await deleteDoc(docPath("eventi",ev.id));
-     continue;
-   }
-   const key=[ev.clienteId,ev.data,ev.ora||""].join("|");
-   if(!rc14Historical(st)){
-     if(seen.has(key)){
-       await deleteDoc(docPath("eventi",ev.id));
-       continue;
-     }
-     seen.add(key);
-     await setDoc(docPath("eventi",ev.id),{stato:"Prenotata",scalata:false,storico:false,updatedAt:serverTimestamp()},{merge:true});
-   }
- }
-}
-async function rc14RigeneraSoloFuturo(clienteId){
- const c=(clienti||[]).find(x=>x.id===clienteId);
- if(!c)return;
- const beforeFatte=rc14Fatte(clienteId);
- const beforeResidue=Math.max(0,Number(c.lezioniTotali||0)-beforeFatte);
- if(!confirm("Aggiornare SOLO le lezioni future? Il passato/storico non verrà toccato."))return;
- try{await addDoc(path("calendarBackups"),{clienteId,createdAtText:new Date().toISOString(),createdAt:serverTimestamp(),eventi:(eventi||[]).filter(e=>e.clienteId===clienteId)})}catch(e){}
- await rc14DeleteMutableFuture(clienteId);
- const cFuture={...c,inizio:rc14TomorrowISO(),dataInizio:rc14TomorrowISO()};
- if(typeof generateFixedEvents==="function"){
-   await generateFixedEvents(clienteId,cFuture);
- }else if(typeof generaCalendarioAutomatico==="function"){
-   const old=$("inizio")?.value;
-   if($("inizio"))$("inizio").value=rc14TomorrowISO();
-   await generaCalendarioAutomatico(clienteId);
-   if($("inizio") && old)$("inizio").value=old;
- }else if(typeof rigeneraCalendarioAutomatico==="function"){
-   const old=$("inizio")?.value;
-   if($("inizio"))$("inizio").value=rc14TomorrowISO();
-   await rigeneraCalendarioAutomatico(clienteId,true);
-   if($("inizio") && old)$("inizio").value=old;
- }
- await rc14CleanGeneratedPastAndDuplicates(clienteId);
- await setDoc(docPath("clienti",clienteId),{lezioniFatte:beforeFatte,lezioniResidue:beforeResidue,updatedAt:serverTimestamp()},{merge:true});
- status("Calendario futuro aggiornato. Passato e contatore invariati.");
-}
-window.rigeneraCalendarioDaPulsante=async()=>{
- const id=$("clienteId")?.value || $("editId")?.value;
- if(!id)return status("Apri prima un cliente in modifica.");
- await rc14RigeneraSoloFuturo(id);
-};
-window.aggiornaCalendarioFuturo=rc14RigeneraSoloFuturo;
-window.ricalcolaContatoreCliente=async(id)=>{await rc14SyncCounter(id);status("Contatore ricalcolato.");};
-
-function rc14SmartStable(){
- const summary=$("smartCoachSummary");
- const outer=document.getElementById("smartCoachBox");
- if(!summary && !outer)return;
- const list=rc14DaConfermare();
- const content=list.length?`<div class="card"><h2>⏳ Lezioni da confermare</h2>${list.map(ev=>`<div class="check"><h3>${ev.clienteNome||"Cliente"}</h3><p class="meta">${fmt(ev.data)} ore ${ev.ora||"-"}</p><button class="btn light" onclick="confermaEffettuata('${ev.id}')">Effettuata</button> <button class="btn red" onclick="confermaAssente('${ev.id}')">Assente</button></div>`).join("")}<button class="btn gold full" onclick="confermaTutteEffettuate()">Conferma tutte come effettuate</button></div>`:`<p class="meta">Nessuna lezione da confermare.</p>`;
- if(summary)summary.innerHTML=content;
- else outer.innerHTML=`<h2>👋 Smart Coach</h2>${content}`;
-}
-window.rc14SmartStable=rc14SmartStable;
-
-setTimeout(()=>{try{rc14SmartStable()}catch(e){}},500);
-
-
-/* RC15 - Smart stabile: no loop, no passato */
-let __rc15LastSmartHTML="";
-function rc15TodayISO(){ return localISO(new Date()); }
-function rc15EventStart(ev){
- if(!ev || !ev.data)return null;
- const a=String(ev.data).split("-").map(Number);
- let h=9,mi=0;
- if(ev.ora && String(ev.ora).includes(":")){ const p=String(ev.ora).split(":").map(Number); h=p[0]||0; mi=p[1]||0; }
- return new Date(a[0],a[1]-1,a[2],h,mi,0);
-}
-function rc15EventEnd(ev){ const s=rc15EventStart(ev); if(!s)return null; return new Date(s.getTime()+Number(ev.durata||60)*60000); }
-function rc15Historical(st){ return ["Effettuata","Assente","Recuperata","Annullata","Annullata dal cliente"].includes(st||""); }
-function rc15Consumes(st){ return ["Effettuata","Assente","Recuperata"].includes(st||""); }
-function rc15Fatte(clienteId){ return (eventi||[]).filter(e=>e.clienteId===clienteId && rc15Consumes(e.stato)).length; }
-async function rc15SyncCounter(clienteId){
- const c=(clienti||[]).find(x=>x.id===clienteId); if(!c)return;
- const fatte=rc15Fatte(clienteId); const residue=Math.max(0,Number(c.lezioniTotali||0)-fatte);
- await setDoc(docPath("clienti",clienteId),{lezioniFatte:fatte,lezioniResidue:residue,updatedAt:serverTimestamp()},{merge:true});
-}
-async function rc15SetLesson(id,stato){
- const ev=(eventi||[]).find(x=>x.id===id); if(!ev)return;
- await setDoc(docPath("eventi",id),{stato,scalata:rc15Consumes(stato),storico:rc15Historical(stato),updatedAt:serverTimestamp()},{merge:true});
- await rc15SyncCounter(ev.clienteId); __rc15LastSmartHTML=""; renderSmartCoachRC15(); status("Lezione aggiornata: "+stato);
-}
-window.confermaEffettuata=async(id)=>rc15SetLesson(id,"Effettuata");
-window.confermaAssente=async(id)=>rc15SetLesson(id,"Assente");
-window.eventoEffettuato=async(id)=>rc15SetLesson(id,"Effettuata");
-window.eventoPerso=async(id)=>rc15SetLesson(id,"Assente");
-window.eventoRecuperata=async(id)=>rc15SetLesson(id,"Recuperata");
-window.eventoAnnullata=async(id)=>rc15SetLesson(id,"Annullata");
-function lezioniDaConfermareRC15(){
- const today=rc15TodayISO(); const now=new Date();
- return (eventi||[]).filter(ev=>{
-   const st=ev.stato||"Prenotata"; if(rc15Historical(st))return false;
-   if(String(ev.data||"") < today)return false; // MAI date precedenti a oggi
-   const end=rc15EventEnd(ev); if(!end)return false;
+   if(ev.data!==today)return false;
+   if(historical(ev.stato))return false;
+   const end=eventEnd(ev);
    if(end>now)return false;
-   if(st==="Da confermare")return true;
-   if(["Prenotata","Programmata","Occupata","Bloccata"].includes(st)) return now>=new Date(end.getTime()+2*60*60000);
-   return false;
+   if(ev.stato==="Da confermare")return true;
+   return ["Prenotata","Bloccata","Programmata"].includes(ev.stato||"Prenotata") && now>=new Date(end.getTime()+2*60*60000);
  });
 }
-window.lezioniDaConfermare=lezioniDaConfermareRC15;
-async function autoScalaLezioniRC15(){
- const today=rc15TodayISO(); const now=new Date();
- for(const ev of (eventi||[])){
-   const st=ev.stato||"Prenotata"; if(rc15Historical(st))continue; if(String(ev.data||"") < today)continue;
-   const start=rc15EventStart(ev), end=rc15EventEnd(ev); if(!start||!end)continue;
-   const hours=(start-now)/36e5;
-   if(hours<=24 && start>now && ["Prenotata","Programmata","Occupata"].includes(st)) await setDoc(docPath("eventi",ev.id),{stato:"Bloccata",bloccataEntro24h:true,updatedAt:serverTimestamp()},{merge:true});
-   if(now>=new Date(end.getTime()+2*60*60000) && ["Prenotata","Programmata","Occupata","Bloccata"].includes(st)) await setDoc(docPath("eventi",ev.id),{stato:"Da confermare",updatedAt:serverTimestamp()},{merge:true});
- }
-}
-window.autoScalaLezioni=autoScalaLezioniRC15;
-function renderSmartCoachRC15(){
- const summary=$("smartCoachSummary"); const outer=document.getElementById("smartCoachBox"); if(!summary && !outer)return;
- const list=lezioniDaConfermareRC15();
- const content=list.length?`<div class="card"><h2>⏳ Lezioni da confermare</h2><p class="meta">Hai ${list.length} lezione/i da confermare oggi.</p>${list.map(ev=>`<div class="check"><h3>${ev.clienteNome||"Cliente"}</h3><p class="meta">${fmt(ev.data)} ore ${ev.ora||"-"}</p><button class="btn light" onclick="confermaEffettuata('${ev.id}')">Effettuata</button> <button class="btn red" onclick="confermaAssente('${ev.id}')">Assente</button></div>`).join("")}<button class="btn gold full" onclick="confermaTutteEffettuate()">Conferma tutte come effettuate</button></div>`:`<p class="meta">Nessuna lezione da confermare oggi.</p>`;
- if(content===__rc15LastSmartHTML)return; __rc15LastSmartHTML=content;
- if(summary) summary.innerHTML=content; else if(outer) outer.innerHTML=`<h2>👋 Smart Coach</h2><div id="smartCoachSummary">${content}</div>`;
-}
-window.renderSmartCoachRC15=renderSmartCoachRC15;
-window.confermaTutteEffettuate=async()=>{ const list=lezioniDaConfermareRC15(); if(!list.length)return status("Nessuna lezione da confermare oggi."); if(!confirm("Confermare tutte le lezioni di oggi come effettuate?"))return; for(const ev of list){await rc15SetLesson(ev.id,"Effettuata");} __rc15LastSmartHTML=""; renderSmartCoachRC15(); };
-setTimeout(renderSmartCoachRC15,300); setTimeout(renderSmartCoachRC15,1200);
+window.confermaEffettuata=async id=>setStatoEvento(id,"Effettuata");
+window.confermaAssente=async id=>setStatoEvento(id,"Assente");
+async function setStatoEvento(id,stato){const ev=eventi.find(e=>e.id===id);if(!ev)return;await setDoc(docPath("eventi",id),{stato,storico:true,scalata:consumes(stato),updatedAt:serverTimestamp()},{merge:true});const c=clienti.find(x=>x.id===ev.clienteId);await setDoc(docPath("clienti",ev.clienteId),{lezioniFatte:fatte(ev.clienteId)+1,lezioniResidue:Math.max(0,Number(c?.lezioniTotali||0)-fatte(ev.clienteId)-1)},{merge:true})}
+window.confermaTutteEffettuate=async()=>{for(const ev of lezioniDaConfermare())await setStatoEvento(ev.id,"Effettuata")}
 
-
-/* RC16 override: calendario da domani + registro cliente */
-let __rc16SmartHTML="";
-function rc16TodayISO(){return localISO(new Date())}
-function rc16TomorrowISO(){const d=new Date();d.setDate(d.getDate()+1);return localISO(d)}
-function rc16Start(e){if(!e||!e.data)return null;const a=String(e.data).split("-").map(Number);let h=9,m=0;if(e.ora&&String(e.ora).includes(":")){const p=String(e.ora).split(":").map(Number);h=p[0]||0;m=p[1]||0}return new Date(a[0],a[1]-1,a[2],h,m,0)}
-function rc16End(e){const s=rc16Start(e);return s?new Date(s.getTime()+Number(e.durata||60)*60000):null}
-function rc16Hist(s){return ["Effettuata","Assente","Recuperata","Annullata","Annullata dal cliente"].includes(s||"")}
-function rc16Cons(s){return ["Effettuata","Assente","Recuperata"].includes(s||"")}
-function rc16Fatte(id){return (eventi||[]).filter(e=>e.clienteId===id&&rc16Cons(e.stato)).length}
-async function rc16Sync(id){const c=(clienti||[]).find(x=>x.id===id);if(!c)return;const f=rc16Fatte(id),r=Math.max(0,Number(c.lezioniTotali||0)-f);await setDoc(docPath("clienti",id),{lezioniFatte:f,lezioniResidue:r,updatedAt:serverTimestamp()},{merge:true})}
-function lezioniDaConfermareRC16(){const today=rc16TodayISO(),now=new Date();return (eventi||[]).filter(e=>{const st=e.stato||"Prenotata";if(rc16Hist(st))return false;if(String(e.data||"")!==today)return false;const end=rc16End(e);if(!end||end>now)return false;if(st==="Da confermare")return true;return ["Prenotata","Programmata","Occupata","Bloccata"].includes(st)&&now>=new Date(end.getTime()+2*60*60000)})}
-window.lezioniDaConfermare=lezioniDaConfermareRC16;
-async function autoScalaLezioniRC16(){const today=rc16TodayISO(),now=new Date();for(const e of (eventi||[])){const st=e.stato||"Prenotata";if(rc16Hist(st)||String(e.data||"")!==today)continue;const s=rc16Start(e),end=rc16End(e);if(!s||!end)continue;const hrs=(s-now)/36e5;if(hrs<=24&&s>now&&["Prenotata","Programmata","Occupata"].includes(st))await setDoc(docPath("eventi",e.id),{stato:"Bloccata",bloccataEntro24h:true,updatedAt:serverTimestamp()},{merge:true});if(now>=new Date(end.getTime()+2*60*60000)&&["Prenotata","Programmata","Occupata","Bloccata"].includes(st))await setDoc(docPath("eventi",e.id),{stato:"Da confermare",updatedAt:serverTimestamp()},{merge:true})}}
-window.autoScalaLezioni=autoScalaLezioniRC16;
-async function rc16Set(id,st){const e=(eventi||[]).find(x=>x.id===id);if(!e)return;await setDoc(docPath("eventi",id),{stato:st,scalata:rc16Cons(st),storico:rc16Hist(st),updatedAt:serverTimestamp()},{merge:true});await rc16Sync(e.clienteId);__rc16SmartHTML="";renderSmartCoachRC16();try{renderRegistroClienteRC16()}catch(x){};status("Lezione aggiornata: "+st)}
-window.confermaEffettuata=id=>rc16Set(id,"Effettuata");window.confermaAssente=id=>rc16Set(id,"Assente");window.eventoEffettuato=id=>rc16Set(id,"Effettuata");window.eventoPerso=id=>rc16Set(id,"Assente");window.eventoRecuperata=id=>rc16Set(id,"Recuperata");window.eventoAnnullata=id=>rc16Set(id,"Annullata");
-window.confermaTutteEffettuate=async()=>{const l=lezioniDaConfermareRC16();if(!l.length)return status("Nessuna lezione di oggi da confermare.");if(!confirm("Confermare tutte le lezioni di oggi come effettuate?"))return;for(const e of l)await rc16Set(e.id,"Effettuata")};
-async function rigeneraCalendarioSoloFuturoRC16(id){const c=(clienti||[]).find(x=>x.id===id);if(!c)return;const f=rc16Fatte(id),r=Math.max(0,Number(c.lezioniTotali||0)-f),tom=rc16TomorrowISO();if(!confirm("Aggiornare il calendario SOLO da domani in poi? Oggi e lo storico non verranno toccati."))return;try{await addDoc(path("calendarBackups"),{clienteId:id,createdAtText:new Date().toISOString(),createdAt:serverTimestamp(),eventi:(eventi||[]).filter(e=>e.clienteId===id)})}catch(e){};for(const e of (eventi||[]).filter(e=>e.clienteId===id&&String(e.data||"")>=tom&&!rc16Hist(e.stato||"Prenotata")))await deleteDoc(docPath("eventi",e.id));const old1=$("inizio")?.value, old2=$("dataInizio")?.value;if($("inizio"))$("inizio").value=tom;if($("dataInizio"))$("dataInizio").value=tom;const cf={...c,inizio:tom,dataInizio:tom};if(typeof generateFixedEvents==="function")await generateFixedEvents(id,cf);else if(typeof generaCalendarioAutomatico==="function")await generaCalendarioAutomatico(id);else if(typeof rigeneraCalendarioAutomatico==="function")await rigeneraCalendarioAutomatico(id,true);if($("inizio")&&old1)$("inizio").value=old1;if($("dataInizio")&&old2)$("dataInizio").value=old2;const snap=await getDocs(query(path("eventi"),where("clienteId","==",id)));const seen=new Set();for(const d of snap.docs){const e={id:d.id,...d.data()};if(String(e.data||"")<tom||rc16Hist(e.stato||""))continue;const k=[e.clienteId,e.data,e.ora||""].join("|");if(seen.has(k))await deleteDoc(docPath("eventi",e.id));else{seen.add(k);await setDoc(docPath("eventi",e.id),{stato:"Prenotata",scalata:false,storico:false,updatedAt:serverTimestamp()},{merge:true})}}await setDoc(docPath("clienti",id),{lezioniFatte:f,lezioniResidue:r,updatedAt:serverTimestamp()},{merge:true});status("Calendario aggiornato da domani in poi. Oggi, storico e contatore invariati.")}
-window.rigeneraCalendarioDaPulsante=async()=>{const id=$("editId")?.value||$("clienteId")?.value;if(!id)return status("Apri prima un cliente in modifica.");await rigeneraCalendarioSoloFuturoRC16(id)};window.aggiornaCalendarioFuturo=rigeneraCalendarioSoloFuturoRC16;window.ricalcolaContatoreCliente=async id=>{await rc16Sync(id);status("Contatore ricalcolato.")};
-function renderSmartCoachRC16(){const sum=$("smartCoachSummary"),outer=document.getElementById("smartCoachBox");if(!sum&&!outer)return;const l=lezioniDaConfermareRC16();const c=l.length?`<div class="card"><h2>⏳ Lezioni da confermare</h2><p class="meta">Hai ${l.length} lezione/i di oggi da confermare.</p>${l.map(e=>`<div class="check"><h3>${e.clienteNome||"Cliente"}</h3><p class="meta">${fmt(e.data)} ore ${e.ora||"-"}</p><button class="btn light" onclick="confermaEffettuata('${e.id}')">Effettuata</button> <button class="btn red" onclick="confermaAssente('${e.id}')">Assente</button></div>`).join("")}<button class="btn gold full" onclick="confermaTutteEffettuate()">Conferma tutte come effettuate</button></div>`:`<p class="meta">Nessuna lezione di oggi da confermare.</p>`;if(c===__rc16SmartHTML)return;__rc16SmartHTML=c;if(sum)sum.innerHTML=c;else outer.innerHTML=`<h2>👋 Smart Coach</h2><div id="smartCoachSummary">${c}</div>`}
-window.renderSmartCoachRC16=renderSmartCoachRC16;
-function rc16Name(c){return ((c.nome||"")+" "+(c.cognome||"")).trim()}
-function initRegistroClienteRC16(){const s=$("registroCliente");if(!s)return;const cur=s.value;s.innerHTML='<option value="">Seleziona cliente</option>'+(clienti||[]).map(c=>`<option value="${c.id}">${rc16Name(c)}</option>`).join("");if(cur)s.value=cur}
-function renderRegistroClienteRC16(){initRegistroClienteRC16();const s=$("registroCliente"),box=$("registroLista");if(!s||!box)return;const id=s.value;if(!id){["regTotali","regFatte","regResidue"].forEach(x=>$(x).textContent="0");$("regPeriodo").textContent="-";box.innerHTML='<div class="empty">Seleziona un cliente per vedere il registro.</div>';return}const c=(clienti||[]).find(x=>x.id===id);if(!c)return;const evs=(eventi||[]).filter(e=>e.clienteId===id).slice().sort((a,b)=>String(a.data||"").localeCompare(String(b.data||""))||String(a.ora||"").localeCompare(String(b.ora||"")));const f=rc16Fatte(id),r=Math.max(0,Number(c.lezioniTotali||0)-f);$("regTotali").textContent=Number(c.lezioniTotali||0);$("regFatte").textContent=f;$("regResidue").textContent=r;$("regPeriodo").textContent=`${fmt(c.inizio||c.dataInizio||"-")} → ${fmt(c.scadenza||c.fine||c.dataFine||"-")}`;box.innerHTML=`<div class="check"><h3>${rc16Name(c)}</h3><p class="meta">Inizio: ${fmt(c.inizio||c.dataInizio||"-")} · Fine/scadenza: ${fmt(c.scadenza||c.fine||c.dataFine||"-")}</p><span class="badge ok">${r} residue su ${c.lezioniTotali||0}</span></div>`+(evs.length?evs.map(e=>`<div class="check"><h3>${fmt(e.data)} ore ${e.ora||"-"}</h3><p class="meta">Durata ${e.durata||60} min · Stato: ${e.stato||"Prenotata"}</p><span class="badge ${rc16Cons(e.stato)?"ok":(e.stato==="Assente"||e.stato==="Annullata"?"bad":"warn")}">${e.stato||"Prenotata"}</span></div>`).join(""):'<div class="empty">Nessuna lezione registrata.</div>')}
-window.renderRegistroClienteRC16=renderRegistroClienteRC16;window.initRegistroClienteRC16=initRegistroClienteRC16;
-function refreshRC16Once(){try{renderSmartCoachRC16()}catch(e){};try{initRegistroClienteRC16()}catch(e){};try{if($("registro")?.classList.contains("active"))renderRegistroClienteRC16()}catch(e){}}
-setTimeout(refreshRC16Once,300);setTimeout(refreshRC16Once,1200);
-
-
-/* RC17 - Hotfix tasti cliente + registro */
-window.aggiornaPulsantiClienteRC11 = window.aggiornaPulsantiClienteRC11 || function(){return true};
-window.aggiornaPulsantiClienteRC17 = function(){return true};
-
-function rc17Name(c){return ((c.nome||"")+" "+(c.cognome||"")).trim();}
-function rc17Consumes(st){return ["Effettuata","Assente","Recuperata"].includes(st||"");}
-function rc17Fatte(clienteId){return (eventi||[]).filter(e=>e.clienteId===clienteId && rc17Consumes(e.stato)).length;}
-
-window.lezione=async(id)=>{
- const c=(clienti||[]).find(x=>x.id===id);
- if(!c)return;
- if(!confirm("Aggiungere una lezione manuale e scalare 1 credito?"))return;
- await setDoc(docPath("clienti",id),{
-   lezioniFatte:Number(c.lezioniFatte||0)+1,
-   lezioniResidue:Math.max(0,Number(c.lezioniResidue||0)-1),
-   updatedAt:serverTimestamp()
- },{merge:true});
- try{render()}catch(e){}
- status("+1 lezione registrata.");
-};
-window.restituisci=async(id)=>{
- const c=(clienti||[]).find(x=>x.id===id);
- if(!c)return;
- if(!confirm("Restituire 1 credito al cliente?"))return;
- await setDoc(docPath("clienti",id),{
-   lezioniFatte:Math.max(0,Number(c.lezioniFatte||0)-1),
-   lezioniResidue:Number(c.lezioniResidue||0)+1,
-   updatedAt:serverTimestamp()
- },{merge:true});
- try{render()}catch(e){}
- status("Credito restituito.");
-};
-window.rinnova=async(id)=>{
- const c=(clienti||[]).find(x=>x.id===id);
- if(!c)return;
- if(!confirm("Rinnovare il pacchetto di questo cliente?"))return;
- const start=localISO(new Date());
- await addDoc(path("rinnovi"),{cliente:rc17Name(c),clienteId:c.id,servizio:c.servizio||"",pacchetto:c.lezioniTotali||0,data:start,importo:Number(c.dovuto||0),createdAt:serverTimestamp()});
- await setDoc(docPath("clienti",id),{stato:"attivo",lezioniFatte:0,lezioniResidue:Number(c.lezioniTotali||0),inizio:start,scadenza:calcExpiry(start,Number(c.lezioniTotali||0),Number(c.frequenza||1)),updatedAt:serverTimestamp()},{merge:true});
- try{render()}catch(e){}
- status("Pacchetto rinnovato.");
-};
-window.inattivo=async(id)=>{
- const c=(clienti||[]).find(x=>x.id===id);
- if(!c)return;
- if(!confirm("Rendere inattivo questo cliente?"))return;
- await setDoc(docPath("clienti",id),{stato:"inattivo",updatedAt:serverTimestamp()},{merge:true});
- try{render()}catch(e){}
-};
-window.eliminaCliente=async(id)=>{
- const c=(clienti||[]).find(x=>x.id===id);
- if(!c)return;
- if(!confirm("Eliminare definitivamente "+rc17Name(c)+"?"))return;
- const evs=await getDocs(query(path("eventi"),where("clienteId","==",id)));
- const chs=await getDocs(query(path("checks"),where("clienteId","==",id)));
- await Promise.all([...evs.docs.map(d=>deleteDoc(docPath("eventi",d.id))),...chs.docs.map(d=>deleteDoc(docPath("checks",d.id))),deleteDoc(docPath("clienti",id))]);
- try{render()}catch(e){}
-};
-const __rc17OldEdit=window.editCliente;
-window.editCliente=(id)=>{
- try{
-   if(typeof __rc17OldEdit==="function") __rc17OldEdit(id);
-   window.scrollTo({top:120,behavior:"smooth"});
-   status("Cliente aperto in modifica.");
- }catch(e){
-   alert("Errore apertura modifica cliente: "+e.message);
- }
-};
-
-function rc17InitRegistro(){
- const sel=$("registroCliente");
- if(!sel)return;
- const current=sel.value;
- const list=(clienti||[]).slice().sort((a,b)=>rc17Name(a).localeCompare(rc17Name(b)));
- sel.innerHTML='<option value="">Seleziona cliente</option>'+list.map(c=>`<option value="${c.id}">${rc17Name(c)}</option>`).join("");
- if(current && list.some(c=>c.id===current))sel.value=current;
+function clientCard(c){
+ const inactive=(c.stato||"attivo")==="inattivo", res=residuoEuro(c), r=residue(c);
+ return `<div class="card"><h2>${nome(c)}</h2><p class="meta">${c.servizio||""} · ${inactive?"Inattivo":"Attivo"}</p>
+ <span class="badge ${r<=3?"warn":"ok"}">${r} residue su ${c.lezioniTotali||0}</span>${res>0?`<span class="badge bad">Residuo ${euro(res)}</span>`:""}
+ <div class="actions">
+ <button class="btn whatsapp" onclick="window.open('https://wa.me/${String(c.telefono||"").replace(/\D/g,"")}')">WhatsApp</button>
+ <button class="btn light" onclick="lezione('${c.id}')">+ Lezione</button>
+ <button class="btn light" onclick="restituisci('${c.id}')">Restituisci</button>
+ <button class="btn gold" onclick="rinnova('${c.id}')">Rinnova</button>
+ <button class="btn dark" onclick="editCliente('${c.id}')">Modifica</button>
+ <button class="btn light" onclick="inattivo('${c.id}')">${inactive?"Riattiva":"Inattivo"}</button>
+ <button class="btn light" onclick="inviaAccessoCliente('${c.id}')">Invia accesso cliente</button>
+ <button class="btn red" onclick="eliminaCliente('${c.id}')">Elimina cliente</button>
+ </div></div>`
 }
-function rc17StatoClass(st){
- if(st==="Effettuata"||st==="Recuperata")return "ok";
- if(st==="Assente"||st==="Annullata"||st==="Annullata dal cliente")return "bad";
- return "warn";
-}
-function renderRegistroClienteRC17(){
- rc17InitRegistro();
- const sel=$("registroCliente"), box=$("registroLista");
- if(!sel||!box)return;
- let id=sel.value;
- if(!id && sel.options.length>1){id=sel.options[1].value; sel.value=id;}
- const c=(clienti||[]).find(x=>x.id===id);
- if(!c){
-   ["regTotali","regFatte","regResidue"].forEach(k=>{if($(k))$(k).textContent="0"});
-   if($("regPeriodo"))$("regPeriodo").textContent="-";
-   box.innerHTML='<div class="empty">Seleziona un cliente per vedere il registro.</div>';
-   return;
- }
- const evs=(eventi||[]).filter(e=>e.clienteId===id).slice().sort((a,b)=>String(a.data||"").localeCompare(String(b.data||"")) || String(a.ora||"").localeCompare(String(b.ora||"")));
- const fatte=rc17Fatte(id);
- const residue=Math.max(0,Number(c.lezioniTotali||0)-fatte);
- if($("regTotali"))$("regTotali").textContent=Number(c.lezioniTotali||0);
- if($("regFatte"))$("regFatte").textContent=fatte;
- if($("regResidue"))$("regResidue").textContent=residue;
- if($("regPeriodo"))$("regPeriodo").textContent=`${fmt(c.inizio||c.dataInizio||"-")} → ${fmt(c.scadenza||c.fine||c.dataFine||"-")}`;
- box.innerHTML=`<div class="check"><h3>${rc17Name(c)}</h3><p class="meta">Inizio pacchetto: ${fmt(c.inizio||c.dataInizio||"-")} · Fine/scadenza: ${fmt(c.scadenza||c.fine||c.dataFine||"-")}</p><span class="badge ok">${residue} residue su ${c.lezioniTotali||0}</span></div>`+(evs.length?evs.map(e=>`<div class="check"><h3>${fmt(e.data)} ore ${e.ora||"-"}</h3><p class="meta">Durata ${e.durata||60} min · Stato: ${e.stato||"Prenotata"}</p><span class="badge ${rc17StatoClass(e.stato||"Prenotata")}">${e.stato||"Prenotata"}</span></div>`).join(""):'<div class="empty">Nessuna lezione registrata per questo cliente.</div>');
-}
-window.renderRegistroClienteRC17=renderRegistroClienteRC17;
-window.renderRegistroClienteRC16=renderRegistroClienteRC17;
-window.initRegistroClienteRC16=rc17InitRegistro;
-function refreshRC17(){try{rc17InitRegistro()}catch(e){}try{if($("registro")&&$("registro").classList.contains("active"))renderRegistroClienteRC17()}catch(e){}}
-setTimeout(refreshRC17,300);
-setTimeout(refreshRC17,1200);
-
-
-/* RC18 - Tasti Cliente funzionanti + Registro */
-function rc18Name(c){return ((c.nome||"")+" "+(c.cognome||"")).trim();}
-function rc18Consumes(st){return ["Effettuata","Assente","Recuperata"].includes(st||"");}
-function rc18Fatte(id){return (eventi||[]).filter(e=>e.clienteId===id && rc18Consumes(e.stato)).length;}
-function rc18ById(id){return (clienti||[]).find(c=>c.id===id);}
-function rc18FindFromCard(card){
- const name=card.querySelector("h2,h3")?.textContent?.trim();
- return (clienti||[]).find(c=>rc18Name(c)===name);
-}
-
-async function rc18AddLesson(id){
- const c=rc18ById(id); if(!c)return alert("Cliente non trovato.");
- if(!confirm("Aggiungere una lezione manuale e scalare 1 credito?"))return;
- await setDoc(docPath("clienti",id),{
-   lezioniFatte:Number(c.lezioniFatte||0)+1,
-   lezioniResidue:Math.max(0,Number(c.lezioniResidue||0)-1),
-   updatedAt:serverTimestamp()
- },{merge:true});
- status("+1 lezione registrata.");
- try{render()}catch(e){}
-}
-async function rc18ReturnLesson(id){
- const c=rc18ById(id); if(!c)return alert("Cliente non trovato.");
- if(!confirm("Restituire 1 credito al cliente?"))return;
- await setDoc(docPath("clienti",id),{
-   lezioniFatte:Math.max(0,Number(c.lezioniFatte||0)-1),
-   lezioniResidue:Number(c.lezioniResidue||0)+1,
-   updatedAt:serverTimestamp()
- },{merge:true});
- status("Credito restituito.");
- try{render()}catch(e){}
-}
-async function rc18Renew(id){
- const c=rc18ById(id); if(!c)return alert("Cliente non trovato.");
- if(!confirm("Rinnovare il pacchetto di "+rc18Name(c)+"?"))return;
- const start=localISO(new Date());
- await addDoc(path("rinnovi"),{
-   cliente:rc18Name(c),clienteId:id,servizio:c.servizio||"",pacchetto:Number(c.lezioniTotali||0),
-   data:start,importo:Number(c.dovuto||0),createdAt:serverTimestamp()
- });
- await setDoc(docPath("clienti",id),{
-   stato:"attivo",lezioniFatte:0,lezioniResidue:Number(c.lezioniTotali||0),
-   inizio:start,scadenza:calcExpiry(start,Number(c.lezioniTotali||0),Number(c.frequenza||1)),
-   updatedAt:serverTimestamp()
- },{merge:true});
- status("Pacchetto rinnovato.");
- try{render()}catch(e){}
-}
-async function rc18Inactive(id){
- const c=rc18ById(id); if(!c)return alert("Cliente non trovato.");
- if(!confirm("Rendere inattivo "+rc18Name(c)+"?"))return;
- await setDoc(docPath("clienti",id),{stato:"inattivo",updatedAt:serverTimestamp()},{merge:true});
- status("Cliente reso inattivo.");
- try{render()}catch(e){}
-}
-async function rc18Delete(id){
- const c=rc18ById(id); if(!c)return alert("Cliente non trovato.");
- if(!confirm("Eliminare definitivamente "+rc18Name(c)+"?"))return;
- const evs=await getDocs(query(path("eventi"),where("clienteId","==",id)));
- const chs=await getDocs(query(path("checks"),where("clienteId","==",id)));
- await Promise.all([...evs.docs.map(d=>deleteDoc(docPath("eventi",d.id))),...chs.docs.map(d=>deleteDoc(docPath("checks",d.id))),deleteDoc(docPath("clienti",id))]);
- status("Cliente eliminato.");
- try{render()}catch(e){}
-}
-const rc18OldEdit = window.editCliente;
-function rc18Edit(id){
- try{
-   if(typeof rc18OldEdit==="function") rc18OldEdit(id);
-   else {
-     const c=rc18ById(id); if(!c)return alert("Cliente non trovato.");
-     ["nome","cognome","telefono","emailCliente","inizio","dovuto","pagato","note"].forEach(k=>{if($(k)&&c[k]!==undefined)$(k).value=c[k]||""});
-     if($("editId"))$("editId").value=id;
-     if($("clienteId"))$("clienteId").value=id;
-   }
-   window.scrollTo({top:0,behavior:"smooth"});
-   status("Cliente aperto in modifica.");
- }catch(e){alert("Errore modifica: "+e.message)}
-}
-function rc18Access(id){
- const c=rc18ById(id); if(!c)return alert("Cliente non trovato.");
- const url=location.origin+location.pathname.replace("index.html","")+"cliente.html?id="+id;
- if(navigator.clipboard) navigator.clipboard.writeText(url);
- status("Link cliente copiato.");
-}
-
-// Override all names used in card/list/clienti sections
-window.lezione=rc18AddLesson;
-window.addLezione=rc18AddLesson;
-window.aggiungiLezione=rc18AddLesson;
-window.restituisci=rc18ReturnLesson;
-window.restituisciLezione=rc18ReturnLesson;
-window.rinnova=rc18Renew;
-window.rinnovaCliente=rc18Renew;
-window.modificaCliente=rc18Edit;
-window.editCliente=rc18Edit;
-window.inattivo=rc18Inactive;
-window.toggleInactive=rc18Inactive;
-window.eliminaCliente=rc18Delete;
-window.deleteCliente=rc18Delete;
-window.inviaAccessoCliente=rc18Access;
-window.sendAccess=rc18Access;
-
-function rc18PatchVisibleClientButtons(){
- const buttons=[...document.querySelectorAll("button")];
- buttons.forEach(btn=>{
-   const t=btn.textContent.trim().toLowerCase();
-   if(!["+ lezione","restituisci","rinnova","modifica","inattivo","elimina cliente","invia accesso cliente"].some(x=>t.includes(x)))return;
-   const card=btn.closest(".card") || btn.closest("div");
-   if(!card)return;
-   let c=rc18FindFromCard(card);
-   if(!c){
-     let p=card.parentElement;
-     for(let i=0;i<4 && p && !c;i++,p=p.parentElement)c=rc18FindFromCard(p);
-   }
-   if(!c)return;
-   btn.onclick=(ev)=>{
-     ev.preventDefault(); ev.stopPropagation();
-     if(t.includes("+ lezione")) return rc18AddLesson(c.id);
-     if(t.includes("restituisci")) return rc18ReturnLesson(c.id);
-     if(t.includes("rinnova")) return rc18Renew(c.id);
-     if(t.includes("modifica")) return rc18Edit(c.id);
-     if(t.includes("inattivo")) return rc18Inactive(c.id);
-     if(t.includes("elimina cliente")) return rc18Delete(c.id);
-     if(t.includes("invia accesso")) return rc18Access(c.id);
-   };
- });
-}
-
-function rc18InitRegistro(){
- const sel=$("registroCliente"); if(!sel)return;
- const current=sel.value;
- const list=(clienti||[]).slice().sort((a,b)=>rc18Name(a).localeCompare(rc18Name(b)));
- sel.innerHTML='<option value="">Seleziona cliente</option>'+list.map(c=>`<option value="${c.id}">${rc18Name(c)}</option>`).join("");
- if(current && list.some(c=>c.id===current)) sel.value=current;
-}
-function rc18StatoClass(st){
- if(st==="Effettuata"||st==="Recuperata")return "ok";
- if(st==="Assente"||st==="Annullata"||st==="Annullata dal cliente")return "bad";
- return "warn";
-}
-function renderRegistroClienteRC18(){
- const sel=$("registroCliente"), box=$("registroLista");
- if(!sel||!box)return;
- const before=sel.value;
- rc18InitRegistro();
- if(before)sel.value=before;
- const id=sel.value;
- const c=rc18ById(id);
- if(!c){
-   if($("regTotali"))$("regTotali").textContent="0";
-   if($("regFatte"))$("regFatte").textContent="0";
-   if($("regResidue"))$("regResidue").textContent="0";
-   if($("regPeriodo"))$("regPeriodo").textContent="-";
-   box.innerHTML='<div class="empty">Seleziona un cliente per vedere il registro.</div>';
-   return;
- }
- const evs=(eventi||[]).filter(e=>e.clienteId===id).slice().sort((a,b)=>String(a.data||"").localeCompare(String(b.data||"")) || String(a.ora||"").localeCompare(String(b.ora||"")));
- const fatte=rc18Fatte(id);
- const residue=Math.max(0,Number(c.lezioniTotali||0)-fatte);
- const inizio=c.inizio||c.dataInizio||"-";
- const fine=c.scadenza||c.fine||c.dataFine||"-";
- if($("regTotali"))$("regTotali").textContent=Number(c.lezioniTotali||0);
- if($("regFatte"))$("regFatte").textContent=fatte;
- if($("regResidue"))$("regResidue").textContent=residue;
- if($("regPeriodo"))$("regPeriodo").textContent=`${fmt(inizio)} → ${fmt(fine)}`;
- box.innerHTML=`<div class="check"><h3>${rc18Name(c)}</h3><p class="meta">Inizio: ${fmt(inizio)} · Fine/scadenza: ${fmt(fine)}</p><span class="badge ok">${residue} residue su ${c.lezioniTotali||0}</span></div>`+
- (evs.length?evs.map(e=>`<div class="check"><h3>${fmt(e.data)} ore ${e.ora||"-"}</h3><p class="meta">Durata ${e.durata||60} min · Stato: ${e.stato||"Prenotata"}</p><span class="badge ${rc18StatoClass(e.stato||"Prenotata")}">${e.stato||"Prenotata"}</span></div>`).join(""):'<div class="empty">Nessuna lezione registrata per questo cliente.</div>');
-}
-window.renderRegistroClienteRC18=renderRegistroClienteRC18;
-window.renderRegistroClienteRC17=renderRegistroClienteRC18;
-window.renderRegistroClienteRC16=renderRegistroClienteRC18;
-
-function refreshRC18(){
- try{rc18PatchVisibleClientButtons()}catch(e){}
- try{rc18InitRegistro()}catch(e){}
- try{if($("registro")&&$("registro").classList.contains("active"))renderRegistroClienteRC18()}catch(e){}
-}
-setTimeout(refreshRC18,300);
-setTimeout(refreshRC18,1000);
-setInterval(refreshRC18,2500);
-
+function renderClienti(){const list=clienti.slice().sort((a,b)=>nome(a).localeCompare(nome(b)));$("listaClienti").innerHTML=list.map(clientCard).join("")||'<div class="empty">Nessun cliente.</div>'}
+function renderSmart(){const list=lezioniDaConfermare();$("smartCoachBox").innerHTML=list.length?`<div class="check"><h3>⏳ Lezioni da confermare oggi</h3>${list.map(ev=>`<div class="check"><b>${ev.clienteNome||""}</b><p class="meta">${fmt(ev.data)} ore ${ev.ora}</p><button class="btn green" onclick="confermaEffettuata('${ev.id}')">Effettuata</button><button class="btn red" onclick="confermaAssente('${ev.id}')">Assente</button></div>`).join("")}<button class="btn gold full" onclick="confermaTutteEffettuate()">Conferma tutte</button></div>`:'<p class="meta">Nessuna lezione di oggi da confermare.</p>'}
+function renderDashboard(){const att=clienti.filter(c=>(c.stato||"attivo")!=="inattivo");$("kClienti").textContent=att.length;$("kOggi").textContent=eventi.filter(e=>e.data===todayISO()).length;$("kDaConf").textContent=lezioniDaConfermare().length;$("kResidui").textContent=euro(att.reduce((s,c)=>s+residuoEuro(c),0));renderSmart()}
+function renderCalendario(){if(!$("calDal").value)$("calDal").value=todayISO();if(!$("calAl").value){const d=new Date();d.setDate(d.getDate()+14);$("calAl").value=d.toISOString().slice(0,10)}const dal=$("calDal").value,al=$("calAl").value;const list=eventi.filter(e=>e.data>=dal&&e.data<=al).sort((a,b)=>a.data.localeCompare(b.data)||String(a.ora).localeCompare(String(b.ora)));$("listaCalendario").innerHTML=list.map(e=>`<div class="card"><h3>${e.clienteNome}</h3><p class="meta">${fmt(e.data)} ore ${e.ora} · ${e.stato||"Prenotata"}</p></div>`).join("")||'<div class="empty">Nessuna lezione.</div>'}
+function renderRegistroSelect(){const cur=$("registroCliente").value;$("registroCliente").innerHTML='<option value="">Seleziona cliente</option>'+clienti.map(c=>`<option value="${c.id}">${nome(c)}</option>`).join("");if(cur)$("registroCliente").value=cur}
+window.renderRegistro=()=>{renderRegistroSelect();const id=$("registroCliente").value,c=clienti.find(x=>x.id===id);if(!c){$("registroLista").innerHTML='<div class="empty">Seleziona un cliente.</div>';return}const evs=eventi.filter(e=>e.clienteId===id).sort((a,b)=>a.data.localeCompare(b.data)||String(a.ora).localeCompare(String(b.ora)));$("regTotali").textContent=c.lezioniTotali||0;$("regFatte").textContent=fatte(id);$("regResidue").textContent=residue(c);$("regPeriodo").textContent=`${fmt(c.inizio)} → ${fmt(c.scadenza)}`;$("registroLista").innerHTML=evs.map(e=>`<div class="check"><h3>${fmt(e.data)} ore ${e.ora}</h3><p class="meta">Stato: ${e.stato||"Prenotata"}</p><span class="badge ${consumes(e.stato)?"ok":historical(e.stato)?"bad":"warn"}">${e.stato||"Prenotata"}</span></div>`).join("")||'<div class="empty">Nessuna lezione.</div>'}
+function renderContattare(){const list=clienti.filter(c=>(c.stato||"attivo")!=="inattivo"&&residuoEuro(c)>0);$("listaContattare").innerHTML=list.map(c=>`<div class="check"><h3>${nome(c)}</h3><p class="meta">Residuo ${euro(residuoEuro(c))}</p><button class="btn whatsapp full" onclick="window.open('https://wa.me/${String(c.telefono||"").replace(/\D/g,"")}')">WhatsApp</button></div>`).join("")||'<div class="empty">Nessun cliente da contattare.</div>'}
+window.eliminaRinnovo=async id=>{if(confirm("Eliminare rinnovo?"))await deleteDoc(docPath("rinnovi",id))}
+function renderRinnovi(){$("listaRinnovi").innerHTML=rinnovi.map(r=>`<div class="check" style="position:relative;padding-right:60px"><button class="btn red" style="position:absolute;right:8px;top:8px;width:auto" onclick="eliminaRinnovo('${r.id}')">✕</button><h3>${r.cliente||"Cliente"}</h3><p class="meta">${r.pacchetto||""} lezioni · ${fmt(r.data)} · ${euro(r.importo)}</p></div>`).join("")||'<div class="empty">Nessun rinnovo.</div>'}
+function renderContabilita(){const now=new Date();if(!$("contMese").value)$("contMese").value=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0");const mese=$("contMese").value;const mov=[...rinnovi.map(r=>({tipo:"rinnovo",data:r.data,mese:String(r.data||"").slice(0,7),nome:r.cliente,importo:Number(r.importo||0)})),...pagamenti.map(p=>({tipo:"pagamento",data:p.data,mese:p.mese||String(p.data||"").slice(0,7),nome:p.clienteNome,importo:Number(p.importo||0)}))];const movM=mov.filter(m=>m.mese===mese);const att=clienti.filter(c=>(c.stato||"attivo")!=="inattivo");$("contIncassato").textContent=euro(movM.reduce((s,m)=>s+m.importo,0));$("contDaIncassare").textContent=euro(att.reduce((s,c)=>s+residuoEuro(c),0));$("contValorePacchetti").textContent=euro(att.reduce((s,c)=>s+valore(c),0));$("contTotaleStorico").textContent=euro(mov.reduce((s,m)=>s+m.importo,0));$("contClientiResiduo").innerHTML=att.filter(c=>residuoEuro(c)>0).map(c=>`<div class="check"><h3>${nome(c)}</h3><p class="meta">Pagato ${euro(pagato(c))} · Dovuto ${euro(valore(c))}</p><span class="badge bad">Residuo ${euro(residuoEuro(c))}</span></div>`).join("")||'<div class="empty">Nessun residuo.</div>';$("contPacchettiAttivi").innerHTML=att.map(c=>`<div class="check"><h3>${nome(c)}</h3><p class="meta">${residue(c)} residue su ${c.lezioniTotali||0}</p><span class="badge ok">${euro(valore(c))}</span></div>`).join("")||'<div class="empty">Nessun pacchetto.</div>';$("contMovimenti").innerHTML=movM.map(m=>`<div class="check"><h3>${m.nome||"Cliente"}</h3><p class="meta">${fmt(m.data)} · ${m.tipo}</p><span class="badge ok">${euro(m.importo)}</span></div>`).join("")||'<div class="empty">Nessun movimento nel mese.</div>'}
+window.esportaBackup=()=>{const data={clienti,eventi,rinnovi,pagamenti,exported:new Date().toISOString()};const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="backup_sb_coach_11.json";a.click()}
+function render(){if(!user)return;renderDashboard();renderClienti();renderCalendario();renderRegistroSelect();renderContattare();renderRinnovi();renderContabilita()}
+window.addEventListener("load",()=>{if(!$("inizio").value)$("inizio").value=todayISO();if(!$("calDal").value)$("calDal").value=todayISO()})
 </script>
 </body>
 </html>
