@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Area Cliente Premium 11.7</title>
+<title>Area Cliente Premium 11.7.1</title>
 <style>
 :root{--dark:#101827;--blue:#17233a;--gold:#d5ad52;--bg:#f4f6f8;--card:#fff;--muted:#667085;--ok:#166534;--bad:#991b1b;--warn:#92400e;--brown:#7c2d12}
 *{box-sizing:border-box}
@@ -25,7 +25,7 @@ main{padding:16px;max-width:930px;margin:auto}
 .accept-box{display:flex;gap:12px;align-items:flex-start;background:#f8fafc;border:1px solid #d8dee9;border-radius:14px;padding:14px;margin:16px 0}
 .accept-box input{width:28px;height:28px;flex:0 0 auto}.accept-box label{font-size:17px;font-weight:800;line-height:1.3}
 .btn{border:0;border-radius:14px;padding:12px 14px;font-size:15px;font-weight:900;cursor:pointer}.btn.full{width:100%}
-.gold{background:linear-gradient(135deg,#d5ad52,#f7d878);color:#111827}.light{background:#e8edf5;color:#17233a}.disabled{opacity:.55;pointer-events:none}
+.gold{background:linear-gradient(135deg,#d5ad52,#f7d878);color:#111827}.whatsapp-client{background:#25D366;color:#fff;width:100%;font-size:18px;margin-top:12px;text-decoration:none;display:block;text-align:center}.light{background:#e8edf5;color:#17233a}.disabled{opacity:.55;pointer-events:none}
 .alert{background:#fef3c7;color:#7c2d12;border-radius:16px;padding:14px 16px;font-weight:800;margin:14px 0}
 .hidden{display:none!important}.locked-content{opacity:.35;pointer-events:none}
 .lesson{display:grid;grid-template-columns:1fr;gap:8px;border:1px solid #eef2f7;border-radius:16px;padding:14px;margin:10px 0;background:#fff}
@@ -61,6 +61,8 @@ main{padding:16px;max-width:930px;margin:auto}
   </section>
   <section id="clienteContent" class="locked-content">
     <div class="card hero"><h2 id="welcome">Benvenuto 👋</h2><p id="heroSub" class="meta"></p><div id="heroBadges"></div></div>
+    <a id="waClienteBtn" class="btn whatsapp-client" target="_blank">💬 WhatsApp Coach</a>
+
     <div id="okBox" class="alert" style="background:#dcfce7;color:#166534">🟢 Tutto regolare: pacchetto e scadenze sotto controllo.</div>
     <div class="grid">
       <div class="kpi"><strong id="kResidue">0</strong><span>Lezioni residue</span></div>
@@ -78,7 +80,7 @@ import { firebaseConfig } from "./firebase-config.js";
 const app=initializeApp(firebaseConfig), db=getFirestore(app);
 const params=new URLSearchParams(location.search), id=params.get("id"), uid=params.get("uid");
 let currentClient=null,currentClientRef=null,ownerUid=uid,allEvents=[],allRequests=[];
-const REG_VERSION="11.7";
+const REG_VERSION="11.7.1";
 function fmt(d){if(!d)return"-";const [y,m,day]=String(d).slice(0,10).split("-");return day&&m&&y?`${day}/${m}/${y}`:d}
 function fmtShort(d){if(!d)return"-";const [,m,day]=String(d).slice(0,10).split("-");return day&&m?`${day}/${m}`:d}
 function nome(c){return `${c.nome||""} ${c.cognome||""}`.trim()}
@@ -90,6 +92,13 @@ function paid(c){return Number(c.pagato||0)}
 function balance(c){return Math.max(0,value(c)-paid(c))}
 function activeLabel(c){return (c.stato||"attivo")==="inattivo"?"Inattivo":"Attivo"}
 function payLabel(c){return balance(c)>0?`🔴 Da saldare ${euro(balance(c))}`:"🟢 Saldo regolare"}
+
+function coachWhatsappLink(){
+ const coachPhone = "393000000000";
+ const msg = encodeURIComponent("Ciao Coach, ho bisogno di assistenza con la mia Area Cliente.");
+ return `https://wa.me/${coachPhone}?text=${msg}`;
+}
+
 function nowLabel(){const d=new Date();return d.toLocaleDateString("it-IT")+" ore "+d.toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})}
 function statoClass(st){if(["Effettuata","Recuperata","Recupero approvato"].includes(st))return"ok";if(["Assente","Annullata","Annullata dal cliente"].includes(st))return"bad";return"warn"}
 function eventStart(e){const [y,m,d]=String(e.data||"").split("-").map(Number);let h=9,mi=0;if(e.ora){const p=String(e.ora).split(":").map(Number);h=p[0]||0;mi=p[1]||0}return new Date(y,m-1,d,h,mi,0)}
@@ -98,7 +107,7 @@ function unlockArea(){document.getElementById("clienteContent").classList.remove
 function lockArea(){document.getElementById("clienteContent").classList.add("locked-content");document.getElementById("regAlert").classList.remove("hidden");document.getElementById("acceptBox").classList.remove("hidden");document.getElementById("acceptBtn").classList.remove("hidden")}
 function updateRegolamentoUI(){if(!currentClient)return;const el=document.getElementById("regAcceptedInfo");if(currentClient.regolamentoAccettato){unlockArea();el.textContent="✅ Regolamento accettato il "+(currentClient.regolamentoAccettatoAtLabel||"-")+" · versione "+(currentClient.regolamentoVersione||REG_VERSION);el.classList.remove("hidden")}else{lockArea();el.classList.add("hidden")}}
 window.accettaRegolamento=async()=>{if(!document.getElementById("regCheck").checked){alert("Devi spuntare la casella di accettazione.");return}if(!currentClientRef){alert("Cliente non trovato.");return}const label=nowLabel();await updateDoc(currentClientRef,{regolamentoAccettato:true,regolamentoAccettatoAtLabel:label,regolamentoAccettatoAt:new Date().toISOString(),regolamentoAccettatoTimestamp:serverTimestamp(),regolamentoVersione:REG_VERSION});currentClient.regolamentoAccettato=true;currentClient.regolamentoAccettatoAtLabel=label;currentClient.regolamentoVersione=REG_VERSION;renderClientArea();updateRegolamentoUI()}
-function renderClientArea(){const c=currentClient;document.getElementById("welcome").textContent="Benvenuto "+(c.nome||nome(c))+" 👋";document.getElementById("heroSub").textContent=(c.servizio||"")+" · Orario fisso";document.getElementById("heroBadges").innerHTML=`<span class="badge ok">${activeLabel(c)}</span><span class="badge ok">${residue(c)} residue su ${total(c)}</span><span class="badge ${balance(c)>0?"bad":"ok"}">${payLabel(c)}</span><span class="badge ok">📋 ${c.regolamentoAccettato?"Regolamento accettato":"Regolamento non accettato"}</span>`;document.getElementById("kResidue").textContent=residue(c);const next=allEvents.filter(e=>String(e.data||"")>=new Date().toISOString().slice(0,10)&&!["Effettuata","Assente","Annullata","Recuperata"].includes(e.stato||"")).sort((a,b)=>String(a.data||"").localeCompare(String(b.data||""))||String(a.ora||"").localeCompare(String(b.ora||"")))[0];document.getElementById("kNext").textContent=next?fmtShort(next.data):"-";document.getElementById("kScadenza").textContent=fmt(c.scadenza);document.getElementById("kCert").textContent=c.certificato||c.certificatoScadenza||"-";document.getElementById("lezioni").innerHTML=allEvents.length?allEvents.map(e=>renderLezioneCliente(e)).join(""):"<p class='meta'>Nessuna lezione trovata.</p>"}
+function renderClientArea(){const c=currentClient;document.getElementById("welcome").textContent="Benvenuto "+(c.nome||nome(c))+" 👋";document.getElementById("heroSub").textContent=(c.servizio||"")+" · Orario fisso";document.getElementById("heroBadges").innerHTML=`<span class="badge ok">${activeLabel(c)}</span><span class="badge ok">${residue(c)} residue su ${total(c)}</span><span class="badge ${balance(c)>0?"bad":"ok"}">${payLabel(c)}</span><span class="badge ok">📋 ${c.regolamentoAccettato?"Regolamento accettato":"Regolamento non accettato"}</span>`;const wa=document.getElementById("waClienteBtn");if(wa)wa.href=coachWhatsappLink();document.getElementById("kResidue").textContent=residue(c);const next=allEvents.filter(e=>String(e.data||"")>=new Date().toISOString().slice(0,10)&&!["Effettuata","Assente","Annullata","Recuperata"].includes(e.stato||"")).sort((a,b)=>String(a.data||"").localeCompare(String(b.data||""))||String(a.ora||"").localeCompare(String(b.ora||"")))[0];document.getElementById("kNext").textContent=next?fmtShort(next.data):"-";document.getElementById("kScadenza").textContent=fmt(c.scadenza);document.getElementById("kCert").textContent=c.certificato||c.certificatoScadenza||"-";document.getElementById("lezioni").innerHTML=allEvents.length?allEvents.map(e=>renderLezioneCliente(e)).join(""):"<p class='meta'>Nessuna lezione trovata.</p>"}
 function renderLezioneCliente(e){const req=allRequests.find(r=>r.eventoId===e.id);const can=canRequestRecovery(e);let action="";if(req){action=`<p class="meta">🔄 Recupero richiesto · Stato: <b>${req.stato||"Richiesta"}</b>${req.motivoRifiuto?`<br>Motivo: ${req.motivoRifiuto}`:""}</p>`}else if(can){action=`<button class="btn gold" onclick="richiediRecupero('${e.id}')">🔄 Richiedi recupero</button>`}else{action=`<button class="btn light disabled">🔒 Recupero non disponibile</button><p class="meta">Richiesta consentita solo prima delle 24 ore.</p>`}return `<div class="lesson"><div><h3>${fmt(e.data)} ore ${e.ora||"-"}</h3><p class="meta">Stato: ${e.stato||"Prenotata"}</p><span class="badge ${statoClass(e.stato||"Prenotata")}">${e.stato||"Prenotata"}</span></div><div>${action}</div></div>`}
 window.richiediRecupero=async(eventoId)=>{if(!currentClient||!currentClientRef||!ownerUid)return alert("Cliente non caricato.");const ev=allEvents.find(e=>e.id===eventoId);if(!ev)return alert("Lezione non trovata.");if(!canRequestRecovery(ev))return alert("Richiesta recupero non disponibile: mancano meno di 24 ore o la lezione è già stata gestita.");if(!confirm("Inviare richiesta di recupero al coach?"))return;const label=nowLabel();await addDoc(collection(db,"users",ownerUid,"recuperi"),{clienteId:id,clienteNome:nome(currentClient),eventoId:ev.id,data:ev.data,ora:ev.ora||"",stato:"Richiesta",createdAt:new Date().toISOString(),createdAtLabel:label,updatedAt:serverTimestamp()});alert("Richiesta di recupero inviata al coach.");await load()}
 async function load(){try{if(!id){document.getElementById("welcome").textContent="Link non valido";return}let c=null;if(uid){const ref=doc(db,"users",uid,"clienti",id);const snap=await getDoc(ref);if(snap.exists()){c={id:snap.id,...snap.data()};currentClientRef=ref}}if(!c){const qs=await getDocs(query(collectionGroup(db,"clienti"),where("__name__","==",id)));if(!qs.empty){const ds=qs.docs[0];c={id:ds.id,...ds.data()};ownerUid=ds.ref.parent.parent.id;currentClientRef=ds.ref}}if(!c){alert("Cliente non trovato.");return}currentClient=c;if(ownerUid){const es=await getDocs(collection(db,"users",ownerUid,"eventi"));allEvents=es.docs.map(d=>({id:d.id,...d.data()})).filter(e=>e.clienteId===id).sort((a,b)=>String(a.data||"").localeCompare(String(b.data||""))||String(a.ora||"").localeCompare(String(b.ora||"")));const rs=await getDocs(collection(db,"users",ownerUid,"recuperi"));allRequests=rs.docs.map(d=>({id:d.id,...d.data()})).filter(r=>r.clienteId===id)}renderClientArea();updateRegolamentoUI()}catch(e){alert("Errore caricamento: "+e.message)}}
