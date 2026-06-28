@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>SB Personal Coach Gestionale 11.5</title>
+<title>SB Personal Coach Gestionale 11.6</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--dark:#101827;--blue:#17233a;--gold:#d5ad52;--bg:#f4f6f8;--card:#fff;--muted:#667085;--ok:#13915f;--bad:#c0392b;--warn:#c47d00}
@@ -50,14 +50,15 @@ hr{border:0;border-top:1px solid #e5e7eb;margin:12px 0}
   <div class="header-inner">
     <img src="logo.jpeg" class="logo" onerror="this.style.display='none'">
     <div>
-      <h1>SB Personal Coach Gestionale 11.5</h1>
-      <div class="subtitle">Regolamento Cliente · 11.5</div>
+      <h1>SB Personal Coach Gestionale 11.6</h1>
+      <div class="subtitle">Recuperi Cliente · 11.6</div>
     </div>
   </div>
   <nav id="nav">
     <button data-tab="dashboard" class="active">Dashboard</button>
     <button data-tab="clienti">Clienti</button>
     <button data-tab="calendario">Calendario</button>
+    <button data-tab="recuperi">Recuperi</button>
     <button data-tab="registro">Registro Cliente</button>
     <button data-tab="contattare">Da contattare</button>
     <button data-tab="rinnovi">Rinnovi</button>
@@ -163,6 +164,15 @@ hr{border:0;border-top:1px solid #e5e7eb;margin:12px 0}
   <div id="listaCalendario"></div>
 </section>
 
+
+<section id="recuperi" class="section">
+  <div class="card">
+    <h2>🔄 Recuperi richiesti</h2>
+    <p class="meta">Richieste inviate dai clienti entro le 24 ore previste dal regolamento.</p>
+    <div id="listaRecuperi"></div>
+  </div>
+</section>
+
 <section id="registro" class="section">
   <div class="card">
     <h2>📚 Registro Cliente</h2>
@@ -222,7 +232,7 @@ const app=initializeApp(firebaseConfig);
 const auth=getAuth(app);
 const db=getFirestore(app);
 
-let user=null, clienti=[], eventi=[], rinnovi=[], pagamenti=[];
+let user=null, clienti=[], eventi=[], rinnovi=[], pagamenti=[], recuperi=[];
 const $=id=>document.getElementById(id);
 const path=name=>collection(db,"users",user.uid,name);
 const docPath=(name,id)=>doc(db,"users",user.uid,name,id);
@@ -291,6 +301,7 @@ function subscribe(){
  onSnapshot(path("eventi"),s=>{eventi=s.docs.map(d=>({id:d.id,...d.data()}));render()});
  onSnapshot(path("rinnovi"),s=>{rinnovi=s.docs.map(d=>({id:d.id,...d.data()}));render()});
  onSnapshot(path("pagamenti"),s=>{pagamenti=s.docs.map(d=>({id:d.id,...d.data()}));render()});
+ onSnapshot(path("recuperi"),s=>{recuperi=s.docs.map(d=>({id:d.id,...d.data()}));render()});
 }
 
 function formData(){
@@ -403,8 +414,57 @@ function renderContattare(){const list=clienti.filter(c=>(c.stato||"attivo")!=="
 window.eliminaRinnovo=async id=>{if(confirm("Eliminare rinnovo?"))await deleteDoc(docPath("rinnovi",id))}
 function renderRinnovi(){$("listaRinnovi").innerHTML=rinnovi.map(r=>`<div class="check" style="position:relative;padding-right:60px"><button class="btn red" style="position:absolute;right:8px;top:8px;width:auto" onclick="eliminaRinnovo('${r.id}')">✕</button><h3>${r.cliente||"Cliente"}</h3><p class="meta">${r.pacchetto||""} lezioni · ${fmt(r.data)} · ${euro(r.importo)}</p></div>`).join("")||'<div class="empty">Nessun rinnovo.</div>'}
 function renderContabilita(){const now=new Date();if(!$("contMese").value)$("contMese").value=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0");const mese=$("contMese").value;const mov=[...rinnovi.map(r=>({tipo:"rinnovo",data:r.data,mese:String(r.data||"").slice(0,7),nome:r.cliente,importo:Number(r.importo||0)})),...pagamenti.map(p=>({tipo:"pagamento",data:p.data,mese:p.mese||String(p.data||"").slice(0,7),nome:p.clienteNome,importo:Number(p.importo||0)}))];const movM=mov.filter(m=>m.mese===mese);const att=clienti.filter(c=>(c.stato||"attivo")!=="inattivo");$("contIncassato").textContent=euro(movM.reduce((s,m)=>s+m.importo,0));$("contDaIncassare").textContent=euro(att.reduce((s,c)=>s+residuoEuro(c),0));$("contValorePacchetti").textContent=euro(att.reduce((s,c)=>s+valore(c),0));$("contTotaleStorico").textContent=euro(mov.reduce((s,m)=>s+m.importo,0));$("contClientiResiduo").innerHTML=att.filter(c=>residuoEuro(c)>0).map(c=>`<div class="check"><h3>${nome(c)}</h3><p class="meta">Pagato ${euro(pagato(c))} · Dovuto ${euro(valore(c))}</p><span class="badge bad">Residuo ${euro(residuoEuro(c))}</span></div>`).join("")||'<div class="empty">Nessun residuo.</div>';$("contPacchettiAttivi").innerHTML=att.map(c=>`<div class="check"><h3>${nome(c)}</h3><p class="meta">${residue(c)} residue su ${c.lezioniTotali||0}</p><span class="badge ok">${euro(valore(c))}</span></div>`).join("")||'<div class="empty">Nessun pacchetto.</div>';$("contMovimenti").innerHTML=movM.map(m=>`<div class="check"><h3>${m.nome||"Cliente"}</h3><p class="meta">${fmt(m.data)} · ${m.tipo}</p><span class="badge ok">${euro(m.importo)}</span></div>`).join("")||'<div class="empty">Nessun movimento nel mese.</div>'}
+
+/* 11.6 - Gestione recuperi richiesti dal cliente */
+async function accettaRecupero(id){
+ const r=recuperi.find(x=>x.id===id);
+ if(!r)return alert("Richiesta non trovata.");
+ if(!confirm("Accettare questa richiesta di recupero?"))return;
+ await setDoc(docPath("recuperi",id),{
+   stato:"Accettata",
+   rispostaAt:new Date().toISOString(),
+   rispostaAtLabel:new Date().toLocaleDateString("it-IT")+" ore "+new Date().toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"}),
+   updatedAt:serverTimestamp()
+ },{merge:true});
+ if(r.eventoId){
+   await setDoc(docPath("eventi",r.eventoId),{
+     stato:"Recupero approvato",
+     recuperoRichiesto:true,
+     updatedAt:serverTimestamp()
+   },{merge:true});
+ }
+}
+async function rifiutaRecupero(id){
+ const r=recuperi.find(x=>x.id===id);
+ if(!r)return alert("Richiesta non trovata.");
+ const motivo=prompt("Motivo del rifiuto, facoltativo:")||"";
+ await setDoc(docPath("recuperi",id),{
+   stato:"Rifiutata",
+   motivoRifiuto:motivo,
+   rispostaAt:new Date().toISOString(),
+   rispostaAtLabel:new Date().toLocaleDateString("it-IT")+" ore "+new Date().toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"}),
+   updatedAt:serverTimestamp()
+ },{merge:true});
+}
+window.accettaRecupero=accettaRecupero;
+window.rifiutaRecupero=rifiutaRecupero;
+
+function renderRecuperi(){
+ const box=$("listaRecuperi");
+ if(!box)return;
+ const list=recuperi.slice().sort((a,b)=>String(b.createdAt||"").localeCompare(String(a.createdAt||"")));
+ box.innerHTML=list.length?list.map(r=>{
+   const pending=(r.stato||"Richiesta")==="Richiesta";
+   return `<div class="check">
+     <h3>${r.clienteNome||"Cliente"}</h3>
+     <p class="meta">Lezione: ${fmt(r.data)} ore ${r.ora||"-"}<br>Richiesta: ${r.createdAtLabel||"-"}<br>Stato: <b>${r.stato||"Richiesta"}</b>${r.motivoRifiuto?`<br>Motivo: ${r.motivoRifiuto}`:""}</p>
+     ${pending?`<button class="btn green" onclick="accettaRecupero('${r.id}')">Accetta</button><button class="btn red" onclick="rifiutaRecupero('${r.id}')">Rifiuta</button>`:""}
+   </div>`;
+ }).join(""):'<div class="empty">Nessuna richiesta di recupero.</div>';
+}
+
 window.esportaBackup=()=>{const data={clienti,eventi,rinnovi,pagamenti,exported:new Date().toISOString()};const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="backup_sb_coach_11.json";a.click()}
-function render(){if(!user)return;renderDashboard();renderClienti();renderCalendario();renderRegistroSelect();renderContattare();renderRinnovi();renderContabilita()}
+function render(){if(!user)return;renderDashboard();renderClienti();renderCalendario();renderRegistroSelect();renderContattare();renderRinnovi();renderContabilita();renderRecuperi()}
 window.addEventListener("load",()=>{if(!$("inizio").value)$("inizio").value=todayISO();if(!$("calDal").value)$("calDal").value=todayISO()})
 
 /* 11.2 Solo Fix */

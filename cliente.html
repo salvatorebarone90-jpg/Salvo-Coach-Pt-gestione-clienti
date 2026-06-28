@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Area Cliente Premium 11.5</title>
+<title>Area Cliente Premium 11.6</title>
 <style>
 :root{--dark:#101827;--blue:#17233a;--gold:#d5ad52;--bg:#f4f6f8;--card:#fff;--muted:#667085;--brown:#7c2d12}
 *{box-sizing:border-box}
@@ -88,7 +88,7 @@ main{padding:16px;max-width:900px;margin:auto}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, doc, getDoc, updateDoc, collection, getDocs, collectionGroup, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, getDoc, updateDoc, collection, getDocs, collectionGroup, query, where, serverTimestamp, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
 
 const app=initializeApp(firebaseConfig);
@@ -155,6 +155,54 @@ window.accettaRegolamento=async()=>{
  updateRegolamentoUI();
 };
 
+
+function eventStart(e){
+ const parts=String(e.data||"").split("-").map(Number);
+ const y=parts[0], m=parts[1], d=parts[2];
+ let h=9,mi=0;
+ if(e.ora){const p=String(e.ora).split(":").map(Number);h=p[0]||0;mi=p[1]||0}
+ return new Date(y,m-1,d,h,mi,0);
+}
+function canRequestRecovery(e){
+ const diff=eventStart(e).getTime()-Date.now();
+ return diff > 24*60*60*1000 && !["Effettuata","Assente","Recuperata","Annullata","Annullata dal cliente","Recupero approvato"].includes(e.stato||"Prenotata");
+}
+function renderLezioneCliente(e,recs){
+ const req=recs.find(r=>r.eventoId===e.id);
+ const can=canRequestRecovery(e);
+ let action="";
+ if(req){
+   action=`<p class="meta">🔄 Recupero richiesto · Stato: <b>${req.stato||"Richiesta"}</b>${req.motivoRifiuto?`<br>Motivo: ${req.motivoRifiuto}`:""}</p>`;
+ }else if(can){
+   action=`<button class="btn gold" style="margin-top:10px" onclick="richiediRecupero('${e.id}')">🔄 Richiedi recupero</button>`;
+ }else{
+   action=`<p class="meta">🔒 Recupero non disponibile: richiesta consentita solo prima delle 24 ore.</p>`;
+ }
+ return `<div class="card"><b>${fmt(e.data)} ore ${e.ora||"-"}</b><p class="meta">Stato: ${e.stato||"Prenotata"}</p><span class="badge ${statoClass(e.stato||"Prenotata")}">${e.stato||"Prenotata"}</span>${action}</div>`;
+}
+window.richiediRecupero=async(eventoId)=>{
+ if(!currentClient || !currentClientRef || !ownerUid)return alert("Cliente non caricato.");
+ const es=await getDocs(collection(db,"users",ownerUid,"eventi"));
+ const ev=es.docs.map(d=>({id:d.id,...d.data()})).find(e=>e.id===eventoId);
+ if(!ev)return alert("Lezione non trovata.");
+ if(!canRequestRecovery(ev))return alert("Richiesta recupero non disponibile: mancano meno di 24 ore o la lezione è già stata gestita.");
+ if(!confirm("Inviare richiesta di recupero al coach?"))return;
+ const label=nowLabel();
+ await addDoc(collection(db,"users",ownerUid,"recuperi"),{
+   clienteId:id,
+   clienteNome:nome(currentClient),
+   eventoId:ev.id,
+   data:ev.data,
+   ora:ev.ora||"",
+   stato:"Richiesta",
+   createdAt:new Date().toISOString(),
+   createdAtLabel:label,
+   updatedAt:serverTimestamp()
+ });
+ alert("Richiesta di recupero inviata al coach.");
+ location.reload();
+};
+
 async function load(){
  try{
    if(!id){document.getElementById("nome").textContent="Link non valido";return}
@@ -191,7 +239,12 @@ async function load(){
      evs=es.docs.map(d=>({id:d.id,...d.data()})).filter(e=>e.clienteId===id).sort((a,b)=>String(a.data||"").localeCompare(String(b.data||""))||String(a.ora||"").localeCompare(String(b.ora||"")));
    }
 
-   document.getElementById("lezioni").innerHTML=evs.length?evs.map(e=>`<div class="card"><b>${fmt(e.data)} ore ${e.ora||"-"}</b><p class="meta">Stato: ${e.stato||"Prenotata"}</p><span class="badge ${statoClass(e.stato||"Prenotata")}">${e.stato||"Prenotata"}</span></div>`).join(""):"<p class='meta'>Nessuna lezione trovata.</p>";
+   let recs=[];
+   if(ownerUid){
+     const rs=await getDocs(collection(db,"users",ownerUid,"recuperi"));
+     recs=rs.docs.map(d=>({id:d.id,...d.data()})).filter(r=>r.clienteId===id);
+   }
+   document.getElementById("lezioni").innerHTML=evs.length?evs.map(e=>renderLezioneCliente(e,recs)).join(""):"<p class='meta'>Nessuna lezione trovata.</p>";
    updateRegolamentoUI();
  }catch(e){
    document.getElementById("nome").textContent="Errore caricamento";
