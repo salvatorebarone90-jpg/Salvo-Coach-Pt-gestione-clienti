@@ -2,34 +2,35 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Area Cliente Premium 11.6</title>
+<title>Area Cliente Premium 11.7</title>
 <style>
-:root{--dark:#101827;--blue:#17233a;--gold:#d5ad52;--bg:#f4f6f8;--card:#fff;--muted:#667085;--brown:#7c2d12}
+:root{--dark:#101827;--blue:#17233a;--gold:#d5ad52;--bg:#f4f6f8;--card:#fff;--muted:#667085;--ok:#166534;--bad:#991b1b;--warn:#92400e;--brown:#7c2d12}
 *{box-sizing:border-box}
 body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);margin:0;color:#111827}
 header{background:linear-gradient(135deg,var(--dark),var(--blue));color:#fff;padding:28px 16px;text-align:center;border-bottom:4px solid var(--gold)}
 .logo{width:150px;max-width:55%;display:block;margin:0 auto 14px;opacity:.95}
-header h1{font-size:28px;margin:0 0 8px}
-header p{margin:0;color:#d1d5db;font-size:16px}
-main{padding:16px;max-width:900px;margin:auto}
+header h1{font-size:28px;margin:0 0 8px} header p{margin:0;color:#d1d5db;font-size:16px}
+main{padding:16px;max-width:930px;margin:auto}
 .card{background:var(--card);border-radius:18px;padding:18px;margin:14px 0;box-shadow:0 8px 24px rgba(16,24,39,.08)}
-.card h2{margin:0 0 10px;font-size:24px}
-.card h3{margin:14px 0 6px;font-size:19px}
+.hero{background:linear-gradient(135deg,var(--dark),var(--blue));color:#fff}.hero .meta{color:#d1d5db}
+.card h2{margin:0 0 10px;font-size:24px}.card h3{margin:0 0 8px;font-size:20px}
 .meta{color:var(--muted);font-size:15px;line-height:1.45}
-.badge{display:inline-block;border-radius:999px;padding:7px 11px;font-size:13px;font-weight:800;background:#dcfce7;color:#166534;margin:3px}
-.badge.warn{background:#fef3c7;color:#92400e}.badge.bad{background:#fee2e2;color:#991b1b}
+.badge{display:inline-block;border-radius:999px;padding:7px 11px;font-size:13px;font-weight:850;margin:4px 4px 4px 0}
+.badge.ok{background:#dcfce7;color:var(--ok)}.badge.bad{background:#fee2e2;color:var(--bad)}.badge.warn{background:#fef3c7;color:var(--warn)}.badge.info{background:#e0f2fe;color:#075985}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.kpi{background:#fff;border-radius:16px;padding:16px;border-top:4px solid var(--gold);box-shadow:0 8px 22px rgba(16,24,39,.07)}
+.kpi strong{display:block;font-size:26px}.kpi span{font-size:12px;color:var(--muted);font-weight:800;text-transform:uppercase}
 .reg-box{background:#fff7ed;border:1px solid #f0d88c;border-radius:18px;padding:16px;color:var(--brown)}
 .reg-box p{line-height:1.45;margin:6px 0 16px}
 .accept-box{display:flex;gap:12px;align-items:flex-start;background:#f8fafc;border:1px solid #d8dee9;border-radius:14px;padding:14px;margin:16px 0}
-.accept-box input{width:28px;height:28px;flex:0 0 auto}
-.accept-box label{font-size:17px;font-weight:800;line-height:1.3}
-.btn{border:0;border-radius:14px;padding:14px 16px;font-size:17px;font-weight:900;cursor:pointer;width:100%}
-.gold{background:linear-gradient(135deg,#d5ad52,#f7d878);color:#111827}
+.accept-box input{width:28px;height:28px;flex:0 0 auto}.accept-box label{font-size:17px;font-weight:800;line-height:1.3}
+.btn{border:0;border-radius:14px;padding:12px 14px;font-size:15px;font-weight:900;cursor:pointer}.btn.full{width:100%}
+.gold{background:linear-gradient(135deg,#d5ad52,#f7d878);color:#111827}.light{background:#e8edf5;color:#17233a}.disabled{opacity:.55;pointer-events:none}
 .alert{background:#fef3c7;color:#7c2d12;border-radius:16px;padding:14px 16px;font-weight:800;margin:14px 0}
-.hidden{display:none!important}
-.locked-content{opacity:.35;pointer-events:none}
+.hidden{display:none!important}.locked-content{opacity:.35;pointer-events:none}
+.lesson{display:grid;grid-template-columns:1fr;gap:8px;border:1px solid #eef2f7;border-radius:16px;padding:14px;margin:10px 0;background:#fff}
 .footer-reg{font-size:13px;color:#667085;margin-top:14px}
-@media(min-width:800px){header h1{font-size:34px}.card{padding:24px}}
+@media(min-width:760px){header h1{font-size:34px}.card{padding:24px}.lesson{grid-template-columns:1fr auto;align-items:center}}
 </style>
 </head>
 <body>
@@ -38,219 +39,69 @@ main{padding:16px;max-width:900px;margin:auto}
   <h1>Area Cliente Premium</h1>
   <p>Lezioni · Check · Calendario · Regolamento</p>
 </header>
-
 <main>
   <section id="regolamentoSection" class="card">
     <h2>📋 Regolamento</h2>
     <p class="meta">Per proseguire è necessario leggere e accettare il regolamento del percorso.</p>
-
     <div class="reg-box">
-      <h3>📅 Annullamento lezioni</h3>
-      <p>Le lezioni possono essere annullate esclusivamente con almeno <b>24 ore di anticipo</b>. In caso contrario la lezione verrà considerata effettuata.</p>
-
-      <h3>🩺 Certificato medico</h3>
-      <p>Il certificato medico deve essere sempre valido e aggiornato per tutta la durata del percorso.</p>
-
-      <h3>🎯 Pacchetto lezioni</h3>
-      <p>Le lezioni devono essere utilizzate entro la data di scadenza indicata nella scheda cliente. Le lezioni non utilizzate entro tale data saranno considerate perse.</p>
-
-      <h3>📈 Frequenza delle lezioni</h3>
-      <p>I pacchetti Personal Training prevedono una frequenza compresa tra <b>2 e 4 lezioni settimanali</b>. La frequenza concordata al momento dell'acquisto rimane valida per tutta la durata del pacchetto e non comporta proroghe della scadenza.</p>
-
-      <h3>💳 Pagamenti</h3>
-      <p>Non sono previste rateizzazioni, pagamenti posticipati o saldi a fine percorso, salvo accordi specifici presi con il coach.</p>
-
-      <h3>⏸️ Sospensione del percorso</h3>
-      <p>Eventuali assenze, vacanze o interruzioni personali non prorogano automaticamente la scadenza del pacchetto.</p>
-
-      <h3>⏰ Ritardi</h3>
-      <p>In caso di ritardo del cliente, la lezione terminerà comunque all'orario previsto per non compromettere gli appuntamenti successivi.</p>
-
-      <h3>🔄 Recuperi</h3>
-      <p>Le richieste di recupero sono soggette alla disponibilità e all'approvazione del coach e non sono garantite.</p>
+      <h3>📅 Annullamento lezioni</h3><p>Le lezioni possono essere annullate esclusivamente con almeno <b>24 ore di anticipo</b>. In caso contrario la lezione verrà considerata effettuata.</p>
+      <h3>🩺 Certificato medico</h3><p>Il certificato medico deve essere sempre valido e aggiornato per tutta la durata del percorso.</p>
+      <h3>🎯 Pacchetto lezioni</h3><p>Le lezioni devono essere utilizzate entro la data di scadenza indicata nella scheda cliente. Le lezioni non utilizzate entro tale data saranno considerate perse.</p>
+      <h3>📈 Frequenza delle lezioni</h3><p>I pacchetti Personal Training prevedono una frequenza compresa tra <b>2 e 4 lezioni settimanali</b>. La frequenza concordata al momento dell'acquisto rimane valida per tutta la durata del pacchetto.</p>
+      <h3>💳 Pagamenti</h3><p>Non sono previste rateizzazioni, pagamenti posticipati o saldi a fine percorso, salvo accordi specifici presi con il coach.</p>
+      <h3>⏸️ Sospensione del percorso</h3><p>Eventuali assenze, vacanze o interruzioni personali non prorogano automaticamente la scadenza del pacchetto.</p>
+      <h3>⏰ Ritardi</h3><p>In caso di ritardo del cliente, la lezione terminerà comunque all'orario previsto.</p>
+      <h3>🔄 Recuperi</h3><p>Le richieste di recupero sono soggette alla disponibilità e all'approvazione del coach e non sono garantite.</p>
     </div>
-
-    <div id="acceptBox" class="accept-box">
-      <input id="regCheck" type="checkbox">
-      <label for="regCheck">Dichiaro di aver letto e accettato integralmente il regolamento.</label>
-    </div>
+    <div id="acceptBox" class="accept-box"><input id="regCheck" type="checkbox"><label for="regCheck">Dichiaro di aver letto e accettato integralmente il regolamento.</label></div>
     <p class="meta">L'accettazione verrà registrata con data, ora e versione del regolamento.</p>
-    <button id="acceptBtn" class="btn gold" onclick="accettaRegolamento()">Accetto e continua</button>
+    <button id="acceptBtn" class="btn gold full" onclick="accettaRegolamento()">Accetto e continua</button>
     <div id="regAlert" class="alert">🟡 Azione richiesta: accettare il regolamento per utilizzare l'Area Cliente.</div>
     <p id="regAcceptedInfo" class="footer-reg hidden"></p>
   </section>
-
   <section id="clienteContent" class="locked-content">
-    <div class="card"><h2 id="nome">Caricamento...</h2><p id="info" class="meta"></p></div>
-    <div class="card"><h2>Lezioni</h2><div id="lezioni"></div></div>
+    <div class="card hero"><h2 id="welcome">Benvenuto 👋</h2><p id="heroSub" class="meta"></p><div id="heroBadges"></div></div>
+    <div id="okBox" class="alert" style="background:#dcfce7;color:#166534">🟢 Tutto regolare: pacchetto e scadenze sotto controllo.</div>
+    <div class="grid">
+      <div class="kpi"><strong id="kResidue">0</strong><span>Lezioni residue</span></div>
+      <div class="kpi"><strong id="kNext">-</strong><span>Prossima lezione</span></div>
+      <div class="kpi"><strong id="kScadenza">-</strong><span>Scadenza pacchetto</span></div>
+      <div class="kpi"><strong id="kCert">-</strong><span>Certificato</span></div>
+    </div>
+    <div class="card"><h2>📅 Tutte le lezioni</h2><div id="lezioni"></div></div>
   </section>
 </main>
-
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, doc, getDoc, updateDoc, collection, getDocs, collectionGroup, query, where, serverTimestamp, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
-
-const app=initializeApp(firebaseConfig);
-const db=getFirestore(app);
-const params=new URLSearchParams(location.search);
-const id=params.get("id");
-const uid=params.get("uid");
-let currentClient=null;
-let currentClientRef=null;
-let ownerUid=uid;
-const REG_VERSION="11.5";
-
+const app=initializeApp(firebaseConfig), db=getFirestore(app);
+const params=new URLSearchParams(location.search), id=params.get("id"), uid=params.get("uid");
+let currentClient=null,currentClientRef=null,ownerUid=uid,allEvents=[],allRequests=[];
+const REG_VERSION="11.7";
 function fmt(d){if(!d)return"-";const [y,m,day]=String(d).slice(0,10).split("-");return day&&m&&y?`${day}/${m}/${y}`:d}
+function fmtShort(d){if(!d)return"-";const [,m,day]=String(d).slice(0,10).split("-");return day&&m?`${day}/${m}`:d}
 function nome(c){return `${c.nome||""} ${c.cognome||""}`.trim()}
-function statoClass(st){return ["Effettuata","Recuperata"].includes(st)?"":(["Assente","Annullata","Annullata dal cliente"].includes(st)?"bad":"warn")}
-function nowLabel(){
- const d=new Date();
- return d.toLocaleDateString("it-IT")+" ore "+d.toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"});
-}
-function unlockArea(){
- document.getElementById("clienteContent").classList.remove("locked-content");
- document.getElementById("regAlert").classList.add("hidden");
- document.getElementById("acceptBox").classList.add("hidden");
- document.getElementById("acceptBtn").classList.add("hidden");
-}
-function lockArea(){
- document.getElementById("clienteContent").classList.add("locked-content");
- document.getElementById("regAlert").classList.remove("hidden");
- document.getElementById("acceptBox").classList.remove("hidden");
- document.getElementById("acceptBtn").classList.remove("hidden");
-}
-function updateRegolamentoUI(){
- if(!currentClient)return;
- if(currentClient.regolamentoAccettato){
-   unlockArea();
-   const text="✅ Regolamento accettato il "+(currentClient.regolamentoAccettatoAtLabel||"-")+" · versione "+(currentClient.regolamentoVersione||REG_VERSION);
-   const el=document.getElementById("regAcceptedInfo");
-   el.textContent=text;
-   el.classList.remove("hidden");
- }else{
-   lockArea();
- }
-}
-window.accettaRegolamento=async()=>{
- if(!document.getElementById("regCheck").checked){
-   alert("Devi spuntare la casella di accettazione.");
-   return;
- }
- if(!currentClientRef){
-   alert("Cliente non trovato.");
-   return;
- }
- const label=nowLabel();
- await updateDoc(currentClientRef,{
-   regolamentoAccettato:true,
-   regolamentoAccettatoAtLabel:label,
-   regolamentoAccettatoAt:new Date().toISOString(),
-   regolamentoAccettatoTimestamp:serverTimestamp(),
-   regolamentoVersione:REG_VERSION
- });
- currentClient.regolamentoAccettato=true;
- currentClient.regolamentoAccettatoAtLabel=label;
- currentClient.regolamentoVersione=REG_VERSION;
- updateRegolamentoUI();
-};
-
-
-function eventStart(e){
- const parts=String(e.data||"").split("-").map(Number);
- const y=parts[0], m=parts[1], d=parts[2];
- let h=9,mi=0;
- if(e.ora){const p=String(e.ora).split(":").map(Number);h=p[0]||0;mi=p[1]||0}
- return new Date(y,m-1,d,h,mi,0);
-}
-function canRequestRecovery(e){
- const diff=eventStart(e).getTime()-Date.now();
- return diff > 24*60*60*1000 && !["Effettuata","Assente","Recuperata","Annullata","Annullata dal cliente","Recupero approvato"].includes(e.stato||"Prenotata");
-}
-function renderLezioneCliente(e,recs){
- const req=recs.find(r=>r.eventoId===e.id);
- const can=canRequestRecovery(e);
- let action="";
- if(req){
-   action=`<p class="meta">🔄 Recupero richiesto · Stato: <b>${req.stato||"Richiesta"}</b>${req.motivoRifiuto?`<br>Motivo: ${req.motivoRifiuto}`:""}</p>`;
- }else if(can){
-   action=`<button class="btn gold" style="margin-top:10px" onclick="richiediRecupero('${e.id}')">🔄 Richiedi recupero</button>`;
- }else{
-   action=`<p class="meta">🔒 Recupero non disponibile: richiesta consentita solo prima delle 24 ore.</p>`;
- }
- return `<div class="card"><b>${fmt(e.data)} ore ${e.ora||"-"}</b><p class="meta">Stato: ${e.stato||"Prenotata"}</p><span class="badge ${statoClass(e.stato||"Prenotata")}">${e.stato||"Prenotata"}</span>${action}</div>`;
-}
-window.richiediRecupero=async(eventoId)=>{
- if(!currentClient || !currentClientRef || !ownerUid)return alert("Cliente non caricato.");
- const es=await getDocs(collection(db,"users",ownerUid,"eventi"));
- const ev=es.docs.map(d=>({id:d.id,...d.data()})).find(e=>e.id===eventoId);
- if(!ev)return alert("Lezione non trovata.");
- if(!canRequestRecovery(ev))return alert("Richiesta recupero non disponibile: mancano meno di 24 ore o la lezione è già stata gestita.");
- if(!confirm("Inviare richiesta di recupero al coach?"))return;
- const label=nowLabel();
- await addDoc(collection(db,"users",ownerUid,"recuperi"),{
-   clienteId:id,
-   clienteNome:nome(currentClient),
-   eventoId:ev.id,
-   data:ev.data,
-   ora:ev.ora||"",
-   stato:"Richiesta",
-   createdAt:new Date().toISOString(),
-   createdAtLabel:label,
-   updatedAt:serverTimestamp()
- });
- alert("Richiesta di recupero inviata al coach.");
- location.reload();
-};
-
-async function load(){
- try{
-   if(!id){document.getElementById("nome").textContent="Link non valido";return}
-
-   let c=null;
-   if(uid){
-     const ref=doc(db,"users",uid,"clienti",id);
-     const snap=await getDoc(ref);
-     if(snap.exists()){
-       c={id:snap.id,...snap.data()};
-       currentClientRef=ref;
-     }
-   }
-
-   if(!c){
-     const qs=await getDocs(query(collectionGroup(db,"clienti"),where("__name__","==",id)));
-     if(!qs.empty){
-       const ds=qs.docs[0];
-       c={id:ds.id,...ds.data()};
-       ownerUid=ds.ref.parent.parent.id;
-       currentClientRef=ds.ref;
-     }
-   }
-
-   if(!c){document.getElementById("nome").textContent="Cliente non trovato";return}
-   currentClient=c;
-
-   document.getElementById("nome").textContent=nome(c);
-   document.getElementById("info").innerHTML=`<span class="badge">${c.lezioniResidue||0} residue su ${c.lezioniTotali||0}</span><br>Periodo: ${fmt(c.inizio)} → ${fmt(c.scadenza)}<br>${c.servizio||""}`;
-
-   let evs=[];
-   if(ownerUid){
-     const es=await getDocs(collection(db,"users",ownerUid,"eventi"));
-     evs=es.docs.map(d=>({id:d.id,...d.data()})).filter(e=>e.clienteId===id).sort((a,b)=>String(a.data||"").localeCompare(String(b.data||""))||String(a.ora||"").localeCompare(String(b.ora||"")));
-   }
-
-   let recs=[];
-   if(ownerUid){
-     const rs=await getDocs(collection(db,"users",ownerUid,"recuperi"));
-     recs=rs.docs.map(d=>({id:d.id,...d.data()})).filter(r=>r.clienteId===id);
-   }
-   document.getElementById("lezioni").innerHTML=evs.length?evs.map(e=>renderLezioneCliente(e,recs)).join(""):"<p class='meta'>Nessuna lezione trovata.</p>";
-   updateRegolamentoUI();
- }catch(e){
-   document.getElementById("nome").textContent="Errore caricamento";
-   document.getElementById("info").textContent=e.message;
- }
-}
+function euro(n){return "€"+Number(n||0).toLocaleString("it-IT",{minimumFractionDigits:0,maximumFractionDigits:2})}
+function residue(c){return Number(c.lezioniResidue ?? c.lezioniTotali ?? 0)}
+function total(c){return Number(c.lezioniTotali||0)}
+function value(c){return Number(c.dovuto||0)}
+function paid(c){return Number(c.pagato||0)}
+function balance(c){return Math.max(0,value(c)-paid(c))}
+function activeLabel(c){return (c.stato||"attivo")==="inattivo"?"Inattivo":"Attivo"}
+function payLabel(c){return balance(c)>0?`🔴 Da saldare ${euro(balance(c))}`:"🟢 Saldo regolare"}
+function nowLabel(){const d=new Date();return d.toLocaleDateString("it-IT")+" ore "+d.toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})}
+function statoClass(st){if(["Effettuata","Recuperata","Recupero approvato"].includes(st))return"ok";if(["Assente","Annullata","Annullata dal cliente"].includes(st))return"bad";return"warn"}
+function eventStart(e){const [y,m,d]=String(e.data||"").split("-").map(Number);let h=9,mi=0;if(e.ora){const p=String(e.ora).split(":").map(Number);h=p[0]||0;mi=p[1]||0}return new Date(y,m-1,d,h,mi,0)}
+function canRequestRecovery(e){const diff=eventStart(e).getTime()-Date.now();return diff>24*60*60*1000 && !["Effettuata","Assente","Recuperata","Annullata","Annullata dal cliente","Recupero approvato"].includes(e.stato||"Prenotata")}
+function unlockArea(){document.getElementById("clienteContent").classList.remove("locked-content");document.getElementById("regAlert").classList.add("hidden");document.getElementById("acceptBox").classList.add("hidden");document.getElementById("acceptBtn").classList.add("hidden")}
+function lockArea(){document.getElementById("clienteContent").classList.add("locked-content");document.getElementById("regAlert").classList.remove("hidden");document.getElementById("acceptBox").classList.remove("hidden");document.getElementById("acceptBtn").classList.remove("hidden")}
+function updateRegolamentoUI(){if(!currentClient)return;const el=document.getElementById("regAcceptedInfo");if(currentClient.regolamentoAccettato){unlockArea();el.textContent="✅ Regolamento accettato il "+(currentClient.regolamentoAccettatoAtLabel||"-")+" · versione "+(currentClient.regolamentoVersione||REG_VERSION);el.classList.remove("hidden")}else{lockArea();el.classList.add("hidden")}}
+window.accettaRegolamento=async()=>{if(!document.getElementById("regCheck").checked){alert("Devi spuntare la casella di accettazione.");return}if(!currentClientRef){alert("Cliente non trovato.");return}const label=nowLabel();await updateDoc(currentClientRef,{regolamentoAccettato:true,regolamentoAccettatoAtLabel:label,regolamentoAccettatoAt:new Date().toISOString(),regolamentoAccettatoTimestamp:serverTimestamp(),regolamentoVersione:REG_VERSION});currentClient.regolamentoAccettato=true;currentClient.regolamentoAccettatoAtLabel=label;currentClient.regolamentoVersione=REG_VERSION;renderClientArea();updateRegolamentoUI()}
+function renderClientArea(){const c=currentClient;document.getElementById("welcome").textContent="Benvenuto "+(c.nome||nome(c))+" 👋";document.getElementById("heroSub").textContent=(c.servizio||"")+" · Orario fisso";document.getElementById("heroBadges").innerHTML=`<span class="badge ok">${activeLabel(c)}</span><span class="badge ok">${residue(c)} residue su ${total(c)}</span><span class="badge ${balance(c)>0?"bad":"ok"}">${payLabel(c)}</span><span class="badge ok">📋 ${c.regolamentoAccettato?"Regolamento accettato":"Regolamento non accettato"}</span>`;document.getElementById("kResidue").textContent=residue(c);const next=allEvents.filter(e=>String(e.data||"")>=new Date().toISOString().slice(0,10)&&!["Effettuata","Assente","Annullata","Recuperata"].includes(e.stato||"")).sort((a,b)=>String(a.data||"").localeCompare(String(b.data||""))||String(a.ora||"").localeCompare(String(b.ora||"")))[0];document.getElementById("kNext").textContent=next?fmtShort(next.data):"-";document.getElementById("kScadenza").textContent=fmt(c.scadenza);document.getElementById("kCert").textContent=c.certificato||c.certificatoScadenza||"-";document.getElementById("lezioni").innerHTML=allEvents.length?allEvents.map(e=>renderLezioneCliente(e)).join(""):"<p class='meta'>Nessuna lezione trovata.</p>"}
+function renderLezioneCliente(e){const req=allRequests.find(r=>r.eventoId===e.id);const can=canRequestRecovery(e);let action="";if(req){action=`<p class="meta">🔄 Recupero richiesto · Stato: <b>${req.stato||"Richiesta"}</b>${req.motivoRifiuto?`<br>Motivo: ${req.motivoRifiuto}`:""}</p>`}else if(can){action=`<button class="btn gold" onclick="richiediRecupero('${e.id}')">🔄 Richiedi recupero</button>`}else{action=`<button class="btn light disabled">🔒 Recupero non disponibile</button><p class="meta">Richiesta consentita solo prima delle 24 ore.</p>`}return `<div class="lesson"><div><h3>${fmt(e.data)} ore ${e.ora||"-"}</h3><p class="meta">Stato: ${e.stato||"Prenotata"}</p><span class="badge ${statoClass(e.stato||"Prenotata")}">${e.stato||"Prenotata"}</span></div><div>${action}</div></div>`}
+window.richiediRecupero=async(eventoId)=>{if(!currentClient||!currentClientRef||!ownerUid)return alert("Cliente non caricato.");const ev=allEvents.find(e=>e.id===eventoId);if(!ev)return alert("Lezione non trovata.");if(!canRequestRecovery(ev))return alert("Richiesta recupero non disponibile: mancano meno di 24 ore o la lezione è già stata gestita.");if(!confirm("Inviare richiesta di recupero al coach?"))return;const label=nowLabel();await addDoc(collection(db,"users",ownerUid,"recuperi"),{clienteId:id,clienteNome:nome(currentClient),eventoId:ev.id,data:ev.data,ora:ev.ora||"",stato:"Richiesta",createdAt:new Date().toISOString(),createdAtLabel:label,updatedAt:serverTimestamp()});alert("Richiesta di recupero inviata al coach.");await load()}
+async function load(){try{if(!id){document.getElementById("welcome").textContent="Link non valido";return}let c=null;if(uid){const ref=doc(db,"users",uid,"clienti",id);const snap=await getDoc(ref);if(snap.exists()){c={id:snap.id,...snap.data()};currentClientRef=ref}}if(!c){const qs=await getDocs(query(collectionGroup(db,"clienti"),where("__name__","==",id)));if(!qs.empty){const ds=qs.docs[0];c={id:ds.id,...ds.data()};ownerUid=ds.ref.parent.parent.id;currentClientRef=ds.ref}}if(!c){alert("Cliente non trovato.");return}currentClient=c;if(ownerUid){const es=await getDocs(collection(db,"users",ownerUid,"eventi"));allEvents=es.docs.map(d=>({id:d.id,...d.data()})).filter(e=>e.clienteId===id).sort((a,b)=>String(a.data||"").localeCompare(String(b.data||""))||String(a.ora||"").localeCompare(String(b.ora||"")));const rs=await getDocs(collection(db,"users",ownerUid,"recuperi"));allRequests=rs.docs.map(d=>({id:d.id,...d.data()})).filter(r=>r.clienteId===id)}renderClientArea();updateRegolamentoUI()}catch(e){alert("Errore caricamento: "+e.message)}}
 load();
 </script>
 </body>
