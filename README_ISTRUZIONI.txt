@@ -1,14 +1,27 @@
-SB PERSONAL COACH GESTIONALE 11.7.2 - HOTFIX CALENDARIO PULITO
+SB PERSONAL COACH GESTIONALE 11.7.3 - HOTFIX RECUPERI SMART
 
-Fix:
-- La sezione Calendario mostra solo lezioni di clienti ancora presenti.
-- Se elimini un cliente, vengono eliminate anche le sue lezioni dal calendario.
-- Vengono eliminate anche eventuali richieste recupero collegate.
-- Aggiunto tasto: "Pulisci eventi di clienti eliminati" per rimuovere vecchi eventi orfani.
+Implementazione isolata sul modulo Recuperi:
+
+1. Smart Coach:
+- le lezioni compaiono da confermare solo 2 ore dopo la fine della lezione.
+
+2. Recupero manuale:
+- nuova sezione nella tab Recuperi;
+- scegli cliente, data, ora, durata, note;
+- crea una lezione di recupero;
+- NON modifica il contatore al momento della creazione;
+- il contatore scalerà solo quando la lezione verrà confermata nello Smart Coach;
+- se la data del recupero supera la scadenza pacchetto, la scadenza viene aggiornata automaticamente.
+
+3. Richieste recupero:
+- Accetta/Rifiuta resta disponibile.
+- Accettare una richiesta non modifica il contatore.
+- Dopo accettazione puoi creare manualmente la nuova data di recupero.
 
 Non sono stati toccati:
-- WhatsApp cliente 11.7.1
+- Area Cliente
+- WhatsApp Cliente
 - Regolamento
-- Recuperi cliente
-- + Lezione / Restituisci
+- Calendario pulito
 - Contabilità
+- + Lezione / Restituisci

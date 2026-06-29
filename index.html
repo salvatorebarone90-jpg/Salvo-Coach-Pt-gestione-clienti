@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>SB Personal Coach Gestionale 11.7.2</title>
+<title>SB Personal Coach Gestionale 11.7.3</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--dark:#101827;--blue:#17233a;--gold:#d5ad52;--bg:#f4f6f8;--card:#fff;--muted:#667085;--ok:#13915f;--bad:#c0392b;--warn:#c47d00}
@@ -50,8 +50,8 @@ hr{border:0;border-top:1px solid #e5e7eb;margin:12px 0}
   <div class="header-inner">
     <img src="logo.jpeg" class="logo" onerror="this.style.display='none'">
     <div>
-      <h1>SB Personal Coach Gestionale 11.7.2.2</h1>
-      <div class="subtitle">Hotfix Calendario Pulito · 11.7.2</div>
+      <h1>SB Personal Coach Gestionale 11.7.3.3.2</h1>
+      <div class="subtitle">Hotfix Recuperi Smart · 11.7.3</div>
     </div>
   </div>
   <nav id="nav">
@@ -744,6 +744,153 @@ function addCleanCalendarButton1172(){
 const oldRender1172=render;
 render=()=>{oldRender1172();setTimeout(addCleanCalendarButton1172,50);};
 setTimeout(addCleanCalendarButton1172,500);
+
+
+/* 11.7.3 - Recuperi Smart */
+function smartDelayHours1173(){ return 2; }
+function eventEnd1173(ev){ return new Date(eventStart(ev).getTime()+Number(ev.durata||60)*60000); }
+function dueForConfirm1173(ev){
+  if(!ev || !ev.data) return false;
+  if(historical(ev.stato)) return false;
+  const endPlusDelay = new Date(eventEnd1173(ev).getTime()+smartDelayHours1173()*60*60*1000);
+  return new Date() >= endPlusDelay;
+}
+function isToday1173(dateStr){ return String(dateStr||"")===todayISO(); }
+
+window.lezioniDaConfermare = function(){
+ const ids = new Set(clienti.map(c=>c.id));
+ return eventi.filter(ev=>{
+   if(!ids.has(ev.clienteId)) return false;
+   if(!isToday1173(ev.data)) return false;
+   if(historical(ev.stato)) return false;
+   return dueForConfirm1173(ev);
+ });
+};
+
+async function creaRecuperoManuale1173(){
+ const clienteId = $("recCliente")?.value || "";
+ const data = $("recData")?.value || "";
+ const ora = $("recOra")?.value || "";
+ const durata = Number($("recDurata")?.value || 60);
+ const note = $("recNote")?.value || "";
+ if(!clienteId || !data || !ora) return alert("Seleziona cliente, data e ora.");
+ const c = clienti.find(x=>x.id===clienteId);
+ if(!c) return alert("Cliente non trovato.");
+
+ await addDoc(path("eventi"),{
+   clienteId,
+   clienteNome:nome(c),
+   data,
+   ora,
+   durata,
+   stato:"Recupero programmato",
+   tipo:"recupero",
+   recuperoManuale:true,
+   note,
+   createdAt:serverTimestamp()
+ });
+
+ if(c.scadenza && data > c.scadenza){
+   await setDoc(docPath("clienti",clienteId),{scadenza:data,updatedAt:serverTimestamp()},{merge:true});
+ }
+
+ await addDoc(path("recuperi"),{
+   clienteId,
+   clienteNome:nome(c),
+   data,
+   ora,
+   durata,
+   note,
+   stato:"Recupero programmato manualmente",
+   manuale:true,
+   createdAt:new Date().toISOString(),
+   createdAtLabel:new Date().toLocaleDateString("it-IT")+" ore "+new Date().toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"}),
+   updatedAt:serverTimestamp()
+ });
+
+ alert("Recupero manuale creato. Il contatore non è stato modificato.");
+ if($("recData")) $("recData").value="";
+ if($("recOra")) $("recOra").value="";
+ if($("recNote")) $("recNote").value="";
+}
+window.creaRecuperoManuale1173=creaRecuperoManuale1173;
+
+function renderRecuperi1173(){
+ const box=$("listaRecuperi");
+ if(!box) return;
+ const clientOptions = clienti.slice().sort((a,b)=>nome(a).localeCompare(nome(b))).map(c=>`<option value="${c.id}">${nome(c)}</option>`).join("");
+ const form = `<div class="card" style="background:#f8fafc">
+   <h3>➕ Nuovo recupero manuale</h3>
+   <p class="meta">Crea una nuova data di recupero senza modificare il contatore. Se la data supera la scadenza pacchetto, la scadenza viene aggiornata.</p>
+   <div class="row">
+     <div><label>Cliente</label><select id="recCliente"><option value="">Seleziona cliente</option>${clientOptions}</select></div>
+     <div><label>Data recupero</label><input id="recData" type="date"></div>
+   </div>
+   <div class="row">
+     <div><label>Ora</label><input id="recOra" type="time"></div>
+     <div><label>Durata minuti</label><input id="recDurata" type="number" value="60"></div>
+   </div>
+   <label>Note</label><textarea id="recNote" placeholder="Es. recupero approvato per assenza comunicata entro 24h"></textarea>
+   <button class="btn gold full" onclick="creaRecuperoManuale1173()">Crea recupero manuale</button>
+ </div>`;
+
+ const list = (typeof recuperi !== "undefined" ? recuperi : []).slice().sort((a,b)=>String(b.createdAt||"").localeCompare(String(a.createdAt||"")));
+ const richieste = list.length ? list.map(r=>{
+   const pending=(r.stato||"Richiesta")==="Richiesta";
+   const manuale=!!r.manuale;
+   return `<div class="check">
+     <h3>${r.clienteNome||"Cliente"}</h3>
+     <p class="meta">
+       ${manuale?"Recupero manuale":"Richiesta cliente"}<br>
+       Lezione/recupero: ${fmt(r.data)} ore ${r.ora||"-"}<br>
+       Inserita: ${r.createdAtLabel||"-"}<br>
+       Stato: <b>${r.stato||"Richiesta"}</b>
+       ${r.motivoRifiuto?`<br>Motivo: ${r.motivoRifiuto}`:""}
+       ${r.note?`<br>Note: ${r.note}`:""}
+     </p>
+     ${pending?`<button class="btn green" onclick="accettaRecupero('${r.id}')">Accetta</button><button class="btn red" onclick="rifiutaRecupero('${r.id}')">Rifiuta</button>`:""}
+   </div>`;
+ }).join("") : '<div class="empty">Nessuna richiesta o recupero programmato.</div>';
+ box.innerHTML = form + richieste;
+}
+
+window.accettaRecupero = async function(id){
+ const r=recuperi.find(x=>x.id===id);
+ if(!r) return alert("Richiesta non trovata.");
+ if(!confirm("Accettare questa richiesta? Il contatore resterà invariato.")) return;
+ await setDoc(docPath("recuperi",id),{
+   stato:"Accettata",
+   rispostaAt:new Date().toISOString(),
+   rispostaAtLabel:new Date().toLocaleDateString("it-IT")+" ore "+new Date().toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"}),
+   updatedAt:serverTimestamp()
+ },{merge:true});
+ if(r.eventoId){
+   await setDoc(docPath("eventi",r.eventoId),{
+     stato:"Recupero approvato",
+     recuperoRichiesto:true,
+     updatedAt:serverTimestamp()
+   },{merge:true});
+ }
+};
+
+window.rifiutaRecupero = async function(id){
+ const r=recuperi.find(x=>x.id===id);
+ if(!r) return alert("Richiesta non trovata.");
+ const motivo=prompt("Motivo del rifiuto, facoltativo:")||"";
+ await setDoc(docPath("recuperi",id),{
+   stato:"Rifiutata",
+   motivoRifiuto:motivo,
+   rispostaAt:new Date().toISOString(),
+   rispostaAtLabel:new Date().toLocaleDateString("it-IT")+" ore "+new Date().toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"}),
+   updatedAt:serverTimestamp()
+ },{merge:true});
+};
+
+const oldRender1173 = render;
+render = ()=>{
+  oldRender1173();
+  renderRecuperi1173();
+};
 
 </script>
 </body>
