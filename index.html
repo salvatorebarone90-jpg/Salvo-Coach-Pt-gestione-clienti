@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>SB Personal Coach Gestionale 11.7.1</title>
+<title>SB Personal Coach Gestionale 11.7.2</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--dark:#101827;--blue:#17233a;--gold:#d5ad52;--bg:#f4f6f8;--card:#fff;--muted:#667085;--ok:#13915f;--bad:#c0392b;--warn:#c47d00}
@@ -50,8 +50,8 @@ hr{border:0;border-top:1px solid #e5e7eb;margin:12px 0}
   <div class="header-inner">
     <img src="logo.jpeg" class="logo" onerror="this.style.display='none'">
     <div>
-      <h1>SB Personal Coach Gestionale 11.7.1</h1>
-      <div class="subtitle">Hotfix WhatsApp Cliente · 11.7.1</div>
+      <h1>SB Personal Coach Gestionale 11.7.2.2</h1>
+      <div class="subtitle">Hotfix Calendario Pulito · 11.7.2</div>
     </div>
   </div>
   <nav id="nav">
@@ -681,6 +681,69 @@ function sbPatchButtons114(){
 const sbOldRender114 = render;
 render = ()=>{ sbOldRender114(); setTimeout(sbPatchButtons114, 50); };
 setTimeout(sbPatchButtons114, 500);
+
+
+/* 11.7.2 - Hotfix calendario pulito */
+function activeClientIds1172(){
+ return new Set(clienti.map(c=>c.id));
+}
+
+window.renderCalendario = function(){
+ if(!$("calDal").value)$("calDal").value=todayISO();
+ if(!$("calAl").value){
+   const d=new Date();
+   d.setDate(d.getDate()+14);
+   $("calAl").value=d.toISOString().slice(0,10);
+ }
+ const dal=$("calDal").value, al=$("calAl").value;
+ const ids=activeClientIds1172();
+ const list=eventi
+   .filter(e=>ids.has(e.clienteId))
+   .filter(e=>String(e.data||"")>=dal && String(e.data||"")<=al)
+   .sort((a,b)=>String(a.data||"").localeCompare(String(b.data||"")) || String(a.ora||"").localeCompare(String(b.ora||"")));
+ $("listaCalendario").innerHTML=list.map(e=>`<div class="card"><h3>${e.clienteNome||"Cliente"}</h3><p class="meta">${fmt(e.data)} ore ${e.ora||"-"} · ${e.stato||"Prenotata"}</p><button class="btn gold" onclick="apriGoogleCalendarEvento('${e.id}')">Google Calendar</button></div>`).join("")||'<div class="empty">Nessuna lezione in questo intervallo.</div>';
+};
+
+window.eliminaCliente = async function(id){
+ const c=clienti.find(x=>x.id===id);
+ if(!c)return alert("Cliente non trovato.");
+ if(!confirm("Eliminare cliente e tutte le sue lezioni dal calendario?"))return;
+
+ for(const ev of eventi.filter(e=>e.clienteId===id)){
+   await deleteDoc(docPath("eventi", ev.id));
+ }
+ if(typeof recuperi !== "undefined"){
+   for(const r of recuperi.filter(x=>x.clienteId===id)){
+     await deleteDoc(docPath("recuperi", r.id));
+   }
+ }
+ await deleteDoc(docPath("clienti", id));
+};
+
+window.pulisciEventiOrfani = async function(){
+ const ids=activeClientIds1172();
+ const orfani=eventi.filter(e=>!ids.has(e.clienteId));
+ if(!orfani.length)return alert("Nessun evento orfano trovato.");
+ if(!confirm(`Trovati ${orfani.length} eventi di clienti eliminati. Vuoi rimuoverli dal calendario?`))return;
+ for(const ev of orfani){
+   await deleteDoc(docPath("eventi", ev.id));
+ }
+ alert("Calendario ripulito.");
+};
+
+function addCleanCalendarButton1172(){
+ const box=document.querySelector("#calendario .card");
+ if(!box || document.getElementById("btnPulisciEventiOrfani"))return;
+ const btn=document.createElement("button");
+ btn.id="btnPulisciEventiOrfani";
+ btn.className="btn light full";
+ btn.textContent="Pulisci eventi di clienti eliminati";
+ btn.onclick=()=>window.pulisciEventiOrfani();
+ box.appendChild(btn);
+}
+const oldRender1172=render;
+render=()=>{oldRender1172();setTimeout(addCleanCalendarButton1172,50);};
+setTimeout(addCleanCalendarButton1172,500);
 
 </script>
 </body>
