@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>SB Personal Coach Gestionale 11.7.3</title>
+<title>SB Personal Coach Gestionale 11.7.4</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--dark:#101827;--blue:#17233a;--gold:#d5ad52;--bg:#f4f6f8;--card:#fff;--muted:#667085;--ok:#13915f;--bad:#c0392b;--warn:#c47d00}
@@ -50,8 +50,8 @@ hr{border:0;border-top:1px solid #e5e7eb;margin:12px 0}
   <div class="header-inner">
     <img src="logo.jpeg" class="logo" onerror="this.style.display='none'">
     <div>
-      <h1>SB Personal Coach Gestionale 11.7.3.3.2</h1>
-      <div class="subtitle">Hotfix Recuperi Smart · 11.7.3</div>
+      <h1>SB Personal Coach Gestionale 11.7.4.3.2</h1>
+      <div class="subtitle">Hotfix Smart Pulito · 11.7.4</div>
     </div>
   </div>
   <nav id="nav">
@@ -891,6 +891,78 @@ render = ()=>{
   oldRender1173();
   renderRecuperi1173();
 };
+
+
+/* 11.7.4 - Hotfix Smart pulito: esclude eventi di clienti eliminati */
+function activeClientIds1174(){
+ return new Set(clienti.map(c=>c.id));
+}
+function validEvent1174(ev){
+ return activeClientIds1174().has(ev.clienteId);
+}
+function smartDelayHours1174(){ return 2; }
+function eventEnd1174(ev){ return new Date(eventStart(ev).getTime()+Number(ev.durata||60)*60000); }
+function dueForConfirm1174(ev){
+ if(!ev || !ev.data) return false;
+ if(!validEvent1174(ev)) return false;
+ if(historical(ev.stato)) return false;
+ const endPlusDelay = new Date(eventEnd1174(ev).getTime()+smartDelayHours1174()*60*60*1000);
+ return new Date() >= endPlusDelay;
+}
+
+window.lezioniDaConfermare = function(){
+ return eventi.filter(ev=>{
+   if(!validEvent1174(ev)) return false;
+   if(String(ev.data||"")!==todayISO()) return false;
+   if(historical(ev.stato)) return false;
+   return dueForConfirm1174(ev);
+ });
+};
+
+window.renderCalendario = function(){
+ if(!$("calDal").value)$("calDal").value=todayISO();
+ if(!$("calAl").value){
+   const d=new Date();
+   d.setDate(d.getDate()+14);
+   $("calAl").value=d.toISOString().slice(0,10);
+ }
+ const dal=$("calDal").value, al=$("calAl").value;
+ const list=eventi
+   .filter(validEvent1174)
+   .filter(e=>String(e.data||"")>=dal && String(e.data||"")<=al)
+   .sort((a,b)=>String(a.data||"").localeCompare(String(b.data||"")) || String(a.ora||"").localeCompare(String(b.ora||"")));
+ $("listaCalendario").innerHTML=list.map(e=>`<div class="card"><h3>${e.clienteNome||"Cliente"}</h3><p class="meta">${fmt(e.data)} ore ${e.ora||"-"} · ${e.stato||"Prenotata"}</p><button class="btn gold" onclick="apriGoogleCalendarEvento('${e.id}')">Google Calendar</button></div>`).join("")||'<div class="empty">Nessuna lezione in questo intervallo.</div>';
+};
+
+window.pulisciEventiOrfani = async function(){
+ const orfani=eventi.filter(e=>!validEvent1174(e));
+ if(!orfani.length)return alert("Nessun evento orfano trovato.");
+ if(!confirm(`Trovati ${orfani.length} eventi di clienti eliminati. Vuoi rimuoverli definitivamente?`))return;
+ for(const ev of orfani){
+   await deleteDoc(docPath("eventi", ev.id));
+ }
+ if(typeof recuperi !== "undefined"){
+   const ids=activeClientIds1174();
+   for(const r of recuperi.filter(x=>!ids.has(x.clienteId))){
+     await deleteDoc(docPath("recuperi", r.id));
+   }
+ }
+ alert("Eventi orfani rimossi. La dashboard sarà pulita.");
+};
+
+function addCleanSmartButton1174(){
+ const dash=document.querySelector("#dashboard .card");
+ if(!dash || document.getElementById("btnPulisciSmartOrfani"))return;
+ const btn=document.createElement("button");
+ btn.id="btnPulisciSmartOrfani";
+ btn.className="btn light full";
+ btn.textContent="Pulisci lezioni di clienti eliminati";
+ btn.onclick=()=>window.pulisciEventiOrfani();
+ dash.appendChild(btn);
+}
+const oldRender1174=render;
+render=()=>{oldRender1174();setTimeout(addCleanSmartButton1174,50);};
+setTimeout(addCleanSmartButton1174,500);
 
 </script>
 </body>
