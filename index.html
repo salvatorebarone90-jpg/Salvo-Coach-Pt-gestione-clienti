@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>SB Personal Coach Gestionale 11.7.5</title>
+<title>SB Personal Coach Gestionale 11.7.6</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--dark:#101827;--blue:#17233a;--gold:#d5ad52;--bg:#f4f6f8;--card:#fff;--muted:#667085;--ok:#13915f;--bad:#c0392b;--warn:#c47d00}
@@ -50,8 +50,8 @@ hr{border:0;border-top:1px solid #e5e7eb;margin:12px 0}
   <div class="header-inner">
     <img src="logo.jpeg" class="logo" onerror="this.style.display='none'">
     <div>
-      <h1>SB Personal Coach Gestionale 11.7.5.3.2</h1>
-      <div class="subtitle">Hotfix Annullamento Coach · 11.7.5</div>
+      <h1>SB Personal Coach Gestionale 11.7.6.3.2</h1>
+      <div class="subtitle">Fix Contatori Clienti · 11.7.6</div>
     </div>
   </div>
   <nav id="nav">
@@ -1011,6 +1011,71 @@ renderDashboard = function(){
  oldRenderDashboard1175();
  renderSmartCoach1175();
 };
+
+
+/* 11.7.6 - Fix Contatori Clienti: non elimina eventi */
+function countDoneEvents1176(clienteId){
+ return eventi.filter(e=>{
+   if(e.clienteId!==clienteId) return false;
+   const st=e.stato||"";
+   return ["Effettuata","Assente","Recuperata"].includes(st);
+ }).length;
+}
+function realResidue1176(c){
+ const total=Number(c.lezioniTotali||0);
+ const stored = Number(c.lezioniResidue);
+ if(Number.isFinite(stored) && stored>=0 && stored<=total){
+   return stored;
+ }
+ const done=countDoneEvents1176(c.id);
+ return Math.max(0,total-done);
+}
+function safeResidue1176(c){
+ return realResidue1176(c);
+}
+
+window.residue = safeResidue1176;
+
+if(typeof clientCard === "function"){
+ const oldClientCard1176 = clientCard;
+ clientCard = function(c){
+   const fixed = {...c, lezioniResidue:safeResidue1176(c)};
+   return oldClientCard1176(fixed);
+ };
+}
+
+async function ricalcolaContatoriClienti1176(){
+ if(!confirm("Ricalcolare e salvare i contatori lezioni residue per tutti i clienti? Nessun evento verrà eliminato."))return;
+ for(const c of clienti){
+   const r=safeResidue1176(c);
+   const fatte=Math.max(0,Number(c.lezioniTotali||0)-r);
+   await setDoc(docPath("clienti",c.id),{
+     lezioniResidue:r,
+     lezioniFatte:fatte,
+     updatedAt:serverTimestamp()
+   },{merge:true});
+ }
+ alert("Contatori clienti ricalcolati. Nessuna lezione è stata eliminata.");
+}
+window.ricalcolaContatoriClienti1176=ricalcolaContatoriClienti1176;
+
+function addFixCounterButton1176(){
+ const sec=document.querySelector("#clienti .card") || document.querySelector("#clienti");
+ if(!sec || document.getElementById("btnFixContatori1176"))return;
+ const btn=document.createElement("button");
+ btn.id="btnFixContatori1176";
+ btn.className="btn light full";
+ btn.textContent="Ricalcola contatori clienti";
+ btn.onclick=()=>window.ricalcolaContatoriClienti1176();
+ sec.prepend(btn);
+}
+
+const oldRender1176=render;
+render=()=>{
+ oldRender1176();
+ setTimeout(addFixCounterButton1176,50);
+};
+setTimeout(addFixCounterButton1176,500);
 
 </script>
 </body>

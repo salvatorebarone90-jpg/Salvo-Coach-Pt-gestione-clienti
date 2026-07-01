@@ -1,23 +1,12 @@
-SB PERSONAL COACH GESTIONALE 11.7.5 - HOTFIX ANNULLAMENTO COACH
+SB PERSONAL COACH GESTIONALE 11.7.6 - FIX CONTATORI CLIENTI
 
-Modifica unica:
-- Nello Smart Coach / Dashboard è stato aggiunto il tasto "Annulla".
+Fix:
+- Corregge la visualizzazione dei contatori nella sezione Clienti.
+- NON elimina eventi.
+- NON tocca calendario, recuperi, area cliente o contabilità.
+- Aggiunto tasto in sezione Clienti: "Ricalcola contatori clienti".
 
 Logica:
-- Conferma: scala il contatore.
-- Assente: scala il contatore.
-- Annulla: registra "Annullata dal coach" e NON scala il contatore.
-
-Dopo annullamento:
-- la lezione scompare dalla Dashboard;
-- rimane nello storico/registro;
-- puoi programmare un recupero manuale dalla sezione Recuperi;
-- il recupero scalerà solo quando verrà confermato come effettuato.
-
-Non sono stati toccati:
-- Recuperi Smart
-- Calendario pulito
-- WhatsApp cliente
-- Regolamento
-- Contabilità
-- + Lezione / Restituisci
+- Usa lezioniResidue se valido.
+- Se manca o è incoerente, ricalcola da lezioniTotali - lezioni già Effettuate/Assenti/Recuperate.
+- Annullata dal coach e Recupero programmato NON scalano il contatore.
