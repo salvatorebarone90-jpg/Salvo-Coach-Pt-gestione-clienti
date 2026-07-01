@@ -1,14 +1,23 @@
-SB PERSONAL COACH GESTIONALE 11.7.4 - HOTFIX SMART PULITO
+SB PERSONAL COACH GESTIONALE 11.7.5 - HOTFIX ANNULLAMENTO COACH
 
-Fix:
-- Lo Smart Coach / Dashboard non mostra più lezioni di clienti eliminati.
-- Il Calendario continua a mostrare solo eventi di clienti esistenti.
-- Aggiunto tasto in Dashboard: "Pulisci lezioni di clienti eliminati".
-- Il tasto elimina definitivamente eventi e recuperi orfani rimasti in memoria.
+Modifica unica:
+- Nello Smart Coach / Dashboard è stato aggiunto il tasto "Annulla".
+
+Logica:
+- Conferma: scala il contatore.
+- Assente: scala il contatore.
+- Annulla: registra "Annullata dal coach" e NON scala il contatore.
+
+Dopo annullamento:
+- la lezione scompare dalla Dashboard;
+- rimane nello storico/registro;
+- puoi programmare un recupero manuale dalla sezione Recuperi;
+- il recupero scalerà solo quando verrà confermato come effettuato.
 
 Non sono stati toccati:
-- Recuperi Smart 11.7.3
-- WhatsApp Cliente
+- Recuperi Smart
+- Calendario pulito
+- WhatsApp cliente
 - Regolamento
 - Contabilità
 - + Lezione / Restituisci

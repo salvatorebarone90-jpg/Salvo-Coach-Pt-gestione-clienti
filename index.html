@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>SB Personal Coach Gestionale 11.7.4</title>
+<title>SB Personal Coach Gestionale 11.7.5</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--dark:#101827;--blue:#17233a;--gold:#d5ad52;--bg:#f4f6f8;--card:#fff;--muted:#667085;--ok:#13915f;--bad:#c0392b;--warn:#c47d00}
@@ -50,8 +50,8 @@ hr{border:0;border-top:1px solid #e5e7eb;margin:12px 0}
   <div class="header-inner">
     <img src="logo.jpeg" class="logo" onerror="this.style.display='none'">
     <div>
-      <h1>SB Personal Coach Gestionale 11.7.4.3.2</h1>
-      <div class="subtitle">Hotfix Smart Pulito · 11.7.4</div>
+      <h1>SB Personal Coach Gestionale 11.7.5.3.2</h1>
+      <div class="subtitle">Hotfix Annullamento Coach · 11.7.5</div>
     </div>
   </div>
   <nav id="nav">
@@ -963,6 +963,54 @@ function addCleanSmartButton1174(){
 const oldRender1174=render;
 render=()=>{oldRender1174();setTimeout(addCleanSmartButton1174,50);};
 setTimeout(addCleanSmartButton1174,500);
+
+
+/* 11.7.5 - Hotfix Annullamento Coach */
+async function annullaLezioneCoach(id){
+ const ev = eventi.find(e=>e.id===id);
+ if(!ev) return alert("Lezione non trovata.");
+ const ok = confirm(
+   "Annullare questa lezione?\n\n" +
+   "La lezione verrà registrata come 'Annullata dal coach'.\n" +
+   "Il contatore NON verrà modificato.\n" +
+   "Potrai programmare un recupero manualmente in seguito."
+ );
+ if(!ok) return;
+
+ await setDoc(docPath("eventi", id), {
+   stato: "Annullata dal coach",
+   annullataDa: "coach",
+   scalata: false,
+   storico: true,
+   updatedAt: serverTimestamp()
+ }, {merge:true});
+}
+window.annullaLezioneCoach = annullaLezioneCoach;
+
+function renderSmartCoach1175(){
+ const box = $("smartCoachBox");
+ if(!box) return;
+ const list = lezioniDaConfermare();
+ box.innerHTML = list.length ? 
+ `<div class="check">
+   <h3>⏳ Lezioni da confermare oggi</h3>
+   ${list.map(ev=>`<div class="check">
+     <b>${ev.clienteNome||""}</b>
+     <p class="meta">${fmt(ev.data)} ore ${ev.ora||"-"}</p>
+     <button class="btn green" onclick="confermaEffettuata('${ev.id}')">Conferma</button>
+     <button class="btn red" onclick="confermaAssente('${ev.id}')">Assente</button>
+     <button class="btn light" onclick="annullaLezioneCoach('${ev.id}')">Annulla</button>
+   </div>`).join("")}
+   <button class="btn gold full" onclick="confermaTutteEffettuate()">Conferma tutte</button>
+ </div>` :
+ '<p class="meta">Nessuna lezione di oggi da confermare.</p>';
+}
+
+const oldRenderDashboard1175 = renderDashboard;
+renderDashboard = function(){
+ oldRenderDashboard1175();
+ renderSmartCoach1175();
+};
 
 </script>
 </body>
