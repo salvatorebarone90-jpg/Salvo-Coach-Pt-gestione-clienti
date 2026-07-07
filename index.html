@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>SB Personal Coach Gestionale 11.7.6</title>
+<title>SB Personal Coach Gestionale 11.7.7</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--dark:#101827;--blue:#17233a;--gold:#d5ad52;--bg:#f4f6f8;--card:#fff;--muted:#667085;--ok:#13915f;--bad:#c0392b;--warn:#c47d00}
@@ -50,8 +50,8 @@ hr{border:0;border-top:1px solid #e5e7eb;margin:12px 0}
   <div class="header-inner">
     <img src="logo.jpeg" class="logo" onerror="this.style.display='none'">
     <div>
-      <h1>SB Personal Coach Gestionale 11.7.6.3.2</h1>
-      <div class="subtitle">Fix Contatori Clienti · 11.7.6</div>
+      <h1>SB Personal Coach Gestionale 11.7.7.3.2</h1>
+      <div class="subtitle">Stable Protezione Scalata · 11.7.7</div>
     </div>
   </div>
   <nav id="nav">
@@ -1076,6 +1076,108 @@ render=()=>{
  setTimeout(addFixCounterButton1176,50);
 };
 setTimeout(addFixCounterButton1176,500);
+
+
+/* 11.7.7 - Stable Protezione doppia scalata */
+function lessonConsumes1177(stato){
+ return ["Effettuata","Assente","Recuperata"].includes(stato||"");
+}
+function clientSafeResidue1177(c){
+ const total=Number(c.lezioniTotali||0);
+ const current=Number(c.lezioniResidue);
+ if(Number.isFinite(current) && current>=0 && current<=total) return current;
+ const done=eventi.filter(e=>e.clienteId===c.id && lessonConsumes1177(e.stato)).length;
+ return Math.max(0,total-done);
+}
+async function processLesson1177(id, stato){
+ const ev=eventi.find(e=>e.id===id);
+ if(!ev) return alert("Lezione non trovata.");
+
+ if(ev.processed===true || ev.scalata===true){
+   await setDoc(docPath("eventi",id),{
+     stato: ev.stato || stato,
+     processed:true,
+     updatedAt:serverTimestamp()
+   },{merge:true});
+   return;
+ }
+
+ const c=clienti.find(x=>x.id===ev.clienteId);
+ if(!c) return alert("Cliente non trovato.");
+
+ const shouldConsume=lessonConsumes1177(stato);
+ const currentResidue=clientSafeResidue1177(c);
+ const newResidue=shouldConsume ? Math.max(0,currentResidue-1) : currentResidue;
+ const newFatte=Math.max(0,Number(c.lezioniTotali||0)-newResidue);
+
+ await setDoc(docPath("eventi",id),{
+   stato,
+   scalata:shouldConsume,
+   processed:true,
+   storico:true,
+   updatedAt:serverTimestamp()
+ },{merge:true});
+
+ if(shouldConsume){
+   await setDoc(docPath("clienti",ev.clienteId),{
+     lezioniResidue:newResidue,
+     lezioniFatte:newFatte,
+     updatedAt:serverTimestamp()
+   },{merge:true});
+ }
+}
+window.processLesson1177=processLesson1177;
+
+window.confermaEffettuata=async function(id){
+ await processLesson1177(id,"Effettuata");
+};
+window.confermaAssente=async function(id){
+ await processLesson1177(id,"Assente");
+};
+window.annullaLezioneCoach=async function(id){
+ const ev=eventi.find(e=>e.id===id);
+ if(!ev) return alert("Lezione non trovata.");
+ const ok=confirm(
+   "Annullare questa lezione?\n\n" +
+   "La lezione verrà registrata come 'Annullata dal coach'.\n" +
+   "Il contatore NON verrà modificato.\n" +
+   "Potrai programmare un recupero manualmente in seguito."
+ );
+ if(!ok) return;
+ await processLesson1177(id,"Annullata dal coach");
+};
+
+window.confermaTutteEffettuate=async function(){
+ const list=lezioniDaConfermare();
+ if(!list.length) return alert("Nessuna lezione da confermare.");
+ if(!confirm("Confermare tutte le lezioni come effettuate? Ogni lezione verrà scalata una sola volta.")) return;
+ for(const ev of list){
+   await processLesson1177(ev.id,"Effettuata");
+ }
+};
+
+function renderSmartCoach1177(){
+ const box=$("smartCoachBox");
+ if(!box)return;
+ const list=lezioniDaConfermare().filter(ev=>ev.processed!==true && ev.scalata!==true);
+ box.innerHTML=list.length?`<div class="check">
+   <h3>⏳ Lezioni da confermare oggi</h3>
+   ${list.map(ev=>`<div class="check">
+     <b>${ev.clienteNome||""}</b>
+     <p class="meta">${fmt(ev.data)} ore ${ev.ora||"-"}</p>
+     <button class="btn green" onclick="confermaEffettuata('${ev.id}')">Conferma</button>
+     <button class="btn red" onclick="confermaAssente('${ev.id}')">Assente</button>
+     <button class="btn light" onclick="annullaLezioneCoach('${ev.id}')">Annulla</button>
+   </div>`).join("")}
+   <button class="btn gold full" onclick="confermaTutteEffettuate()">Conferma tutte</button>
+ </div>`:'<p class="meta">Nessuna lezione di oggi da confermare.</p>';
+}
+
+const oldRenderDashboard1177=renderDashboard;
+renderDashboard=function(){
+ oldRenderDashboard1177();
+ renderSmartCoach1177();
+};
 
 </script>
 </body>

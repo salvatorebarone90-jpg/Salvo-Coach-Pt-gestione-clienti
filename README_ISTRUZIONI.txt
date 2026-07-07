@@ -1,12 +1,23 @@
-SB PERSONAL COACH GESTIONALE 11.7.6 - FIX CONTATORI CLIENTI
+SB PERSONAL COACH GESTIONALE 11.7.7 - STABLE PROTEZIONE DOPPIA SCALATA
 
-Fix:
-- Corregge la visualizzazione dei contatori nella sezione Clienti.
-- NON elimina eventi.
-- NON tocca calendario, recuperi, area cliente o contabilità.
-- Aggiunto tasto in sezione Clienti: "Ricalcola contatori clienti".
+Fix critico:
+- Conferma scala 1 sola volta.
+- Assente scala 1 sola volta.
+- Annulla Coach non scala mai.
+- Protezione contro doppio click, refresh, onSnapshot e chiamate duplicate.
+
+Nuovi campi tecnici sugli eventi:
+- processed: true
+- scalata: true/false
 
 Logica:
-- Usa lezioniResidue se valido.
-- Se manca o è incoerente, ricalcola da lezioniTotali - lezioni già Effettuate/Assenti/Recuperate.
-- Annullata dal coach e Recupero programmato NON scalano il contatore.
+- Effettuata / Assente / Recuperata: scalano solo se l'evento non è già stato processato.
+- Annullata dal coach: viene registrata nello storico ma non modifica il contatore.
+
+Non sono stati toccati:
+- Area Cliente
+- WhatsApp
+- Regolamento
+- Recuperi
+- Calendario
+- Contabilità
