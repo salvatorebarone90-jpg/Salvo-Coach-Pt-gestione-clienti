@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>SB Personal Coach Gestionale 11.7.7</title>
+<title>SB Personal Coach Gestionale 11.7.8.1</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--dark:#101827;--blue:#17233a;--gold:#d5ad52;--bg:#f4f6f8;--card:#fff;--muted:#667085;--ok:#13915f;--bad:#c0392b;--warn:#c47d00}
@@ -50,8 +50,8 @@ hr{border:0;border-top:1px solid #e5e7eb;margin:12px 0}
   <div class="header-inner">
     <img src="logo.jpeg" class="logo" onerror="this.style.display='none'">
     <div>
-      <h1>SB Personal Coach Gestionale 11.7.7.3.2</h1>
-      <div class="subtitle">Stable Protezione Scalata · 11.7.7</div>
+      <h1>SB Personal Coach Gestionale 11.7.8.1.3.2</h1>
+      <div class="subtitle">Stable Smart Arretrate · 11.7.8.1</div>
     </div>
   </div>
   <nav id="nav">
@@ -63,6 +63,7 @@ hr{border:0;border-top:1px solid #e5e7eb;margin:12px 0}
     <button data-tab="contattare">Da contattare</button>
     <button data-tab="rinnovi">Rinnovi</button>
     <button data-tab="contabilita">Contabilità</button>
+    <button data-tab="impostazioni">Impostazioni</button>
     <button data-tab="backup">Backup</button>
   </nav>
 </header>
@@ -220,19 +221,36 @@ hr{border:0;border-top:1px solid #e5e7eb;margin:12px 0}
     <button class="btn gold full" onclick="esportaBackup()">Esporta backup JSON</button>
   </div>
 </section>
+
+<section id="impostazioni" class="section">
+  <div class="card">
+    <h2>⚙️ Impostazioni</h2>
+    <p class="meta">Modifica solo quando una lezione deve comparire nella Smart Dashboard.</p>
+    <label>Mostra le lezioni da confermare dopo</label>
+    <select id="smartDelaySelect">
+      <option value="0.5">30 minuti</option>
+      <option value="1">1 ora</option>
+      <option value="2">2 ore</option>
+      <option value="3">3 ore</option>
+    </select>
+    <button class="btn gold full" onclick="salvaImpostazioniSmart1178()">Salva impostazione</button>
+    <p id="smartDelayInfo" class="meta"></p>
+  </div>
+</section>
+
 </main>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, collection, doc, addDoc, setDoc, deleteDoc, getDocs, onSnapshot, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, doc, addDoc, setDoc, deleteDoc, getDoc, getDocs, onSnapshot, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
 
 const app=initializeApp(firebaseConfig);
 const auth=getAuth(app);
 const db=getFirestore(app);
 
-let user=null, clienti=[], eventi=[], rinnovi=[], pagamenti=[], recuperi=[];
+let user=null, clienti=[], eventi=[], rinnovi=[], pagamenti=[], recuperi=[], settings={};
 const $=id=>document.getElementById(id);
 const path=name=>collection(db,"users",user.uid,name);
 const docPath=(name,id)=>doc(db,"users",user.uid,name,id);
@@ -1177,6 +1195,120 @@ const oldRenderDashboard1177=renderDashboard;
 renderDashboard=function(){
  oldRenderDashboard1177();
  renderSmartCoach1177();
+};
+
+
+/* 11.7.8 - Impostazioni Smart Delay */
+function smartDelayHours1178(){
+ const v=Number(settings.smartDelayHours ?? 2);
+ return (Number.isFinite(v) && v>0) ? v : 2;
+}
+function smartDelayLabel1178(v){
+ const n=Number(v);
+ if(n===0.5)return "30 minuti";
+ if(n===1)return "1 ora";
+ if(n===2)return "2 ore";
+ if(n===3)return "3 ore";
+ return n+" ore";
+}
+async function caricaImpostazioni1178(){
+ if(!user)return;
+ try{
+   const snap=await getDoc(doc(db,"users",user.uid,"settings","app"));
+   settings=snap.exists()?snap.data():{smartDelayHours:2};
+ }catch(e){ settings={smartDelayHours:2}; }
+ aggiornaUIImpostazioni1178();
+}
+function aggiornaUIImpostazioni1178(){
+ const sel=$("smartDelaySelect");
+ if(sel) sel.value=String(settings.smartDelayHours ?? 2);
+ const info=$("smartDelayInfo");
+ if(info) info.textContent="Valore attuale: "+smartDelayLabel1178(settings.smartDelayHours ?? 2)+" dopo la fine della lezione.";
+}
+async function salvaImpostazioniSmart1178(){
+ if(!user)return alert("Devi essere loggato.");
+ const v=Number($("smartDelaySelect")?.value || 2);
+ await setDoc(doc(db,"users",user.uid,"settings","app"),{smartDelayHours:v,updatedAt:serverTimestamp()},{merge:true});
+ settings.smartDelayHours=v;
+ aggiornaUIImpostazioni1178();
+ alert("Impostazione salvata.");
+}
+window.salvaImpostazioniSmart1178=salvaImpostazioniSmart1178;
+
+function eventEnd1178(ev){ return new Date(eventStart(ev).getTime()+Number(ev.durata||60)*60000); }
+function dueForConfirm1178(ev){
+ if(!ev || !ev.data)return false;
+ if(historical(ev.stato))return false;
+ const endPlusDelay=new Date(eventEnd1178(ev).getTime()+smartDelayHours1178()*60*60*1000);
+ return new Date()>=endPlusDelay;
+}
+window.lezioniDaConfermare=function(){
+ return eventi.filter(ev=>{
+   if(String(ev.data||"")!==todayISO()) return false;
+   if(ev.processed===true || ev.scalata===true) return false;
+   return dueForConfirm1178(ev);
+ });
+};
+
+const oldRender1178=render;
+render=()=>{oldRender1178();aggiornaUIImpostazioni1178();};
+
+const oldSubscribe1178=subscribe;
+subscribe=function(){oldSubscribe1178();caricaImpostazioni1178();};
+setTimeout(()=>{try{caricaImpostazioni1178()}catch(e){}},1000);
+
+
+/* 11.7.8.1 - Smart arretrate */
+function isPastOrToday11781(dateStr){
+  const d=String(dateStr||"");
+  return d!=="" && d<=todayISO();
+}
+function isUnprocessed11781(ev){
+  if(!ev) return false;
+  if(ev.processed===true || ev.scalata===true) return false;
+  if(historical(ev.stato)) return false;
+  return true;
+}
+function validClientEvent11781(ev){
+  const ids=new Set(clienti.map(c=>c.id));
+  return ids.has(ev.clienteId);
+}
+window.lezioniDaConfermare=function(){
+  return eventi.filter(ev=>{
+    if(!validClientEvent11781(ev)) return false;
+    if(!isPastOrToday11781(ev.data)) return false;
+    if(!isUnprocessed11781(ev)) return false;
+    return dueForConfirm1178(ev);
+  }).sort((a,b)=>
+    String(a.data||"").localeCompare(String(b.data||"")) ||
+    String(a.ora||"").localeCompare(String(b.ora||""))
+  );
+};
+
+function renderSmartCoach11781(){
+ const box=$("smartCoachBox");
+ if(!box)return;
+ const list=lezioniDaConfermare();
+ box.innerHTML=list.length?`<div class="check">
+   <h3>⏳ Lezioni da confermare</h3>
+   ${list.map(ev=>{
+     const arretrata=String(ev.data||"")<todayISO();
+     return `<div class="check">
+       <b>${ev.clienteNome||""}</b>
+       <p class="meta">${fmt(ev.data)} ore ${ev.ora||"-"}${arretrata?' · <b>Arretrata</b>':''}</p>
+       <button class="btn green" onclick="confermaEffettuata('${ev.id}')">Conferma</button>
+       <button class="btn red" onclick="confermaAssente('${ev.id}')">Assente</button>
+       <button class="btn light" onclick="annullaLezioneCoach('${ev.id}')">Annulla</button>
+     </div>`;
+   }).join("")}
+   <button class="btn gold full" onclick="confermaTutteEffettuate()">Conferma tutte</button>
+ </div>`:'<p class="meta">Nessuna lezione da confermare.</p>';
+}
+
+const oldRenderDashboard11781=renderDashboard;
+renderDashboard=function(){
+  oldRenderDashboard11781();
+  renderSmartCoach11781();
 };
 
 </script>

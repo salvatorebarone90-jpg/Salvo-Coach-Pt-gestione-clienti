@@ -1,23 +1,15 @@
-SB PERSONAL COACH GESTIONALE 11.7.7 - STABLE PROTEZIONE DOPPIA SCALATA
+SB PERSONAL COACH GESTIONALE 11.7.8.1 - STABLE SMART ARRETRATE
 
-Fix critico:
-- Conferma scala 1 sola volta.
-- Assente scala 1 sola volta.
-- Annulla Coach non scala mai.
-- Protezione contro doppio click, refresh, onSnapshot e chiamate duplicate.
+Correzione:
+- Le lezioni non gestite non spariscono più a mezzanotte.
+- La Dashboard mostra anche lezioni dei giorni precedenti rimaste Prenotate.
+- Le lezioni arretrate sono indicate con la scritta "Arretrata".
+- Restano disponibili Conferma, Assente e Annulla.
 
-Nuovi campi tecnici sugli eventi:
-- processed: true
-- scalata: true/false
+Conservato:
+- Ritardo Smart configurabile.
+- Protezione doppia scalata.
+- Annulla Coach non scala.
+- Nessuna modifica a calendario, recuperi, contabilità, area cliente o registro.
 
-Logica:
-- Effettuata / Assente / Recuperata: scalano solo se l'evento non è già stato processato.
-- Annullata dal coach: viene registrata nello storico ma non modifica il contatore.
-
-Non sono stati toccati:
-- Area Cliente
-- WhatsApp
-- Regolamento
-- Recuperi
-- Calendario
-- Contabilità
+Nel Registro Cliente una lezione resta "Prenotata" finché non scegli Conferma, Assente o Annulla.

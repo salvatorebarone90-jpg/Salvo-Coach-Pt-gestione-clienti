@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Area Cliente Premium 11.7.7</title>
+<title>Area Cliente Premium 11.7.8.1</title>
 <style>
 :root{--dark:#101827;--blue:#17233a;--gold:#d5ad52;--bg:#f4f6f8;--card:#fff;--muted:#667085;--ok:#166534;--bad:#991b1b;--warn:#92400e;--brown:#7c2d12}
 *{box-sizing:border-box}
@@ -80,7 +80,7 @@ import { firebaseConfig } from "./firebase-config.js";
 const app=initializeApp(firebaseConfig), db=getFirestore(app);
 const params=new URLSearchParams(location.search), id=params.get("id"), uid=params.get("uid");
 let currentClient=null,currentClientRef=null,ownerUid=uid,allEvents=[],allRequests=[];
-const REG_VERSION="11.7.7";
+const REG_VERSION="11.7.8.1";
 function fmt(d){if(!d)return"-";const [y,m,day]=String(d).slice(0,10).split("-");return day&&m&&y?`${day}/${m}/${y}`:d}
 function fmtShort(d){if(!d)return"-";const [,m,day]=String(d).slice(0,10).split("-");return day&&m?`${day}/${m}`:d}
 function nome(c){return `${c.nome||""} ${c.cognome||""}`.trim()}
