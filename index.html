@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>SB Personal Coach Gestionale 11.7.8.1</title>
+<title>SB Personal Coach Gestionale 11.7.9</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--dark:#101827;--blue:#17233a;--gold:#d5ad52;--bg:#f4f6f8;--card:#fff;--muted:#667085;--ok:#13915f;--bad:#c0392b;--warn:#c47d00}
@@ -43,6 +43,14 @@ textarea{min-height:80px}
 .hidden{display:none!important}
 .small{font-size:12px}
 hr{border:0;border-top:1px solid #e5e7eb;margin:12px 0}
+
+.edit-lesson-modal{position:fixed;inset:0;background:rgba(15,23,42,.72);display:none;align-items:center;justify-content:center;padding:16px;z-index:9999}
+.edit-lesson-modal.active{display:flex}
+.edit-lesson-box{width:min(560px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:20px;padding:20px;box-shadow:0 24px 70px rgba(0,0,0,.28)}
+.edit-lesson-box h2{margin-top:0}
+.edit-lesson-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+@media(max-width:600px){.edit-lesson-actions{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
@@ -50,8 +58,8 @@ hr{border:0;border-top:1px solid #e5e7eb;margin:12px 0}
   <div class="header-inner">
     <img src="logo.jpeg" class="logo" onerror="this.style.display='none'">
     <div>
-      <h1>SB Personal Coach Gestionale 11.7.8.1.3.2</h1>
-      <div class="subtitle">Stable Smart Arretrate · 11.7.8.1</div>
+      <h1>SB Personal Coach Gestionale 11.7.9.3.2</h1>
+      <div class="subtitle">Stable Registro + Modifica Lezione · 11.7.9</div>
     </div>
   </div>
   <nav id="nav">
@@ -1311,6 +1319,188 @@ renderDashboard=function(){
   renderSmartCoach11781();
 };
 
+
+/* 11.7.9 - Registro intelligente + modifica singola lezione */
+
+function eventoGestibileRegistro1179(ev){
+ const stato=ev.stato||"Prenotata";
+ const nonGestito=ev.processed!==true && ev.scalata!==true && !historical(stato);
+ return String(ev.data||"")<=todayISO() && nonGestito;
+}
+
+window.renderRegistro=function(){
+ renderRegistroSelect();
+ const id=$("registroCliente").value;
+ const c=clienti.find(x=>x.id===id);
+
+ if(!c){
+   $("registroLista").innerHTML='<div class="empty">Seleziona un cliente.</div>';
+   return;
+ }
+
+ const evs=eventi
+   .filter(e=>e.clienteId===id)
+   .sort((a,b)=>String(a.data||"").localeCompare(String(b.data||""))||String(a.ora||"").localeCompare(String(b.ora||"")));
+
+ $("regTotali").textContent=c.lezioniTotali||0;
+ $("regFatte").textContent=fatte(id);
+ $("regResidue").textContent=residue(c);
+ $("regPeriodo").textContent=`${fmt(c.inizio)} → ${fmt(c.scadenza)}`;
+
+ $("registroLista").innerHTML=evs.map(e=>{
+   const gestibile=eventoGestibileRegistro1179(e);
+   return `<div class="check">
+     <h3>${fmt(e.data)} ore ${e.ora||"-"}</h3>
+     <p class="meta">Stato: ${e.stato||"Prenotata"}</p>
+     <span class="badge ${consumes(e.stato)?"ok":historical(e.stato)?"bad":"warn"}">${e.stato||"Prenotata"}</span>
+     ${gestibile?`<div class="actions" style="margin-top:10px">
+       <button class="btn green" onclick="confermaEffettuata('${e.id}')">Effettuata</button>
+       <button class="btn red" onclick="confermaAssente('${e.id}')">Assente</button>
+       <button class="btn light" onclick="annullaLezioneCoach('${e.id}')">Annullata Coach</button>
+     </div>`:""}
+   </div>`;
+ }).join("")||'<div class="empty">Nessuna lezione.</div>';
+};
+
+function apriModificaLezione1179(id){
+ const ev=eventi.find(e=>e.id===id);
+ if(!ev)return alert("Lezione non trovata.");
+
+ $("editLessonId1179").value=id;
+ $("editLessonData1179").value=ev.data||"";
+ $("editLessonOra1179").value=ev.ora||"";
+ $("editLessonDurata1179").value=Number(ev.durata||60);
+ $("editLessonScope1179").value="single";
+ $("editLessonCliente1179").textContent=`${ev.clienteNome||"Cliente"} · ${fmt(ev.data)} ore ${ev.ora||"-"}`;
+ $("editLessonModal1179").classList.add("active");
+}
+window.apriModificaLezione1179=apriModificaLezione1179;
+
+function chiudiModificaLezione1179(){
+ $("editLessonModal1179").classList.remove("active");
+}
+window.chiudiModificaLezione1179=chiudiModificaLezione1179;
+
+function weekday1179(dateStr){
+ const [y,m,d]=String(dateStr||"").split("-").map(Number);
+ return new Date(y,m-1,d).getDay();
+}
+
+async function salvaModificaLezione1179(){
+ const id=$("editLessonId1179").value;
+ const ev=eventi.find(e=>e.id===id);
+ if(!ev)return alert("Lezione non trovata.");
+
+ const nuovaData=$("editLessonData1179").value;
+ const nuovaOra=$("editLessonOra1179").value;
+ const nuovaDurata=Number($("editLessonDurata1179").value||60);
+ const scope=$("editLessonScope1179").value;
+
+ if(!nuovaData||!nuovaOra)return alert("Inserisci data e ora.");
+ if(nuovaDurata<15)return alert("La durata minima è 15 minuti.");
+
+ const conferma=confirm(
+   scope==="single"
+   ? "Modificare solo questa lezione? Il contatore resterà invariato."
+   : "Modificare questa lezione e tutte le successive dello stesso giorno? Le lezioni già gestite non verranno toccate."
+ );
+ if(!conferma)return;
+
+ const originalDate=ev.data;
+ const originalWeekday=weekday1179(originalDate);
+
+ await setDoc(docPath("eventi",id),{
+   data:nuovaData,
+   ora:nuovaOra,
+   durata:nuovaDurata,
+   updatedAt:serverTimestamp()
+ },{merge:true});
+
+ if(scope==="following"){
+   const successive=eventi.filter(x=>
+     x.id!==id &&
+     x.clienteId===ev.clienteId &&
+     String(x.data||"")>String(originalDate||"") &&
+     weekday1179(x.data)===originalWeekday &&
+     x.processed!==true &&
+     x.scalata!==true &&
+     !historical(x.stato)
+   );
+
+   for(const futuro of successive){
+     await setDoc(docPath("eventi",futuro.id),{
+       ora:nuovaOra,
+       durata:nuovaDurata,
+       updatedAt:serverTimestamp()
+     },{merge:true});
+   }
+ }
+
+ chiudiModificaLezione1179();
+ alert(scope==="single"?"Lezione modificata.":"Lezione e appuntamenti successivi modificati.");
+}
+window.salvaModificaLezione1179=salvaModificaLezione1179;
+
+window.renderCalendario=function(){
+ if(!$("calDal").value)$("calDal").value=todayISO();
+ if(!$("calAl").value){
+   const d=new Date();
+   d.setDate(d.getDate()+14);
+   $("calAl").value=d.toISOString().slice(0,10);
+ }
+
+ const dal=$("calDal").value;
+ const al=$("calAl").value;
+ const ids=new Set(clienti.map(c=>c.id));
+
+ const list=eventi
+   .filter(e=>ids.has(e.clienteId))
+   .filter(e=>String(e.data||"")>=dal&&String(e.data||"")<=al)
+   .sort((a,b)=>String(a.data||"").localeCompare(String(b.data||""))||String(a.ora||"").localeCompare(String(b.ora||"")));
+
+ $("listaCalendario").innerHTML=list.map(e=>`
+   <div class="card">
+     <h3>${e.clienteNome||"Cliente"}</h3>
+     <p class="meta">${fmt(e.data)} ore ${e.ora||"-"} · ${e.stato||"Prenotata"}</p>
+     <button class="btn dark" onclick="apriModificaLezione1179('${e.id}')">Modifica lezione</button>
+     <button class="btn gold" onclick="apriGoogleCalendarEvento('${e.id}')">Google Calendar</button>
+   </div>
+ `).join("")||'<div class="empty">Nessuna lezione in questo intervallo.</div>';
+};
+
 </script>
+
+<div id="editLessonModal1179" class="edit-lesson-modal">
+  <div class="edit-lesson-box">
+    <h2>✏️ Modifica lezione</h2>
+    <p id="editLessonCliente1179" class="meta"></p>
+    <input id="editLessonId1179" type="hidden">
+
+    <label>Data</label>
+    <input id="editLessonData1179" type="date">
+
+    <label>Ora</label>
+    <input id="editLessonOra1179" type="time">
+
+    <label>Durata in minuti</label>
+    <input id="editLessonDurata1179" type="number" min="15" step="15" value="60">
+
+    <label>Applica modifica</label>
+    <select id="editLessonScope1179">
+      <option value="single">Solo questa lezione</option>
+      <option value="following">Questa e tutte le successive dello stesso giorno</option>
+    </select>
+
+    <p class="meta">
+      Il contatore non verrà modificato. Le lezioni già effettuate, assenti o annullate non verranno toccate.
+    </p>
+
+    <div class="edit-lesson-actions">
+      <button class="btn gold" onclick="salvaModificaLezione1179()">Salva modifica</button>
+      <button class="btn light" onclick="chiudiModificaLezione1179()">Chiudi</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
