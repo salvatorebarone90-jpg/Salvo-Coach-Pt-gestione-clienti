@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Area Cliente Premium 11.8.0</title>
+<title>Area Cliente Premium 11.8.0.1</title>
 <style>
 :root{--dark:#101827;--blue:#17233a;--gold:#d5ad52;--bg:#f4f6f8;--card:#fff;--muted:#667085;--ok:#166534;--bad:#991b1b;--warn:#92400e;--brown:#7c2d12}
 *{box-sizing:border-box}
@@ -80,7 +80,7 @@ import { firebaseConfig } from "./firebase-config.js";
 const app=initializeApp(firebaseConfig), db=getFirestore(app);
 const params=new URLSearchParams(location.search), id=params.get("id"), uid=params.get("uid");
 let currentClient=null,currentClientRef=null,ownerUid=uid,allEvents=[],allRequests=[];
-const REG_VERSION="11.8.0";
+const REG_VERSION="11.8.0.1";
 function fmt(d){if(!d)return"-";const [y,m,day]=String(d).slice(0,10).split("-");return day&&m&&y?`${day}/${m}/${y}`:d}
 function fmtShort(d){if(!d)return"-";const [,m,day]=String(d).slice(0,10).split("-");return day&&m?`${day}/${m}`:d}
 function nome(c){return `${c.nome||""} ${c.cognome||""}`.trim()}
@@ -93,10 +93,10 @@ function balance(c){return Math.max(0,value(c)-paid(c))}
 function activeLabel(c){return (c.stato||"attivo")==="inattivo"?"Inattivo":"Attivo"}
 function payLabel(c){return balance(c)>0?`🔴 Da saldare ${euro(balance(c))}`:"🟢 Saldo regolare"}
 
+let coachPhone11801 = "393793701208";
 function coachWhatsappLink(){
- const coachPhone = "393000000000";
  const msg = encodeURIComponent("Ciao Coach, ho bisogno di assistenza con la mia Area Cliente.");
- return `https://wa.me/${coachPhone}?text=${msg}`;
+ return `https://wa.me/${coachPhone11801}?text=${msg}`;
 }
 
 function nowLabel(){const d=new Date();return d.toLocaleDateString("it-IT")+" ore "+d.toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})}
@@ -120,6 +120,7 @@ async function loadCoachContacts1180(){
  try{
   const s=await getDoc(doc(db,"users",ownerUid,"settings","coachContacts"));
   if(s.exists())coachContacts1180={...coachContacts1180,...s.data()};
+  coachPhone11801=normPhone1180(coachContacts1180.whatsapp||"3793701208");
  }catch(e){}
  const href="https://wa.me/"+normPhone1180(coachContacts1180.whatsapp||"3793701208")+"?text="+encodeURIComponent("Ciao Coach, ho bisogno di assistenza con la mia Area Cliente.");
  document.querySelectorAll('a[href*="wa.me"],a[href*="whatsapp"],button[data-whatsapp-coach]').forEach(el=>{

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>SB Personal Coach Gestionale 11.8.0</title>
+<title>SB Personal Coach Gestionale 11.8.0.1</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--dark:#101827;--blue:#17233a;--gold:#d5ad52;--bg:#f4f6f8;--card:#fff;--muted:#667085;--ok:#13915f;--bad:#c0392b;--warn:#c47d00}
@@ -58,8 +58,8 @@ hr{border:0;border-top:1px solid #e5e7eb;margin:12px 0}
   <div class="header-inner">
     <img src="logo.jpeg" class="logo" onerror="this.style.display='none'">
     <div>
-      <h1>SB Personal Coach Gestionale 11.8.0.3.2</h1>
-      <div class="subtitle">Stable Calendario Futuro + Contatti · 11.8.0</div>
+      <h1>SB Personal Coach Gestionale 11.8.0.1.3.2</h1>
+      <div class="subtitle">Hotfix Calendario + WhatsApp · 11.8.0.1</div>
     </div>
   </div>
   <nav id="nav">
@@ -152,7 +152,7 @@ hr{border:0;border-top:1px solid #e5e7eb;margin:12px 0}
     </div>
     <div id="editActions" class="hidden">
       <button class="btn green" onclick="salvaSaldoCliente()">💰 Modifica solo saldo</button>
-      <button class="btn gold" onclick="aggiornaCalendarioFuturo1180()">📅 Aggiorna calendario futuro</button>
+      <button class="btn gold" onclick="aggiornaCalendarioFuturo11801()">📅 Aggiorna calendario futuro</button>
       <button class="btn light" onclick="ricalcolaContatoreCliente()">🔄 Ricalcola contatore</button>
       <button class="btn dark" onclick="salvaDatiCliente()">💾 Salva dati cliente</button>
       <button class="btn light" onclick="pulisciForm()">Nuovo cliente</button>
@@ -1572,6 +1572,117 @@ const oldSubscribe1180=subscribe;
 subscribe=function(){oldSubscribe1180();caricaContattiCoach1180();};
 const oldRender1180=render;
 render=()=>{oldRender1180();aggiornaUIContattiCoach1180();};
+
+
+/* 11.8.0.1 - Rigenerazione calendario futuro corretta */
+function localISO11801(d){
+ const y=d.getFullYear();
+ const m=String(d.getMonth()+1).padStart(2,"0");
+ const day=String(d.getDate()).padStart(2,"0");
+ return `${y}-${m}-${day}`;
+}
+function futurePending11801(e){
+ return e &&
+   String(e.data||"")>=todayISO() &&
+   e.processed!==true &&
+   e.scalata!==true &&
+   !historical(e.stato);
+}
+function schedule11801(){
+ const map=[
+  ["Lunedi","lun"],["Martedi","mar"],["Mercoledi","mer"],
+  ["Giovedi","gio"],["Venerdi","ven"],["Sabato","sab"],["Domenica","dom"]
+ ];
+ return map
+  .filter(([label,key])=>$("day_"+key)?.checked && $("time_"+key)?.value)
+  .map(([label,key])=>({label,key,ora:$("time_"+key).value}));
+}
+function weekdayKey11801(d){
+ return ["dom","lun","mar","mer","gio","ven","sab"][d.getDay()];
+}
+async function aggiornaCalendarioFuturo11801(){
+ const id=$("clienteId")?.value;
+ if(!id)return alert("Apri prima il cliente da modificare.");
+
+ const c=clienti.find(x=>x.id===id);
+ if(!c)return alert("Cliente non trovato.");
+
+ if(typeof syncScheduleFields112==="function") syncScheduleFields112();
+
+ const sc=schedule11801();
+ if(!sc.length)return alert("Seleziona almeno un giorno e un orario.");
+
+ const residue=Number(c.lezioniResidue||0);
+
+ const ok=confirm(
+  "Rigenerare il calendario da oggi in poi?\\n\\n"+
+  "• Le lezioni Effettuate, Assenti e Annullate resteranno invariate.\\n"+
+  "• Verranno eliminate solo le lezioni ancora Prenotate da oggi in poi.\\n"+
+  "• Verranno create esattamente "+residue+" lezioni residue.\\n"+
+  "• La data di fine pacchetto verrà aggiornata automaticamente."
+ );
+ if(!ok)return;
+
+ const pending=eventi.filter(e=>e.clienteId===id && futurePending11801(e));
+ for(const ev of pending){
+  await deleteDoc(docPath("eventi",ev.id));
+ }
+
+ const created=[];
+ let cursor=new Date();
+ cursor.setHours(0,0,0,0);
+ let guard=0;
+
+ while(created.length<residue && guard<370){
+  const slot=sc.find(s=>s.key===weekdayKey11801(cursor));
+  if(slot){
+   created.push({data:localISO11801(cursor),ora:slot.ora});
+  }
+  cursor.setDate(cursor.getDate()+1);
+  guard++;
+ }
+
+ if(created.length!==residue){
+  return alert("Non è stato possibile generare tutte le lezioni residue.");
+ }
+
+ for(const item of created){
+  await addDoc(path("eventi"),{
+   clienteId:id,
+   clienteNome:(c.nome+" "+c.cognome).trim(),
+   data:item.data,
+   ora:item.ora,
+   durata:Number($("durata")?.value||c.durata||60),
+   stato:"Prenotata",
+   processed:false,
+   scalata:false,
+   createdAt:serverTimestamp()
+  });
+ }
+
+ const nuovaScadenza=created.length
+  ? created[created.length-1].data
+  : todayISO();
+
+ await setDoc(docPath("clienti",id),{
+  frequenza:Number($("frequenza")?.value||sc.length),
+  giorni:sc.map(x=>x.label),
+  orari:sc.map(x=>x.ora),
+  scadenza:nuovaScadenza,
+  updatedAt:serverTimestamp()
+ },{merge:true});
+
+ if($("scadenza"))$("scadenza").value=nuovaScadenza;
+
+ alert(
+  "Calendario aggiornato correttamente.\\n\\n"+
+  "Lezioni future create: "+created.length+"\\n"+
+  "Nuova scadenza: "+fmt(nuovaScadenza)
+ );
+}
+window.aggiornaCalendarioFuturo11801=aggiornaCalendarioFuturo11801;
+window.aggiornaCalendarioFuturo1180=aggiornaCalendarioFuturo11801;
+window.aggiornaCalendarioFuturo=aggiornaCalendarioFuturo11801;
 
 </script>
 
