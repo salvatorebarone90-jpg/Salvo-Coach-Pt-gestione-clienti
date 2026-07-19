@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Area Cliente Premium 11.7.9</title>
+<title>Area Cliente Premium 11.8.0</title>
 <style>
 :root{--dark:#101827;--blue:#17233a;--gold:#d5ad52;--bg:#f4f6f8;--card:#fff;--muted:#667085;--ok:#166534;--bad:#991b1b;--warn:#92400e;--brown:#7c2d12}
 *{box-sizing:border-box}
@@ -80,7 +80,7 @@ import { firebaseConfig } from "./firebase-config.js";
 const app=initializeApp(firebaseConfig), db=getFirestore(app);
 const params=new URLSearchParams(location.search), id=params.get("id"), uid=params.get("uid");
 let currentClient=null,currentClientRef=null,ownerUid=uid,allEvents=[],allRequests=[];
-const REG_VERSION="11.7.9";
+const REG_VERSION="11.8.0";
 function fmt(d){if(!d)return"-";const [y,m,day]=String(d).slice(0,10).split("-");return day&&m&&y?`${day}/${m}/${y}`:d}
 function fmtShort(d){if(!d)return"-";const [,m,day]=String(d).slice(0,10).split("-");return day&&m?`${day}/${m}`:d}
 function nome(c){return `${c.nome||""} ${c.cognome||""}`.trim()}
@@ -112,6 +112,22 @@ function renderLezioneCliente(e){const req=allRequests.find(r=>r.eventoId===e.id
 window.richiediRecupero=async(eventoId)=>{if(!currentClient||!currentClientRef||!ownerUid)return alert("Cliente non caricato.");const ev=allEvents.find(e=>e.id===eventoId);if(!ev)return alert("Lezione non trovata.");if(!canRequestRecovery(ev))return alert("Richiesta recupero non disponibile: mancano meno di 24 ore o la lezione è già stata gestita.");if(!confirm("Inviare richiesta di recupero al coach?"))return;const label=nowLabel();await addDoc(collection(db,"users",ownerUid,"recuperi"),{clienteId:id,clienteNome:nome(currentClient),eventoId:ev.id,data:ev.data,ora:ev.ora||"",stato:"Richiesta",createdAt:new Date().toISOString(),createdAtLabel:label,updatedAt:serverTimestamp()});alert("Richiesta di recupero inviata al coach.");await load()}
 async function load(){try{if(!id){document.getElementById("welcome").textContent="Link non valido";return}let c=null;if(uid){const ref=doc(db,"users",uid,"clienti",id);const snap=await getDoc(ref);if(snap.exists()){c={id:snap.id,...snap.data()};currentClientRef=ref}}if(!c){const qs=await getDocs(query(collectionGroup(db,"clienti"),where("__name__","==",id)));if(!qs.empty){const ds=qs.docs[0];c={id:ds.id,...ds.data()};ownerUid=ds.ref.parent.parent.id;currentClientRef=ds.ref}}if(!c){alert("Cliente non trovato.");return}currentClient=c;if(ownerUid){const es=await getDocs(collection(db,"users",ownerUid,"eventi"));allEvents=es.docs.map(d=>({id:d.id,...d.data()})).filter(e=>e.clienteId===id).sort((a,b)=>String(a.data||"").localeCompare(String(b.data||""))||String(a.ora||"").localeCompare(String(b.ora||"")));const rs=await getDocs(collection(db,"users",ownerUid,"recuperi"));allRequests=rs.docs.map(d=>({id:d.id,...d.data()})).filter(r=>r.clienteId===id)}renderClientArea();updateRegolamentoUI()}catch(e){alert("Errore caricamento: "+e.message)}}
 load();
+
+/* 11.8.0 - WhatsApp Coach dinamico */
+let coachContacts1180={whatsapp:"3793701208"};
+function normPhone1180(v){let p=String(v||"").replace(/\D/g,""); return p.startsWith("39")?p:"39"+p.replace(/^0+/,"")}
+async function loadCoachContacts1180(){
+ try{
+  const s=await getDoc(doc(db,"users",ownerUid,"settings","coachContacts"));
+  if(s.exists())coachContacts1180={...coachContacts1180,...s.data()};
+ }catch(e){}
+ const href="https://wa.me/"+normPhone1180(coachContacts1180.whatsapp||"3793701208")+"?text="+encodeURIComponent("Ciao Coach, ho bisogno di assistenza con la mia Area Cliente.");
+ document.querySelectorAll('a[href*="wa.me"],a[href*="whatsapp"],button[data-whatsapp-coach]').forEach(el=>{
+  if(el.tagName==="A"){el.href=href;el.target="_blank"}else el.onclick=()=>window.open(href,"_blank");
+ });
+}
+setTimeout(loadCoachContacts1180,800);
+
 </script>
 </body>
 </html>

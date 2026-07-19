@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>SB Personal Coach Gestionale 11.7.9</title>
+<title>SB Personal Coach Gestionale 11.8.0</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--dark:#101827;--blue:#17233a;--gold:#d5ad52;--bg:#f4f6f8;--card:#fff;--muted:#667085;--ok:#13915f;--bad:#c0392b;--warn:#c47d00}
@@ -58,8 +58,8 @@ hr{border:0;border-top:1px solid #e5e7eb;margin:12px 0}
   <div class="header-inner">
     <img src="logo.jpeg" class="logo" onerror="this.style.display='none'">
     <div>
-      <h1>SB Personal Coach Gestionale 11.7.9.3.2</h1>
-      <div class="subtitle">Stable Registro + Modifica Lezione · 11.7.9</div>
+      <h1>SB Personal Coach Gestionale 11.8.0.3.2</h1>
+      <div class="subtitle">Stable Calendario Futuro + Contatti · 11.8.0</div>
     </div>
   </div>
   <nav id="nav">
@@ -73,6 +73,7 @@ hr{border:0;border-top:1px solid #e5e7eb;margin:12px 0}
     <button data-tab="contabilita">Contabilità</button>
     <button data-tab="impostazioni">Impostazioni</button>
     <button data-tab="backup">Backup</button>
+      <button data-tab="contattiCoach">Contatti Coach</button>
   </nav>
 </header>
 
@@ -151,7 +152,7 @@ hr{border:0;border-top:1px solid #e5e7eb;margin:12px 0}
     </div>
     <div id="editActions" class="hidden">
       <button class="btn green" onclick="salvaSaldoCliente()">💰 Modifica solo saldo</button>
-      <button class="btn gold" onclick="aggiornaCalendarioFuturo()">📅 Aggiorna calendario futuro</button>
+      <button class="btn gold" onclick="aggiornaCalendarioFuturo1180()">📅 Aggiorna calendario futuro</button>
       <button class="btn light" onclick="ricalcolaContatoreCliente()">🔄 Ricalcola contatore</button>
       <button class="btn dark" onclick="salvaDatiCliente()">💾 Salva dati cliente</button>
       <button class="btn light" onclick="pulisciForm()">Nuovo cliente</button>
@@ -246,6 +247,24 @@ hr{border:0;border-top:1px solid #e5e7eb;margin:12px 0}
   </div>
 </section>
 
+
+<section id="contattiCoach" class="section">
+  <div class="card">
+    <h2>📇 Contatti Coach</h2>
+    <p class="meta">Questi dati vengono utilizzati nell’Area Cliente.</p>
+    <label>Numero WhatsApp Business</label>
+    <input id="coachWhatsapp" inputmode="tel" placeholder="3793701208">
+    <label>Email</label>
+    <input id="coachEmail" type="email">
+    <label>Instagram</label>
+    <input id="coachInstagram" placeholder="@salvo_coach90">
+    <label>Sito web</label>
+    <input id="coachWebsite" placeholder="https://www.salvatorebarone.com">
+    <button class="btn gold full" onclick="salvaContattiCoach1180()">Salva contatti</button>
+    <p id="coachContactsInfo" class="meta"></p>
+  </div>
+</section>
+
 </main>
 
 <script type="module">
@@ -258,7 +277,7 @@ const app=initializeApp(firebaseConfig);
 const auth=getAuth(app);
 const db=getFirestore(app);
 
-let user=null, clienti=[], eventi=[], rinnovi=[], pagamenti=[], recuperi=[], settings={};
+let user=null, clienti=[], eventi=[], rinnovi=[], pagamenti=[], recuperi=[], settings={}, coachSettings={};
 const $=id=>document.getElementById(id);
 const path=name=>collection(db,"users",user.uid,name);
 const docPath=(name,id)=>doc(db,"users",user.uid,name,id);
@@ -1467,6 +1486,92 @@ window.renderCalendario=function(){
    </div>
  `).join("")||'<div class="empty">Nessuna lezione in questo intervallo.</div>';
 };
+
+
+/* 11.8.0 - Contatti Coach */
+function normalizePhone1180(v){
+ let p=String(v||"").replace(/\D/g,"");
+ if(p.startsWith("39"))return p;
+ return "39"+p.replace(/^0+/,"");
+}
+async function caricaContattiCoach1180(){
+ if(!user)return;
+ try{
+  const s=await getDoc(doc(db,"users",user.uid,"settings","coachContacts"));
+  coachSettings=s.exists()?s.data():{whatsapp:"3793701208",email:"",instagram:"",website:""};
+ }catch(e){coachSettings={whatsapp:"3793701208",email:"",instagram:"",website:""}}
+ aggiornaUIContattiCoach1180();
+}
+function aggiornaUIContattiCoach1180(){
+ if($("coachWhatsapp"))$("coachWhatsapp").value=coachSettings.whatsapp||"3793701208";
+ if($("coachEmail"))$("coachEmail").value=coachSettings.email||"";
+ if($("coachInstagram"))$("coachInstagram").value=coachSettings.instagram||"";
+ if($("coachWebsite"))$("coachWebsite").value=coachSettings.website||"";
+ if($("coachContactsInfo"))$("coachContactsInfo").textContent="WhatsApp attuale: +"+normalizePhone1180(coachSettings.whatsapp||"3793701208");
+}
+async function salvaContattiCoach1180(){
+ const data={
+  whatsapp:($("coachWhatsapp")?.value||"3793701208").trim(),
+  email:($("coachEmail")?.value||"").trim(),
+  instagram:($("coachInstagram")?.value||"").trim(),
+  website:($("coachWebsite")?.value||"").trim(),
+  updatedAt:serverTimestamp()
+ };
+ await setDoc(doc(db,"users",user.uid,"settings","coachContacts"),data,{merge:true});
+ coachSettings=data; aggiornaUIContattiCoach1180(); alert("Contatti Coach salvati.");
+}
+window.salvaContattiCoach1180=salvaContattiCoach1180;
+
+/* 11.8.0 - Rigenerazione calendario futuro */
+function futurePending1180(e){
+ return e && String(e.data||"")>=todayISO() && e.processed!==true && e.scalata!==true && !historical(e.stato);
+}
+function schedule1180(){
+ const map=[["Lunedi","lun"],["Martedi","mar"],["Mercoledi","mer"],["Giovedi","gio"],["Venerdi","ven"],["Sabato","sab"],["Domenica","dom"]];
+ return map.filter(([l,k])=>$("day_"+k)?.checked && $("time_"+k)?.value).map(([l,k])=>({label:l,key:k,ora:$("time_"+k).value}));
+}
+function weekdayKey1180(d){return ["dom","lun","mar","mer","gio","ven","sab"][d.getDay()]}
+async function aggiornaCalendarioFuturo1180(){
+ const id=editingId, c=clienti.find(x=>x.id===id);
+ if(!c)return alert("Seleziona prima un cliente.");
+ const sc=schedule1180(); if(!sc.length)return alert("Seleziona almeno un giorno e un orario.");
+ const residue=Number(c.lezioniResidue||0);
+ if(!confirm("Rigenerare solo le lezioni future ancora Prenotate?\n\nLo storico non verrà toccato. Verranno create esattamente "+residue+" lezioni residue e sarà ricalcolata la scadenza."))return;
+
+ for(const e of eventi.filter(x=>x.clienteId===id && futurePending1180(x))) await deleteDoc(docPath("eventi",e.id));
+
+ const created=[]; let cursor=new Date(); cursor.setHours(0,0,0,0); let guard=0;
+ while(created.length<residue && guard<370){
+  const slot=sc.find(s=>s.key===weekdayKey1180(cursor));
+  if(slot)created.push({data:cursor.toISOString().slice(0,10),ora:slot.ora});
+  cursor.setDate(cursor.getDate()+1); guard++;
+ }
+ if(created.length!==residue)return alert("Impossibile generare tutte le lezioni.");
+
+ for(const x of created){
+  await addDoc(path("eventi"),{
+   clienteId:id, clienteNome:(c.nome+" "+c.cognome).trim(),
+   data:x.data, ora:x.ora, durata:Number($("durata")?.value||c.durata||60),
+   stato:"Prenotata", processed:false, scalata:false, createdAt:serverTimestamp()
+  });
+ }
+
+ const nuovaScadenza=created.length?created[created.length-1].data:todayISO();
+ await setDoc(docPath("clienti",id),{
+  frequenza:Number($("frequenza")?.value||sc.length),
+  giorni:sc.map(x=>x.label), orari:sc.map(x=>x.ora),
+  scadenza:nuovaScadenza, updatedAt:serverTimestamp()
+ },{merge:true});
+ if($("scadenza"))$("scadenza").value=nuovaScadenza;
+ alert("Calendario rigenerato con "+residue+" lezioni residue.");
+}
+window.aggiornaCalendarioFuturo1180=aggiornaCalendarioFuturo1180;
+window.aggiornaCalendarioFuturo=aggiornaCalendarioFuturo1180;
+
+const oldSubscribe1180=subscribe;
+subscribe=function(){oldSubscribe1180();caricaContattiCoach1180();};
+const oldRender1180=render;
+render=()=>{oldRender1180();aggiornaUIContattiCoach1180();};
 
 </script>
 
