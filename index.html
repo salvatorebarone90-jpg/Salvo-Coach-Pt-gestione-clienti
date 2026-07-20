@@ -59,7 +59,7 @@ hr{border:0;border-top:1px solid #e5e7eb;margin:12px 0}
     <img src="logo.jpeg" class="logo" onerror="this.style.display='none'">
     <div>
       <h1>SB Personal Coach Gestionale 11.8.0.1.3.2</h1>
-      <div class="subtitle">Hotfix Calendario + WhatsApp · 11.8.0.1</div>
+      <div class="subtitle">DEV Sicurezza Area Cliente · 11.8.0.2</div>
     </div>
   </div>
   <nav id="nav">
@@ -611,15 +611,7 @@ window.apriGoogleCalendarEvento113=(id)=>{
 };
 window.apriGoogleCalendarEvento=window.apriGoogleCalendarEvento113;
 
-window.inviaAccessoCliente=id=>{
- const c=byId113(id); if(!c)return alert("Cliente non trovato.");
- const base=location.href.split("/").slice(0,-1).join("/");
- const link=base+"/cliente.html?id="+encodeURIComponent(id);
- const phone=String(c.telefono||"").replace(/\D/g,"");
- const msg=encodeURIComponent(`Ciao ${c.nome||""}, ecco il link per accedere alla tua Area Cliente Premium:\n${link}`);
- if(phone) window.open(`https://wa.me/${phone}?text=${msg}`,"_blank");
- else {navigator.clipboard?.writeText(link); window.open(link,"_blank");}
-};
+window.inviaAccessoCliente=id=>window.sbInviteClient(id);
 
 window.renderContabilita=()=>{
  if(!$("contMese").value)$("contMese").value=monthNow113();
@@ -689,22 +681,41 @@ window.sbReturnLesson = async function(id){
 window.lezione = window.sbAddLesson;
 window.restituisci = window.sbReturnLesson;
 
-window.sbClientLink = function(id){
+function sbNewClientToken(){
+ const bytes=new Uint8Array(24);
+ crypto.getRandomValues(bytes);
+ return Array.from(bytes,b=>b.toString(16).padStart(2,"0")).join("");
+}
+
+window.sbClientLink = function(id, token){
  const base = location.href.split("/").slice(0,-1).join("/");
- const uid = user?.uid || "";
- return `${base}/cliente.html?uid=${encodeURIComponent(uid)}&id=${encodeURIComponent(id)}`;
+ return `${base}/cliente.html?token=${encodeURIComponent(token)}`;
 };
 
-window.sbInviteClient = function(id){
+window.sbInviteClient = async function(id){
  const c = sbGetClient(id);
  if(!c) return alert("Cliente non trovato.");
- const link = sbClientLink(id);
+
+ let token=String(c.accessToken||"").trim();
+ if(!token){
+   token=sbNewClientToken();
+   await setDoc(docPath("clienti",id),{accessToken:token,updatedAt:serverTimestamp()},{merge:true});
+ }
+
+ await setDoc(doc(db,"clientInvites",token),{
+   ownerUid:user.uid,
+   clientId:id,
+   active:true,
+   updatedAt:serverTimestamp()
+ },{merge:true});
+
+ const link = sbClientLink(id,token);
  const phone = String(c.telefono||"").replace(/\D/g,"");
  const text = encodeURIComponent(`Ciao ${c.nome||""}, ecco il link per accedere alla tua Area Cliente Premium:\n${link}`);
  if(phone){
    window.open(`https://wa.me/${phone}?text=${text}`, "_blank");
  }else{
-   navigator.clipboard?.writeText(link);
+   await navigator.clipboard?.writeText(link);
    window.open(link, "_blank");
  }
 };
