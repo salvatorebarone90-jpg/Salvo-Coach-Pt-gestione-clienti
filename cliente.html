@@ -76,7 +76,7 @@ main{padding:16px;max-width:930px;margin:auto}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, getDoc, updateDoc, collection, getDocs, collectionGroup, query, where, serverTimestamp, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, getDoc,setDoc, updateDoc, collection, getDocs, collectionGroup, query, where, serverTimestamp, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
 const app=initializeApp(firebaseConfig), db=getFirestore(app), auth=getAuth(app);
 const params=new URLSearchParams(location.search), token=params.get("token");
