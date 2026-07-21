@@ -1695,6 +1695,129 @@ window.aggiornaCalendarioFuturo11801=aggiornaCalendarioFuturo11801;
 window.aggiornaCalendarioFuturo1180=aggiornaCalendarioFuturo11801;
 window.aggiornaCalendarioFuturo=aggiornaCalendarioFuturo11801;
 
+
+/* 11.8.1 - Calendario intelligente su modifica pacchetto/orari */
+function normalizedSchedule1181(){
+ if(typeof syncScheduleFields112==="function") syncScheduleFields112();
+ return schedule11801();
+}
+function scheduleSignature1181(sc){
+ return sc.map(x=>`${x.key}:${x.ora}`).sort().join("|");
+}
+function clientScheduleSignature1181(c){
+ const days=Array.isArray(c?.giorni)?c.giorni:String(c?.giorni||"").split(/[,;\n]+/).map(x=>x.trim()).filter(Boolean);
+ const hours=Array.isArray(c?.orari)?c.orari:String(c?.orari||"").split(/[,;\n]+/).map(x=>x.trim()).filter(Boolean);
+ const keyMap={lunedi:"lun",lunedì:"lun",lun:"lun",martedi:"mar",martedì:"mar",mar:"mar",mercoledi:"mer",mercoledì:"mer",mer:"mer",giovedi:"gio",giovedì:"gio",gio:"gio",venerdi:"ven",venerdì:"ven",ven:"ven",sabato:"sab",sab:"sab",domenica:"dom",dom:"dom"};
+ return days.map((d,i)=>`${keyMap[normDay(d)]||normDay(d)}:${hours[i]||hours[0]||""}`).filter(x=>!x.endsWith(":" )).sort().join("|");
+}
+function calendarFieldsChanged1181(oldC,newData,sc){
+ return Number(oldC?.lezioniTotali||0)!==Number(newData.lezioniTotali||0)
+  || Number(oldC?.frequenza||0)!==Number(newData.frequenza||0)
+  || Number(oldC?.durata||60)!==Number(newData.durata||60)
+  || clientScheduleSignature1181(oldC)!==scheduleSignature1181(sc);
+}
+async function reconcileCalendar1181(id,newData,{ask=true}={}){
+ const oldC=clienti.find(x=>x.id===id);
+ if(!oldC)throw new Error("Cliente non trovato.");
+ const sc=normalizedSchedule1181();
+ if(!sc.length)throw new Error("Seleziona almeno un giorno e un orario.");
+
+ const consumed=eventi.filter(e=>e.clienteId===id && consumes(e.stato)).length;
+ const targetTotal=Math.max(0,Number(newData.lezioniTotali||0));
+ const targetRemaining=Math.max(0,targetTotal-consumed);
+ const start=todayISO();
+ const pending=eventi.filter(e=>e.clienteId===id && String(e.data||"")>=start && futurePending11801(e));
+
+ if(ask){
+  const diff=targetTotal-Number(oldC.lezioniTotali||0);
+  const text=[
+   "Aggiornare il calendario da oggi in poi?",
+   "",
+   "• Storico, lezioni effettuate, assenze e annullamenti resteranno invariati.",
+   "• Verranno sostituite soltanto le lezioni future ancora Prenotate.",
+   `• Pacchetto: ${oldC.lezioniTotali||0} → ${targetTotal} lezioni${diff>0?` (+${diff})`:diff<0?` (${diff})`:""}.`,
+   `• Lezioni già consumate: ${consumed}.`,
+   `• Lezioni future da programmare: ${targetRemaining}.`,
+   "• Giorni, orari e scadenza verranno aggiornati automaticamente."
+  ].join("\\n");
+  if(!confirm(text))return false;
+ }
+
+ for(const ev of pending)await deleteDoc(docPath("eventi",ev.id));
+
+ // Evita sovrapposizioni con lezioni storiche o non eliminabili già presenti.
+ const deletedIds=new Set(pending.map(e=>e.id));
+ const occupied=new Set(eventi.filter(e=>e.clienteId===id && !deletedIds.has(e.id)).map(e=>`${e.data}|${e.ora}`));
+ const created=[];
+ let cursor=new Date();cursor.setHours(0,0,0,0);
+ let guard=0;
+ while(created.length<targetRemaining && guard<730){
+  const slot=sc.find(s=>s.key===weekdayKey11801(cursor));
+  if(slot){
+   const data=localISO11801(cursor), key=`${data}|${slot.ora}`;
+   if(!occupied.has(key)){
+    created.push({data,ora:slot.ora});
+    occupied.add(key);
+   }
+  }
+  cursor.setDate(cursor.getDate()+1);guard++;
+ }
+ if(created.length!==targetRemaining)throw new Error("Non è stato possibile generare tutte le lezioni richieste.");
+
+ for(const item of created){
+  await addDoc(path("eventi"),{
+   clienteId:id,clienteNome:`${newData.nome||oldC.nome||""} ${newData.cognome||oldC.cognome||""}`.trim(),
+   data:item.data,ora:item.ora,durata:Number(newData.durata||oldC.durata||60),
+   stato:"Prenotata",processed:false,storico:false,scalata:false,createdAt:serverTimestamp()
+  });
+ }
+
+ const latestProtected=eventi.filter(e=>e.clienteId===id && !deletedIds.has(e.id)).map(e=>String(e.data||"")).filter(Boolean).sort().pop();
+ const nuovaScadenza=created.length?created[created.length-1].data:(latestProtected||todayISO());
+ await setDoc(docPath("clienti",id),{
+  ...newData,
+  lezioniTotali:targetTotal,
+  frequenza:Number(newData.frequenza||sc.length),
+  giorni:sc.map(x=>x.label),
+  orari:sc.map(x=>x.ora),
+  lezioniFatte:consumed,
+  lezioniResidue:targetRemaining,
+  scadenza:nuovaScadenza,
+  updatedAt:serverTimestamp()
+ },{merge:true});
+ if($("scadenza"))$("scadenza").value=nuovaScadenza;
+ return {created:created.length,remaining:targetRemaining,expiry:nuovaScadenza,consumed};
+}
+
+window.aggiornaCalendarioFuturo11801=async()=>{
+ const id=$("clienteId")?.value;
+ if(!id)return alert("Apri prima il cliente da modificare.");
+ try{
+  const result=await reconcileCalendar1181(id,formData(),{ask:true});
+  if(!result)return;
+  alert(`Calendario aggiornato correttamente.\\n\\nLezioni future create: ${result.created}\\nLezioni residue: ${result.remaining}\\nNuova scadenza: ${fmt(result.expiry)}`);
+ }catch(e){alert(e.message||String(e));}
+};
+window.aggiornaCalendarioFuturo1180=window.aggiornaCalendarioFuturo11801;
+window.aggiornaCalendarioFuturo=window.aggiornaCalendarioFuturo11801;
+
+window.salvaDatiCliente=async()=>{
+ const id=$("clienteId")?.value;if(!id)return;
+ const oldC=clienti.find(x=>x.id===id);if(!oldC)return alert("Cliente non trovato.");
+ const data=formData();
+ const sc=normalizedSchedule1181();
+ try{
+  if(calendarFieldsChanged1181(oldC,data,sc)){
+   const result=await reconcileCalendar1181(id,data,{ask:true});
+   if(!result)return;
+   alert(`Dati e calendario aggiornati.\\n\\nLezioni future create: ${result.created}\\nNuova scadenza: ${fmt(result.expiry)}`);
+  }else{
+   await setDoc(docPath("clienti",id),data,{merge:true});
+   alert("Dati cliente salvati.");
+  }
+ }catch(e){alert(e.message||String(e));}
+};
+
 </script>
 
 <div id="editLessonModal1179" class="edit-lesson-modal">
