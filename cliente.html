@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Area Cliente Premium 11.8.0.1</title>
+<title>Area Cliente Premium DEV Secure 11.8.0.2</title>
 <style>
 :root{--dark:#101827;--blue:#17233a;--gold:#d5ad52;--bg:#f4f6f8;--card:#fff;--muted:#667085;--ok:#166534;--bad:#991b1b;--warn:#92400e;--brown:#7c2d12}
 *{box-sizing:border-box}
@@ -75,11 +75,30 @@ main{padding:16px;max-width:930px;margin:auto}
 </main>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, doc, getDoc, updateDoc, collection, getDocs, collectionGroup, query, where, serverTimestamp, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, getDoc,setDoc, updateDoc, collection, getDocs, collectionGroup, query, where, serverTimestamp, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
-const app=initializeApp(firebaseConfig), db=getFirestore(app);
-const params=new URLSearchParams(location.search), id=params.get("id"), uid=params.get("uid");
-let currentClient=null,currentClientRef=null,ownerUid=uid,allEvents=[],allRequests=[];
+const app=initializeApp(firebaseConfig), db=getFirestore(app), auth=getAuth(app);
+const params=new URLSearchParams(location.search), token=params.get("token");
+let id=null;
+let currentClient=null,currentClientRef=null,ownerUid=null,allEvents=[],allRequests=[];
+
+async function authenticateClientPortal(){
+ if(!token) throw new Error("Link cliente non valido o incompleto.");
+ const credential=await signInAnonymously(auth);
+ const inviteRef=doc(db,"clientInvites",token);
+ const inviteSnap=await getDoc(inviteRef);
+ if(!inviteSnap.exists() || inviteSnap.data().active!==true) throw new Error("Link cliente non valido o disattivato.");
+ const invite=inviteSnap.data();
+ ownerUid=invite.ownerUid;
+ id=invite.clientId;
+ await setDoc(doc(db,"clientAccess",credential.user.uid),{
+   token,
+   ownerUid,
+   clientId:id,
+   updatedAt:serverTimestamp()
+ },{merge:true});
+}
 const REG_VERSION="11.8.0.1";
 function fmt(d){if(!d)return"-";const [y,m,day]=String(d).slice(0,10).split("-");return day&&m&&y?`${day}/${m}/${y}`:d}
 function fmtShort(d){if(!d)return"-";const [,m,day]=String(d).slice(0,10).split("-");return day&&m?`${day}/${m}`:d}
@@ -110,8 +129,37 @@ window.accettaRegolamento=async()=>{if(!document.getElementById("regCheck").chec
 function renderClientArea(){const c=currentClient;document.getElementById("welcome").textContent="Benvenuto "+(c.nome||nome(c))+" 👋";document.getElementById("heroSub").textContent=(c.servizio||"")+" · Orario fisso";document.getElementById("heroBadges").innerHTML=`<span class="badge ok">${activeLabel(c)}</span><span class="badge ok">${residue(c)} residue su ${total(c)}</span><span class="badge ${balance(c)>0?"bad":"ok"}">${payLabel(c)}</span><span class="badge ok">📋 ${c.regolamentoAccettato?"Regolamento accettato":"Regolamento non accettato"}</span>`;const wa=document.getElementById("waClienteBtn");if(wa)wa.href=coachWhatsappLink();document.getElementById("kResidue").textContent=residue(c);const next=allEvents.filter(e=>String(e.data||"")>=new Date().toISOString().slice(0,10)&&!["Effettuata","Assente","Annullata","Recuperata"].includes(e.stato||"")).sort((a,b)=>String(a.data||"").localeCompare(String(b.data||""))||String(a.ora||"").localeCompare(String(b.ora||"")))[0];document.getElementById("kNext").textContent=next?fmtShort(next.data):"-";document.getElementById("kScadenza").textContent=fmt(c.scadenza);document.getElementById("kCert").textContent=c.certificato||c.certificatoScadenza||"-";document.getElementById("lezioni").innerHTML=allEvents.length?allEvents.map(e=>renderLezioneCliente(e)).join(""):"<p class='meta'>Nessuna lezione trovata.</p>"}
 function renderLezioneCliente(e){const req=allRequests.find(r=>r.eventoId===e.id);const can=canRequestRecovery(e);let action="";if(req){action=`<p class="meta">🔄 Recupero richiesto · Stato: <b>${req.stato||"Richiesta"}</b>${req.motivoRifiuto?`<br>Motivo: ${req.motivoRifiuto}`:""}</p>`}else if(can){action=`<button class="btn gold" onclick="richiediRecupero('${e.id}')">🔄 Richiedi recupero</button>`}else{action=`<button class="btn light disabled">🔒 Recupero non disponibile</button><p class="meta">Richiesta consentita solo prima delle 24 ore.</p>`}return `<div class="lesson"><div><h3>${fmt(e.data)} ore ${e.ora||"-"}</h3><p class="meta">Stato: ${e.stato||"Prenotata"}</p><span class="badge ${statoClass(e.stato||"Prenotata")}">${e.stato||"Prenotata"}</span></div><div>${action}</div></div>`}
 window.richiediRecupero=async(eventoId)=>{if(!currentClient||!currentClientRef||!ownerUid)return alert("Cliente non caricato.");const ev=allEvents.find(e=>e.id===eventoId);if(!ev)return alert("Lezione non trovata.");if(!canRequestRecovery(ev))return alert("Richiesta recupero non disponibile: mancano meno di 24 ore o la lezione è già stata gestita.");if(!confirm("Inviare richiesta di recupero al coach?"))return;const label=nowLabel();await addDoc(collection(db,"users",ownerUid,"recuperi"),{clienteId:id,clienteNome:nome(currentClient),eventoId:ev.id,data:ev.data,ora:ev.ora||"",stato:"Richiesta",createdAt:new Date().toISOString(),createdAtLabel:label,updatedAt:serverTimestamp()});alert("Richiesta di recupero inviata al coach.");await load()}
-async function load(){try{if(!id){document.getElementById("welcome").textContent="Link non valido";return}let c=null;if(uid){const ref=doc(db,"users",uid,"clienti",id);const snap=await getDoc(ref);if(snap.exists()){c={id:snap.id,...snap.data()};currentClientRef=ref}}if(!c){const qs=await getDocs(query(collectionGroup(db,"clienti"),where("__name__","==",id)));if(!qs.empty){const ds=qs.docs[0];c={id:ds.id,...ds.data()};ownerUid=ds.ref.parent.parent.id;currentClientRef=ds.ref}}if(!c){alert("Cliente non trovato.");return}currentClient=c;if(ownerUid){const es=await getDocs(collection(db,"users",ownerUid,"eventi"));allEvents=es.docs.map(d=>({id:d.id,...d.data()})).filter(e=>e.clienteId===id).sort((a,b)=>String(a.data||"").localeCompare(String(b.data||""))||String(a.ora||"").localeCompare(String(b.ora||"")));const rs=await getDocs(collection(db,"users",ownerUid,"recuperi"));allRequests=rs.docs.map(d=>({id:d.id,...d.data()})).filter(r=>r.clienteId===id)}renderClientArea();updateRegolamentoUI()}catch(e){alert("Errore caricamento: "+e.message)}}
-load();
+async function load(){
+ try{
+  if(!id||!ownerUid){document.getElementById("welcome").textContent="Link non valido";return}
+  const ref=doc(db,"users",ownerUid,"clienti",id);
+  const snap=await getDoc(ref);
+  if(!snap.exists()){alert("Cliente non trovato.");return}
+  const c={id:snap.id,...snap.data()};
+  currentClientRef=ref;
+  currentClient=c;
+
+  const es=await getDocs(query(collection(db,"users",ownerUid,"eventi"),where("clienteId","==",id)));
+  allEvents=es.docs.map(d=>({id:d.id,...d.data()}))
+    .sort((a,b)=>String(a.data||"").localeCompare(String(b.data||""))||String(a.ora||"").localeCompare(String(b.ora||"")));
+
+  const rs=await getDocs(query(collection(db,"users",ownerUid,"recuperi"),where("clienteId","==",id)));
+  allRequests=rs.docs.map(d=>({id:d.id,...d.data()}));
+
+  renderClientArea();
+  updateRegolamentoUI();
+ }catch(e){alert("Errore caricamento: "+e.message)}
+}
+
+async function startClientPortal(){
+ try{
+  await authenticateClientPortal();
+  await load();
+ }catch(e){
+  alert("Errore accesso Area Cliente: "+e.message);
+ }
+}
+startClientPortal();
 
 /* 11.8.0 - WhatsApp Coach dinamico */
 let coachContacts1180={whatsapp:"3793701208"};
