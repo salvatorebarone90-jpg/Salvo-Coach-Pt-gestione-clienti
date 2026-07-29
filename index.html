@@ -58,7 +58,7 @@ hr{border:0;border-top:1px solid #e5e7eb;margin:12px 0}
   <div class="header-inner">
     <img src="logo.jpeg" class="logo" onerror="this.style.display='none'">
     <div>
-      <h1>SB Personal Coach Gestionale 11.8.0.1.3.2</h1>
+      <h1>SB Personal Coach Gestionale 11.8.1.1 HOTFIX Rinnovo</h1>
       <div class="subtitle">DEV Sicurezza Area Cliente · 11.8.0.2</div>
     </div>
   </div>
@@ -311,6 +311,25 @@ window.aggiornaAnteprimaOrari=()=>{
 
 function parseDays(s){return String(s||"").split(/[,\n;]/).map(x=>dayMap[normDay(x)]).filter(x=>x!==undefined)}
 function parseHours(s){return String(s||"").split(/[,\n;]/).map(x=>x.trim()).filter(Boolean)}
+function localDateFromISO(iso){const [y,m,d]=String(iso||"").split("-").map(Number);return new Date(y,m-1,d,12,0,0)}
+function localISO(date){const y=date.getFullYear(),m=String(date.getMonth()+1).padStart(2,"0"),d=String(date.getDate()).padStart(2,"0");return `${y}-${m}-${d}`}
+function primoGiornoUtile(c,fromDate=tomorrowISO()){
+ const days=parseDays(c.giorni);
+ if(!days.length)return fromDate;
+ const d=localDateFromISO(fromDate);
+ for(let i=0;i<14;i++){if(days.includes(d.getDay()))return localISO(d);d.setDate(d.getDate()+1)}
+ return fromDate;
+}
+function ultimaDataProgrammata(c,startDate){
+ const days=parseDays(c.giorni), max=Number(c.lezioniTotali||0);
+ if(!days.length||max<=0)return calcExpiry(startDate,c.lezioniTotali,c.frequenza);
+ let created=0,d=localDateFromISO(startDate),last=startDate,safety=0;
+ while(created<max && safety<730){
+  if(days.includes(d.getDay())){last=localISO(d);created++}
+  d.setDate(d.getDate()+1);safety++;
+ }
+ return last;
+}
 function eventStart(ev){const [y,m,d]=String(ev.data||"").split("-").map(Number);let h=9,mi=0;if(ev.ora){const p=String(ev.ora).split(":").map(Number);h=p[0]||0;mi=p[1]||0}return new Date(y,m-1,d,h,mi,0)}
 function eventEnd(ev){return new Date(eventStart(ev).getTime()+Number(ev.durata||60)*60000)}
 function historical(st){return ["Effettuata","Assente","Recuperata","Annullata","Annullata dal cliente"].includes(st||"")}
@@ -407,7 +426,23 @@ window.aggiornaCalendarioFuturo=async()=>{
 window.lezione=async id=>{const c=clienti.find(x=>x.id===id);if(!c)return;if(!confirm("Scalare 1 lezione manualmente?"))return;await setDoc(docPath("clienti",id),{lezioniFatte:Number(c.lezioniFatte||0)+1,lezioniResidue:Math.max(0,Number(c.lezioniResidue||0)-1)},{merge:true})}
 window.restituisci=async id=>{const c=clienti.find(x=>x.id===id);if(!c)return;if(!confirm("Restituire 1 lezione?"))return;await setDoc(docPath("clienti",id),{lezioniFatte:Math.max(0,Number(c.lezioniFatte||0)-1),lezioniResidue:Number(c.lezioniResidue||0)+1},{merge:true})}
 window.inattivo=async id=>{const c=clienti.find(x=>x.id===id);if(!c)return;const nuovo=(c.stato||"attivo")==="inattivo"?"attivo":"inattivo";await setDoc(docPath("clienti",id),{stato:nuovo},{merge:true})}
-window.rinnova=async id=>{const c=clienti.find(x=>x.id===id);if(!c)return;if(!confirm("Rinnovare pacchetto?"))return;const start=todayISO();await addDoc(path("rinnovi"),{cliente:nome(c),clienteId:id,pacchetto:c.lezioniTotali,data:start,importo:valore(c),createdAt:serverTimestamp()});await setDoc(docPath("clienti",id),{stato:"attivo",lezioniFatte:0,lezioniResidue:Number(c.lezioniTotali||0),inizio:start,scadenza:calcExpiry(start,c.lezioniTotali,c.frequenza)},{merge:true})}
+window.rinnova=async id=>{
+ const c=clienti.find(x=>x.id===id);if(!c)return;
+ const days=parseDays(c.giorni),hours=parseHours(c.orari);
+ if(!days.length||!hours.length)return alert("Impossibile rinnovare: controlla giorni e orari settimanali del cliente.");
+ const start=primoGiornoUtile(c,tomorrowISO());
+ const end=ultimaDataProgrammata(c,start);
+ if(!confirm(`Rinnovare il pacchetto dal ${fmt(start)}? Le nuove lezioni saranno generate dal primo giorno utile.`))return;
+ try{
+  // Rimuove soltanto eventuali lezioni future non storiche del vecchio pacchetto.
+  // Storico, lezioni effettuate, assenze e recuperi non vengono modificati.
+  for(const ev of eventi.filter(e=>e.clienteId===id && e.data>=start && !historical(e.stato))){await deleteDoc(docPath("eventi",ev.id))}
+  await addDoc(path("rinnovi"),{cliente:nome(c),clienteId:id,pacchetto:c.lezioniTotali,data:start,importo:valore(c),createdAt:serverTimestamp()});
+  await setDoc(docPath("clienti",id),{stato:"attivo",lezioniFatte:0,lezioniResidue:Number(c.lezioniTotali||0),inizio:start,scadenza:end,updatedAt:serverTimestamp()},{merge:true});
+  await generaEventi(id,{...c,inizio:start,scadenza:end},start);
+  alert(`Pacchetto rinnovato. Prima lezione: ${fmt(start)}. Calendario generato correttamente.`);
+ }catch(e){console.error("Errore rinnovo pacchetto",e);alert("Errore durante il rinnovo. Nessuna modifica al Calendario Intelligente. Riprova o controlla la connessione.")}
+}
 window.eliminaCliente=async id=>{const c=clienti.find(x=>x.id===id);if(!c)return;if(!confirm("Eliminare cliente?"))return;await deleteDoc(docPath("clienti",id))}
 window.inviaAccessoCliente=id=>{const url=location.origin+location.pathname.replace("index.html","")+"cliente.html?id="+id;navigator.clipboard?.writeText(url);alert("Link copiato.")}
 
