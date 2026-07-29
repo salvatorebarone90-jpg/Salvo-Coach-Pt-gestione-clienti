@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Area Cliente Premium DEV Secure 11.8.0.2</title>
+<title>Area Cliente Premium 11.8.1.2</title>
 <style>
 :root{--dark:#101827;--blue:#17233a;--gold:#d5ad52;--bg:#f4f6f8;--card:#fff;--muted:#667085;--ok:#166534;--bad:#991b1b;--warn:#92400e;--brown:#7c2d12}
 *{box-sizing:border-box}
@@ -48,7 +48,7 @@ main{padding:16px;max-width:930px;margin:auto}
       <h3>🩺 Certificato medico</h3><p>Il certificato medico deve essere sempre valido e aggiornato per tutta la durata del percorso.</p>
       <h3>🎯 Pacchetto lezioni</h3><p>Le lezioni devono essere utilizzate entro la data di scadenza indicata nella scheda cliente. Le lezioni non utilizzate entro tale data saranno considerate perse.</p>
       <h3>📈 Frequenza delle lezioni</h3><p>I pacchetti Personal Training prevedono una frequenza compresa tra <b>2 e 4 lezioni settimanali</b>. La frequenza concordata al momento dell'acquisto rimane valida per tutta la durata del pacchetto.</p>
-      <h3>💳 Pagamenti</h3><p>Non sono previste rateizzazioni, pagamenti posticipati o saldi a fine percorso, salvo accordi specifici presi con il coach.</p>
+      <h3>💳 Pagamenti</h3><p>Non sono previste rateizzazioni, pagamenti posticipati o saldi a fine percorso.</p>
       <h3>⏸️ Sospensione del percorso</h3><p>Eventuali assenze, vacanze o interruzioni personali non prorogano automaticamente la scadenza del pacchetto.</p>
       <h3>⏰ Ritardi</h3><p>In caso di ritardo del cliente, la lezione terminerà comunque all'orario previsto.</p>
       <h3>🔄 Recuperi</h3><p>Le richieste di recupero sono soggette alla disponibilità e all'approvazione del coach e non sono garantite.</p>
@@ -70,6 +70,7 @@ main{padding:16px;max-width:930px;margin:auto}
       <div class="kpi"><strong id="kScadenza">-</strong><span>Scadenza pacchetto</span></div>
       <div class="kpi"><strong id="kCert">-</strong><span>Certificato</span></div>
     </div>
+    <div id="bachecaClienteCard" class="card hidden"><h2 id="bachecaClienteTitolo">📣 Comunicazione del coach</h2><p id="bachecaClienteMessaggio"></p><p id="bachecaClientePeriodo" class="meta"></p></div>
     <div class="card"><h2>📅 Tutte le lezioni</h2><div id="lezioni"></div></div>
   </section>
 </main>
@@ -80,24 +81,27 @@ import { getFirestore, doc, getDoc,setDoc, updateDoc, collection, getDocs, colle
 import { firebaseConfig } from "./firebase-config.js";
 const app=initializeApp(firebaseConfig), db=getFirestore(app), auth=getAuth(app);
 const params=new URLSearchParams(location.search), token=params.get("token");
+const legacyId=params.get("id"), legacyUid=params.get("uid");
 let id=null;
 let currentClient=null,currentClientRef=null,ownerUid=null,allEvents=[],allRequests=[];
 
 async function authenticateClientPortal(){
- if(!token) throw new Error("Link cliente non valido o incompleto.");
  const credential=await signInAnonymously(auth);
- const inviteRef=doc(db,"clientInvites",token);
- const inviteSnap=await getDoc(inviteRef);
- if(!inviteSnap.exists() || inviteSnap.data().active!==true) throw new Error("Link cliente non valido o disattivato.");
- const invite=inviteSnap.data();
- ownerUid=invite.ownerUid;
- id=invite.clientId;
- await setDoc(doc(db,"clientAccess",credential.user.uid),{
-   token,
-   ownerUid,
-   clientId:id,
-   updatedAt:serverTimestamp()
- },{merge:true});
+ if(token){
+  const inviteRef=doc(db,"clientInvites",token);
+  const inviteSnap=await getDoc(inviteRef);
+  if(!inviteSnap.exists() || inviteSnap.data().active!==true) throw new Error("Link cliente non valido o disattivato.");
+  const invite=inviteSnap.data();
+  ownerUid=invite.ownerUid;id=invite.clientId;
+  await setDoc(doc(db,"clientAccess",credential.user.uid),{token,ownerUid,clientId:id,updatedAt:serverTimestamp()},{merge:true});
+  return;
+ }
+ if(!legacyId)throw new Error("Link cliente non valido o incompleto.");
+ id=legacyId;
+ if(legacyUid){ownerUid=legacyUid;return}
+ const qs=await getDocs(query(collectionGroup(db,"clienti"),where("__name__","==",id)));
+ if(qs.empty)throw new Error("Vecchio link non riconosciuto. Richiedi al coach un nuovo accesso.");
+ const ds=qs.docs[0];ownerUid=ds.ref.parent.parent.id;
 }
 const REG_VERSION="11.8.0.1";
 function fmt(d){if(!d)return"-";const [y,m,day]=String(d).slice(0,10).split("-");return day&&m&&y?`${day}/${m}/${y}`:d}
@@ -129,6 +133,21 @@ window.accettaRegolamento=async()=>{if(!document.getElementById("regCheck").chec
 function renderClientArea(){const c=currentClient;document.getElementById("welcome").textContent="Benvenuto "+(c.nome||nome(c))+" 👋";document.getElementById("heroSub").textContent=(c.servizio||"")+" · Orario fisso";document.getElementById("heroBadges").innerHTML=`<span class="badge ok">${activeLabel(c)}</span><span class="badge ok">${residue(c)} residue su ${total(c)}</span><span class="badge ${balance(c)>0?"bad":"ok"}">${payLabel(c)}</span><span class="badge ok">📋 ${c.regolamentoAccettato?"Regolamento accettato":"Regolamento non accettato"}</span>`;const wa=document.getElementById("waClienteBtn");if(wa)wa.href=coachWhatsappLink();document.getElementById("kResidue").textContent=residue(c);const next=allEvents.filter(e=>String(e.data||"")>=new Date().toISOString().slice(0,10)&&!["Effettuata","Assente","Annullata","Recuperata"].includes(e.stato||"")).sort((a,b)=>String(a.data||"").localeCompare(String(b.data||""))||String(a.ora||"").localeCompare(String(b.ora||"")))[0];document.getElementById("kNext").textContent=next?fmtShort(next.data):"-";document.getElementById("kScadenza").textContent=fmt(c.scadenza);document.getElementById("kCert").textContent=c.certificato||c.certificatoScadenza||"-";document.getElementById("lezioni").innerHTML=allEvents.length?allEvents.map(e=>renderLezioneCliente(e)).join(""):"<p class='meta'>Nessuna lezione trovata.</p>"}
 function renderLezioneCliente(e){const req=allRequests.find(r=>r.eventoId===e.id);const can=canRequestRecovery(e);let action="";if(req){action=`<p class="meta">🔄 Recupero richiesto · Stato: <b>${req.stato||"Richiesta"}</b>${req.motivoRifiuto?`<br>Motivo: ${req.motivoRifiuto}`:""}</p>`}else if(can){action=`<button class="btn gold" onclick="richiediRecupero('${e.id}')">🔄 Richiedi recupero</button>`}else{action=`<button class="btn light disabled">🔒 Recupero non disponibile</button><p class="meta">Richiesta consentita solo prima delle 24 ore.</p>`}return `<div class="lesson"><div><h3>${fmt(e.data)} ore ${e.ora||"-"}</h3><p class="meta">Stato: ${e.stato||"Prenotata"}</p><span class="badge ${statoClass(e.stato||"Prenotata")}">${e.stato||"Prenotata"}</span></div><div>${action}</div></div>`}
 window.richiediRecupero=async(eventoId)=>{if(!currentClient||!currentClientRef||!ownerUid)return alert("Cliente non caricato.");const ev=allEvents.find(e=>e.id===eventoId);if(!ev)return alert("Lezione non trovata.");if(!canRequestRecovery(ev))return alert("Richiesta recupero non disponibile: mancano meno di 24 ore o la lezione è già stata gestita.");if(!confirm("Inviare richiesta di recupero al coach?"))return;const label=nowLabel();await addDoc(collection(db,"users",ownerUid,"recuperi"),{clienteId:id,clienteNome:nome(currentClient),eventoId:ev.id,data:ev.data,ora:ev.ora||"",stato:"Richiesta",createdAt:new Date().toISOString(),createdAtLabel:label,updatedAt:serverTimestamp()});alert("Richiesta di recupero inviata al coach.");await load()}
+function renderBachecaCliente(data){
+ const card=document.getElementById("bachecaClienteCard");
+ if(!card)return;
+ const today=new Date().toISOString().slice(0,10);
+ const active=data&&data.attiva!==false&&(!data.dal||data.dal<=today)&&(!data.al||data.al>=today)&&data.titolo&&data.messaggio;
+ card.classList.toggle("hidden",!active);
+ if(!active)return;
+ document.getElementById("bachecaClienteTitolo").textContent="📣 "+data.titolo;
+ document.getElementById("bachecaClienteMessaggio").textContent=data.messaggio;
+ document.getElementById("bachecaClientePeriodo").textContent=data.al?`Valido fino al ${fmt(data.al)}`:"Comunicazione attiva";
+}
+async function loadBachecaCliente(){
+ try{const bs=await getDoc(doc(db,"users",ownerUid,"comunicazioni","bachecaAttiva"));renderBachecaCliente(bs.exists()?bs.data():null)}catch(e){renderBachecaCliente(null)}
+}
+
 async function load(){
  try{
   if(!id||!ownerUid){document.getElementById("welcome").textContent="Link non valido";return}
@@ -147,6 +166,7 @@ async function load(){
   allRequests=rs.docs.map(d=>({id:d.id,...d.data()}));
 
   renderClientArea();
+  await loadBachecaCliente();
   updateRegolamentoUI();
  }catch(e){alert("Errore caricamento: "+e.message)}
 }

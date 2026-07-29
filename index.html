@@ -59,7 +59,7 @@ hr{border:0;border-top:1px solid #e5e7eb;margin:12px 0}
     <img src="logo.jpeg" class="logo" onerror="this.style.display='none'">
     <div>
       <h1>SB Personal Coach Gestionale 11.8.1.1 HOTFIX Rinnovo</h1>
-      <div class="subtitle">DEV Sicurezza Area Cliente · 11.8.0.2</div>
+      <div class="subtitle">HOTFIX Migliorie · 29/07/2026</div>
     </div>
   </div>
   <nav id="nav">
@@ -74,6 +74,7 @@ hr{border:0;border-top:1px solid #e5e7eb;margin:12px 0}
     <button data-tab="impostazioni">Impostazioni</button>
     <button data-tab="backup">Backup</button>
       <button data-tab="contattiCoach">Contatti Coach</button>
+      <button data-tab="bacheca">Bacheca</button>
   </nav>
 </header>
 
@@ -265,6 +266,23 @@ hr{border:0;border-top:1px solid #e5e7eb;margin:12px 0}
   </div>
 </section>
 
+<section id="bacheca" class="section">
+  <div class="card">
+    <h2>📣 Bacheca comunicazioni</h2>
+    <p class="meta">Pubblica un avviso visibile a tutti i clienti nell’Area Cliente. La comunicazione scade automaticamente alla data indicata.</p>
+    <label>Titolo</label><input id="bachecaTitolo" placeholder="Es. Chiusura estiva">
+    <label>Messaggio</label><textarea id="bachecaMessaggio" placeholder="Scrivi qui la comunicazione..."></textarea>
+    <div class="row">
+      <div><label>Visibile dal</label><input id="bachecaDal" type="date"></div>
+      <div><label>Visibile fino al</label><input id="bachecaAl" type="date"></div>
+    </div>
+    <label><input id="bachecaAttiva" type="checkbox" style="width:auto" checked> Comunicazione attiva</label>
+    <button class="btn gold full" onclick="salvaBacheca()">Pubblica / aggiorna</button>
+    <button class="btn red full" onclick="disattivaBacheca()">Disattiva comunicazione</button>
+    <p id="bachecaStato" class="meta"></p>
+  </div>
+</section>
+
 </main>
 
 <script type="module">
@@ -277,7 +295,7 @@ const app=initializeApp(firebaseConfig);
 const auth=getAuth(app);
 const db=getFirestore(app);
 
-let user=null, clienti=[], eventi=[], rinnovi=[], pagamenti=[], recuperi=[], settings={}, coachSettings={};
+let user=null, clienti=[], eventi=[], rinnovi=[], pagamenti=[], recuperi=[], settings={}, coachSettings={}, bachecaData={};
 const $=id=>document.getElementById(id);
 const path=name=>collection(db,"users",user.uid,name);
 const docPath=(name,id)=>doc(db,"users",user.uid,name,id);
@@ -345,6 +363,8 @@ function showTab(tab){
  document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("active",b.dataset.tab===tab));
  const el=$(tab); if(el)el.classList.add("active");
  render();
+ if(tab==="calendario")renderCalendario();
+ if(tab==="bacheca")renderBachecaCoach();
 }
 document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
 
@@ -366,6 +386,7 @@ function subscribe(){
  onSnapshot(path("rinnovi"),s=>{rinnovi=s.docs.map(d=>({id:d.id,...d.data()}));render()});
  onSnapshot(path("pagamenti"),s=>{pagamenti=s.docs.map(d=>({id:d.id,...d.data()}));render()});
  onSnapshot(path("recuperi"),s=>{recuperi=s.docs.map(d=>({id:d.id,...d.data()}));render()});
+ onSnapshot(doc(db,"users",user.uid,"comunicazioni","bachecaAttiva"),snap=>{bachecaData=snap.exists()?snap.data():{};renderBachecaCoach();});
 }
 
 function formData(){
@@ -462,6 +483,21 @@ window.confermaAssente=async id=>setStatoEvento(id,"Assente");
 async function setStatoEvento(id,stato){const ev=eventi.find(e=>e.id===id);if(!ev)return;await setDoc(docPath("eventi",id),{stato,storico:true,scalata:consumes(stato),updatedAt:serverTimestamp()},{merge:true});const c=clienti.find(x=>x.id===ev.clienteId);await setDoc(docPath("clienti",ev.clienteId),{lezioniFatte:fatte(ev.clienteId)+1,lezioniResidue:Math.max(0,Number(c?.lezioniTotali||0)-fatte(ev.clienteId)-1)},{merge:true})}
 window.confermaTutteEffettuate=async()=>{for(const ev of lezioniDaConfermare())await setStatoEvento(ev.id,"Effettuata")}
 
+function normalizeClientPhone(v){
+ let p=String(v||"").replace(/\D/g,"");
+ if(!p)return "";
+ return p.startsWith("39")?p:"39"+p.replace(/^0+/,"");
+}
+function whatsappCliente(c,rinnovo=false){
+ const phone=normalizeClientPhone(c.telefono);
+ if(!phone)return alert("Numero WhatsApp non presente nella scheda cliente.");
+ const msg=rinnovo
+  ? `Ciao ${c.nome||nome(c)}, ti ricordo che ti rimane una sola lezione del pacchetto. Per garantire continuità al percorso, possiamo procedere con il rinnovo. Salvatore`
+  : `Ciao ${c.nome||nome(c)},`;
+ window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`,"_blank");
+}
+window.whatsappCliente=whatsappCliente;
+
 function clientCard(c){
  const inactive=(c.stato||"attivo")==="inattivo";
  const res=residuoEuro(c);
@@ -473,7 +509,8 @@ function clientCard(c){
    <p class="meta">${c.regolamentoAccettato ? "📋 Regolamento accettato il " + (c.regolamentoAccettatoAtLabel || c.regolamentoAccettatoAt || "-") : "📋 Regolamento non ancora accettato"}</p>
    <span class="badge ${r<=3?"warn":"ok"}">${r} residue su ${c.lezioniTotali||0}</span>${res>0?`<span class="badge bad">Residuo ${euro(res)}</span>`:""}
    <div class="actions">
-     <button type="button" class="btn whatsapp" onclick="window.open('https://wa.me/${String(c.telefono||"").replace(/\\D/g,"")}','_blank')">WhatsApp</button>
+     <button type="button" class="btn whatsapp" onclick="whatsappCliente(clienti.find(x=>x.id==='${c.id}'))">WhatsApp</button>
+     ${r===1?`<button type="button" class="btn whatsapp" onclick="whatsappCliente(clienti.find(x=>x.id==='${c.id}'),true)">📲 Messaggio rinnovo</button>`:""}
      <button type="button" class="btn light" onclick="sbAddLesson('${c.id}')">+ Lezione</button>
      <button type="button" class="btn light" onclick="sbReturnLesson('${c.id}')">Restituisci</button>
      <button type="button" class="btn gold" onclick="rinnova('${c.id}')">Rinnova</button>
@@ -485,7 +522,7 @@ function clientCard(c){
  </div>`;
 }
 function renderClienti(){const list=clienti.slice().sort((a,b)=>nome(a).localeCompare(nome(b)));$("listaClienti").innerHTML=list.map(clientCard).join("")||'<div class="empty">Nessun cliente.</div>'}
-function renderSmart(){const list=lezioniDaConfermare();$("smartCoachBox").innerHTML=list.length?`<div class="check"><h3>⏳ Lezioni da confermare oggi</h3>${list.map(ev=>`<div class="check"><b>${ev.clienteNome||""}</b><p class="meta">${fmt(ev.data)} ore ${ev.ora}</p><button class="btn green" onclick="confermaEffettuata('${ev.id}')">Effettuata</button><button class="btn red" onclick="confermaAssente('${ev.id}')">Assente</button></div>`).join("")}<button class="btn gold full" onclick="confermaTutteEffettuate()">Conferma tutte</button></div>`:'<p class="meta">Nessuna lezione di oggi da confermare.</p>'}
+function renderSmart(){const list=lezioniDaConfermare();$("smartCoachBox").innerHTML=list.length?`<div class="check"><h3>⏳ Lezioni da confermare oggi</h3>${list.map(ev=>`<div class="check"><b>${ev.clienteNome||""}</b><p class="meta">${fmt(ev.data)} ore ${ev.ora}</p><button class="btn green" onclick="confermaEffettuata('${ev.id}',this)">Effettuata</button><button class="btn red" onclick="confermaAssente('${ev.id}',this)">Assente</button></div>`).join("")}<button class="btn gold full" onclick="confermaTutteEffettuate()">Conferma tutte</button></div>`:'<p class="meta">Nessuna lezione di oggi da confermare.</p>'}
 function renderDashboard(){const att=clienti.filter(c=>(c.stato||"attivo")!=="inattivo");$("kClienti").textContent=att.length;$("kOggi").textContent=eventi.filter(e=>e.data===todayISO()).length;$("kDaConf").textContent=lezioniDaConfermare().length;$("kResidui").textContent=euro(att.reduce((s,c)=>s+residuoEuro(c),0));renderSmart()}
 function renderCalendario(){if(!$("calDal").value)$("calDal").value=todayISO();if(!$("calAl").value){const d=new Date();d.setDate(d.getDate()+14);$("calAl").value=d.toISOString().slice(0,10)}const dal=$("calDal").value,al=$("calAl").value;const list=eventi.filter(e=>e.data>=dal&&e.data<=al).sort((a,b)=>a.data.localeCompare(b.data)||String(a.ora).localeCompare(String(b.ora)));$("listaCalendario").innerHTML=list.map(e=>`<div class="card"><h3>${e.clienteNome}</h3><p class="meta">${fmt(e.data)} ore ${e.ora} · ${e.stato||"Prenotata"}</p></div>`).join("")||'<div class="empty">Nessuna lezione.</div>'}
 function renderRegistroSelect(){const cur=$("registroCliente").value;$("registroCliente").innerHTML='<option value="">Seleziona cliente</option>'+clienti.map(c=>`<option value="${c.id}">${nome(c)}</option>`).join("");if(cur)$("registroCliente").value=cur}
@@ -1088,9 +1125,9 @@ function renderSmartCoach1175(){
    ${list.map(ev=>`<div class="check">
      <b>${ev.clienteNome||""}</b>
      <p class="meta">${fmt(ev.data)} ore ${ev.ora||"-"}</p>
-     <button class="btn green" onclick="confermaEffettuata('${ev.id}')">Conferma</button>
-     <button class="btn red" onclick="confermaAssente('${ev.id}')">Assente</button>
-     <button class="btn light" onclick="annullaLezioneCoach('${ev.id}')">Annulla</button>
+     <button class="btn green" onclick="confermaEffettuata('${ev.id}',this)">Conferma</button>
+     <button class="btn red" onclick="confermaAssente('${ev.id}',this)">Assente</button>
+     <button class="btn light" onclick="annullaLezioneCoach('${ev.id}',this)">Annulla</button>
    </div>`).join("")}
    <button class="btn gold full" onclick="confermaTutteEffettuate()">Conferma tutte</button>
  </div>` :
@@ -1180,6 +1217,20 @@ function clientSafeResidue1177(c){
  const done=eventi.filter(e=>e.clienteId===c.id && lessonConsumes1177(e.stato)).length;
  return Math.max(0,total-done);
 }
+function setActionButtonState(btn,state,label){
+ if(!btn)return;
+ if(!btn.dataset.originalText)btn.dataset.originalText=btn.textContent;
+ btn.disabled=state==="loading";
+ btn.style.opacity=state==="loading"?".65":"1";
+ btn.textContent=state==="loading"?"⏳ Salvataggio...":state==="success"?"✅ Salvato":(label||btn.dataset.originalText);
+ if(state==="success")setTimeout(()=>{btn.textContent=btn.dataset.originalText;btn.disabled=false;btn.style.opacity="1"},900);
+}
+async function runLessonAction(btn,fn){
+ if(btn?.disabled)return;
+ setActionButtonState(btn,"loading");
+ try{await fn();setActionButtonState(btn,"success")}catch(e){console.error(e);if(btn){btn.textContent="❌ Errore";btn.disabled=false;setTimeout(()=>{btn.textContent=btn.dataset.originalText;btn.style.opacity="1"},1200)}alert("Errore durante il salvataggio. Riprova.")}
+}
+
 async function processLesson1177(id, stato){
  const ev=eventi.find(e=>e.id===id);
  if(!ev) return alert("Lezione non trovata.");
@@ -1219,13 +1270,13 @@ async function processLesson1177(id, stato){
 }
 window.processLesson1177=processLesson1177;
 
-window.confermaEffettuata=async function(id){
- await processLesson1177(id,"Effettuata");
+window.confermaEffettuata=async function(id,btn){
+ await runLessonAction(btn,()=>processLesson1177(id,"Effettuata"));
 };
-window.confermaAssente=async function(id){
- await processLesson1177(id,"Assente");
+window.confermaAssente=async function(id,btn){
+ await runLessonAction(btn,()=>processLesson1177(id,"Assente"));
 };
-window.annullaLezioneCoach=async function(id){
+window.annullaLezioneCoach=async function(id,btn){
  const ev=eventi.find(e=>e.id===id);
  if(!ev) return alert("Lezione non trovata.");
  const ok=confirm(
@@ -1235,7 +1286,7 @@ window.annullaLezioneCoach=async function(id){
    "Potrai programmare un recupero manualmente in seguito."
  );
  if(!ok) return;
- await processLesson1177(id,"Annullata dal coach");
+ await runLessonAction(btn,()=>processLesson1177(id,"Annullata dal coach"));
 };
 
 window.confermaTutteEffettuate=async function(){
@@ -1256,9 +1307,9 @@ function renderSmartCoach1177(){
    ${list.map(ev=>`<div class="check">
      <b>${ev.clienteNome||""}</b>
      <p class="meta">${fmt(ev.data)} ore ${ev.ora||"-"}</p>
-     <button class="btn green" onclick="confermaEffettuata('${ev.id}')">Conferma</button>
-     <button class="btn red" onclick="confermaAssente('${ev.id}')">Assente</button>
-     <button class="btn light" onclick="annullaLezioneCoach('${ev.id}')">Annulla</button>
+     <button class="btn green" onclick="confermaEffettuata('${ev.id}',this)">Conferma</button>
+     <button class="btn red" onclick="confermaAssente('${ev.id}',this)">Assente</button>
+     <button class="btn light" onclick="annullaLezioneCoach('${ev.id}',this)">Annulla</button>
    </div>`).join("")}
    <button class="btn gold full" onclick="confermaTutteEffettuate()">Conferma tutte</button>
  </div>`:'<p class="meta">Nessuna lezione di oggi da confermare.</p>';
@@ -1369,9 +1420,9 @@ function renderSmartCoach11781(){
      return `<div class="check">
        <b>${ev.clienteNome||""}</b>
        <p class="meta">${fmt(ev.data)} ore ${ev.ora||"-"}${arretrata?' · <b>Arretrata</b>':''}</p>
-       <button class="btn green" onclick="confermaEffettuata('${ev.id}')">Conferma</button>
-       <button class="btn red" onclick="confermaAssente('${ev.id}')">Assente</button>
-       <button class="btn light" onclick="annullaLezioneCoach('${ev.id}')">Annulla</button>
+       <button class="btn green" onclick="confermaEffettuata('${ev.id}',this)">Conferma</button>
+       <button class="btn red" onclick="confermaAssente('${ev.id}',this)">Assente</button>
+       <button class="btn light" onclick="annullaLezioneCoach('${ev.id}',this)">Annulla</button>
      </div>`;
    }).join("")}
    <button class="btn gold full" onclick="confermaTutteEffettuate()">Conferma tutte</button>
@@ -1419,9 +1470,9 @@ window.renderRegistro=function(){
      <p class="meta">Stato: ${e.stato||"Prenotata"}</p>
      <span class="badge ${consumes(e.stato)?"ok":historical(e.stato)?"bad":"warn"}">${e.stato||"Prenotata"}</span>
      ${gestibile?`<div class="actions" style="margin-top:10px">
-       <button class="btn green" onclick="confermaEffettuata('${e.id}')">Effettuata</button>
-       <button class="btn red" onclick="confermaAssente('${e.id}')">Assente</button>
-       <button class="btn light" onclick="annullaLezioneCoach('${e.id}')">Annullata Coach</button>
+       <button class="btn green" onclick="confermaEffettuata('${e.id}',this)">Effettuata</button>
+       <button class="btn red" onclick="confermaAssente('${e.id}',this)">Assente</button>
+       <button class="btn light" onclick="annullaLezioneCoach('${e.id}',this)">Annullata Coach</button>
      </div>`:""}
    </div>`;
  }).join("")||'<div class="empty">Nessuna lezione.</div>';
@@ -1851,6 +1902,30 @@ window.salvaDatiCliente=async()=>{
    alert("Dati cliente salvati.");
   }
  }catch(e){alert(e.message||String(e));}
+};
+
+
+function renderBachecaCoach(){
+ if(!$(("bachecaTitolo")))return;
+ $("bachecaTitolo").value=bachecaData.titolo||"";
+ $("bachecaMessaggio").value=bachecaData.messaggio||"";
+ $("bachecaDal").value=bachecaData.dal||todayISO();
+ $("bachecaAl").value=bachecaData.al||"";
+ $("bachecaAttiva").checked=bachecaData.attiva!==false;
+ const active=bachecaData.attiva!==false && (!bachecaData.al || bachecaData.al>=todayISO());
+ $("bachecaStato").textContent=bachecaData.titolo?(active?"🟢 Comunicazione attualmente visibile ai clienti.":"⚪ Comunicazione scaduta o disattivata."):"Nessuna comunicazione pubblicata.";
+}
+window.salvaBacheca=async()=>{
+ const titolo=$("bachecaTitolo").value.trim(),messaggio=$("bachecaMessaggio").value.trim();
+ if(!titolo||!messaggio)return alert("Inserisci titolo e messaggio.");
+ const dal=$("bachecaDal").value||todayISO(),al=$("bachecaAl").value;
+ if(al&&al<dal)return alert("La data finale non può precedere quella iniziale.");
+ await setDoc(doc(db,"users",user.uid,"comunicazioni","bachecaAttiva"),{titolo,messaggio,dal,al,attiva:$("bachecaAttiva").checked,updatedAt:serverTimestamp()},{merge:true});
+ alert("Comunicazione pubblicata.");
+};
+window.disattivaBacheca=async()=>{
+ if(!confirm("Disattivare la comunicazione attuale?"))return;
+ await setDoc(doc(db,"users",user.uid,"comunicazioni","bachecaAttiva"),{attiva:false,updatedAt:serverTimestamp()},{merge:true});
 };
 
 </script>
