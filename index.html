@@ -34,6 +34,7 @@ input,select,textarea{width:100%;padding:12px;border:1px solid #d0d5dd;border-ra
 textarea{min-height:80px}
 .btn{border:0;border-radius:12px;padding:11px 13px;font-weight:800;margin:4px 4px 4px 0;cursor:pointer}
 .btn.full{width:100%;margin:8px 0 0}
+.sb-toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#17233a;color:#fff;padding:12px 18px;border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.25);z-index:99999;font-weight:700;opacity:0;pointer-events:none;transition:opacity .2s ease}.sb-toast.show{opacity:1}
 .gold{background:var(--gold);color:#111827}.dark{background:var(--dark);color:#fff}.light{background:#e8edf5;color:#17233a}.red{background:#ffe3e0;color:#a62018}.green{background:#dcfce7;color:#166534}.whatsapp{background:#25D366;color:#fff}
 .badge{display:inline-block;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:800;margin:3px}
 .badge.ok{background:#dcfce7;color:#166534}.badge.bad{background:#fee2e2;color:#991b1b}.badge.warn{background:#fef3c7;color:#92400e}.badge.info{background:#e0f2fe;color:#075985}
@@ -428,7 +429,7 @@ window.editCliente=id=>{
  setEditMode(true);aggiornaAnteprimaOrari();showTab("clienti");window.scrollTo({top:0,behavior:"smooth"});
 }
 window.salvaDatiCliente=async()=>{const id=$("clienteId").value;if(!id)return;await setDoc(docPath("clienti",id),formData(),{merge:true});alert("Dati cliente salvati.")}
-window.salvaSaldoCliente=async()=>{const id=$("clienteId").value;if(!id)return;await setDoc(docPath("clienti",id),{dovuto:Number($("dovuto").value||0),pagato:Number($("pagato").value||0),updatedAt:serverTimestamp()},{merge:true});alert("Saldo aggiornato.")}
+window.salvaSaldoCliente=async()=>{const id=$("clienteId").value;if(!id)return;const dovuto=Number($("dovuto").value||0),pagato=Number($("pagato").value||0);await setDoc(docPath("clienti",id),{dovuto,pagato,pagamentoRinnovoDaSaldare:pagato<dovuto,updatedAt:serverTimestamp()},{merge:true});alert("Saldo aggiornato.")}
 window.ricalcolaContatoreCliente=async()=>{const id=$("clienteId").value;if(!id)return;const c=clienti.find(x=>x.id===id);await setDoc(docPath("clienti",id),{lezioniFatte:fatte(id),lezioniResidue:residue(c),updatedAt:serverTimestamp()},{merge:true});alert("Contatore ricalcolato.")}
 
 window.aggiornaCalendarioFuturo=async()=>{
@@ -459,7 +460,7 @@ window.rinnova=async id=>{
   // Storico, lezioni effettuate, assenze e recuperi non vengono modificati.
   for(const ev of eventi.filter(e=>e.clienteId===id && e.data>=start && !historical(e.stato))){await deleteDoc(docPath("eventi",ev.id))}
   await addDoc(path("rinnovi"),{cliente:nome(c),clienteId:id,pacchetto:c.lezioniTotali,data:start,importo:valore(c),createdAt:serverTimestamp()});
-  await setDoc(docPath("clienti",id),{stato:"attivo",lezioniFatte:0,lezioniResidue:Number(c.lezioniTotali||0),inizio:start,scadenza:end,updatedAt:serverTimestamp()},{merge:true});
+  await setDoc(docPath("clienti",id),{stato:"attivo",lezioniFatte:0,lezioniResidue:Number(c.lezioniTotali||0),inizio:start,scadenza:end,pagamentoRinnovoDaSaldare:true,updatedAt:serverTimestamp()},{merge:true});
   await generaEventi(id,{...c,inizio:start,scadenza:end},start);
   alert(`Pacchetto rinnovato. Prima lezione: ${fmt(start)}. Calendario generato correttamente.`);
  }catch(e){console.error("Errore rinnovo pacchetto",e);alert("Errore durante il rinnovo. Nessuna modifica al Calendario Intelligente. Riprova o controlla la connessione.")}
@@ -484,20 +485,45 @@ async function setStatoEvento(id,stato){const ev=eventi.find(e=>e.id===id);if(!e
 window.confermaTutteEffettuate=async()=>{for(const ev of lezioniDaConfermare())await setStatoEvento(ev.id,"Effettuata")}
 
 function normalizeClientPhone(v){
- let p=String(v||"").replace(/\D/g,"");
+ let p=String(v||"").trim().replace(/^00/,"").replace(/\D/g,"");
  if(!p)return "";
- return p.startsWith("39")?p:"39"+p.replace(/^0+/,"");
+ if(p.startsWith("39"))return p;
+ if(p.startsWith("3") && p.length===10)return "39"+p;
+ return p;
 }
+function ultimaLezioneEffettuata(clienteId){
+ return eventi
+  .filter(e=>e.clienteId===clienteId && String(e.stato||"").trim().toLowerCase()==="effettuata")
+  .sort((a,b)=>String(b.data||"").localeCompare(String(a.data||"")) || String(b.ora||"").localeCompare(String(a.ora||"")))[0] || null;
+}
+function sbToast(message){
+ let el=document.getElementById("sbToast");
+ if(!el){el=document.createElement("div");el.id="sbToast";el.className="sb-toast";document.body.appendChild(el)}
+ el.textContent=message;el.classList.add("show");
+ clearTimeout(window.__sbToastTimer);window.__sbToastTimer=setTimeout(()=>el.classList.remove("show"),1100);
+}
+function whatsappPagamentoById(clienteId){
+ const c=clienti.find(x=>x.id===clienteId);
+ if(!c)return alert("Cliente non trovato.");
+ if(residuoEuro(c)<=0)return alert("Il cliente risulta già in regola con il pagamento.");
+ const phone=normalizeClientPhone(c.telefono);
+ if(!phone)return alert("Numero di telefono non presente nella scheda cliente.");
+ const last=ultimaLezioneEffettuata(c.id);
+ if(!last)return alert("Impossibile trovare l'ultima lezione effettuata.");
+ const firstName=String(c.nome||nome(c)||"Cliente").trim().split(/\s+/)[0];
+ const msg=`Ciao ${firstName}! 👋\n\nTi informo che il tuo pacchetto è stato rinnovato in seguito all'ultima lezione effettuata il ${fmt(last.data)}.\n\nTi chiedo gentilmente di procedere con il saldo del rinnovo, così da mantenere il servizio regolarmente attivo.\n\nGrazie mille e ci vediamo al prossimo allenamento! 💪`;
+ sbToast("Preparazione messaggio...");
+ const url=`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+ setTimeout(()=>{const w=window.open(url,"_blank");if(!w)location.href=url},180);
+}
+window.whatsappPagamentoById=whatsappPagamentoById;
 function whatsappCliente(c,tipo="generico"){
+ if(tipo==="saldo")return whatsappPagamentoById(c?.id);
  const phone=normalizeClientPhone(c?.telefono);
  if(!phone)return alert("Numero WhatsApp non presente nella scheda cliente.");
- const firstName=String(c?.nome||nome(c)||"Cliente").trim();
- let msg=`Ciao ${firstName},`;
- if(tipo==="rinnovo"){
-  msg=`Ciao ${firstName}, ti ricordo che ti rimane una sola lezione del pacchetto. Per garantire continuità al percorso, possiamo procedere con il rinnovo. Salvatore`;
- }else if(tipo==="saldo"){
-  msg=`Ciao ${firstName}, risulta un saldo residuo di ${euro(residuoEuro(c))}. Ti chiedo gentilmente di provvedere al pagamento. Grazie, Salvatore`;
- }
+ const firstName=String(c?.nome||nome(c)||"Cliente").trim().split(/\s+/)[0];
+ let msg=`Ciao ${firstName}!`;
+ if(tipo==="rinnovo")msg=`Ciao ${firstName}! 👋\n\nTi ricordo che ti rimane una sola lezione del pacchetto. Per garantire continuità al percorso, possiamo procedere con il rinnovo.\n\nSalvatore`;
  window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`,"_blank");
 }
 window.whatsappCliente=whatsappCliente;
@@ -533,8 +559,12 @@ function renderRegistroSelect(){const cur=$("registroCliente").value;$("registro
 window.renderRegistro=()=>{renderRegistroSelect();const id=$("registroCliente").value,c=clienti.find(x=>x.id===id);if(!c){$("registroLista").innerHTML='<div class="empty">Seleziona un cliente.</div>';return}const evs=eventi.filter(e=>e.clienteId===id).sort((a,b)=>a.data.localeCompare(b.data)||String(a.ora).localeCompare(String(b.ora)));$("regTotali").textContent=c.lezioniTotali||0;$("regFatte").textContent=fatte(id);$("regResidue").textContent=residue(c);$("regPeriodo").textContent=`${fmt(c.inizio)} → ${fmt(c.scadenza)}`;$("registroLista").innerHTML=evs.map(e=>`<div class="check"><h3>${fmt(e.data)} ore ${e.ora}</h3><p class="meta">Stato: ${e.stato||"Prenotata"}</p><span class="badge ${consumes(e.stato)?"ok":historical(e.stato)?"bad":"warn"}">${e.stato||"Prenotata"}</span></div>`).join("")||'<div class="empty">Nessuna lezione.</div>'}
 function renderContattare(){
  const list=clienti.filter(c=>(c.stato||"attivo")!=="inattivo"&&residuoEuro(c)>0);
- $("listaContattare").innerHTML=list.map(c=>`<div class="check"><h3>${nome(c)}</h3><p class="meta">Residuo ${euro(residuoEuro(c))}</p><button class="btn whatsapp full" onclick="whatsappCliente(clienti.find(x=>x.id==='${c.id}'),'saldo')">WhatsApp pagamento</button></div>`).join("")||'<div class="empty">Nessun cliente da contattare.</div>';
+ $("listaContattare").innerHTML=list.map(c=>{
+   const haRinnovo=Boolean(c.pagamentoRinnovoDaSaldare)||rinnovi.some(r=>r.clienteId===c.id);
+   return `<div class="check"><h3>${nome(c)}</h3><p class="meta">Residuo ${euro(residuoEuro(c))}</p>${haRinnovo?`<button type="button" class="btn whatsapp full js-wa-pagamento" data-client-id="${c.id}">WhatsApp pagamento</button>`:""}</div>`;
+ }).join("")||'<div class="empty">Nessun cliente da contattare.</div>';
 }
+document.addEventListener("click",e=>{const btn=e.target.closest(".js-wa-pagamento");if(!btn)return;e.preventDefault();e.stopPropagation();whatsappPagamentoById(btn.dataset.clientId)});
 window.eliminaRinnovo=async id=>{if(confirm("Eliminare rinnovo?"))await deleteDoc(docPath("rinnovi",id))}
 function renderRinnovi(){$("listaRinnovi").innerHTML=rinnovi.map(r=>`<div class="check" style="position:relative;padding-right:60px"><button class="btn red" style="position:absolute;right:8px;top:8px;width:auto" onclick="eliminaRinnovo('${r.id}')">✕</button><h3>${r.cliente||"Cliente"}</h3><p class="meta">${r.pacchetto||""} lezioni · ${fmt(r.data)} · ${euro(r.importo)}</p></div>`).join("")||'<div class="empty">Nessun rinnovo.</div>'}
 function renderContabilita(){const now=new Date();if(!$("contMese").value)$("contMese").value=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0");const mese=$("contMese").value;const mov=[...rinnovi.map(r=>({tipo:"rinnovo",data:r.data,mese:String(r.data||"").slice(0,7),nome:r.cliente,importo:Number(r.importo||0)})),...pagamenti.map(p=>({tipo:"pagamento",data:p.data,mese:p.mese||String(p.data||"").slice(0,7),nome:p.clienteNome,importo:Number(p.importo||0)}))];const movM=mov.filter(m=>m.mese===mese);const att=clienti.filter(c=>(c.stato||"attivo")!=="inattivo");$("contIncassato").textContent=euro(movM.reduce((s,m)=>s+m.importo,0));$("contDaIncassare").textContent=euro(att.reduce((s,c)=>s+residuoEuro(c),0));$("contValorePacchetti").textContent=euro(att.reduce((s,c)=>s+valore(c),0));$("contTotaleStorico").textContent=euro(mov.reduce((s,m)=>s+m.importo,0));$("contClientiResiduo").innerHTML=att.filter(c=>residuoEuro(c)>0).map(c=>`<div class="check"><h3>${nome(c)}</h3><p class="meta">Pagato ${euro(pagato(c))} · Dovuto ${euro(valore(c))}</p><span class="badge bad">Residuo ${euro(residuoEuro(c))}</span></div>`).join("")||'<div class="empty">Nessun residuo.</div>';$("contPacchettiAttivi").innerHTML=att.map(c=>`<div class="check"><h3>${nome(c)}</h3><p class="meta">${residue(c)} residue su ${c.lezioniTotali||0}</p><span class="badge ok">${euro(valore(c))}</span></div>`).join("")||'<div class="empty">Nessun pacchetto.</div>';$("contMovimenti").innerHTML=movM.map(m=>`<div class="check"><h3>${m.nome||"Cliente"}</h3><p class="meta">${fmt(m.data)} · ${m.tipo}</p><span class="badge ok">${euro(m.importo)}</span></div>`).join("")||'<div class="empty">Nessun movimento nel mese.</div>'}
