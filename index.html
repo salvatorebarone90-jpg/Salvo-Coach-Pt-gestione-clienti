@@ -58,8 +58,8 @@ hr{border:0;border-top:1px solid #e5e7eb;margin:12px 0}
   <div class="header-inner">
     <img src="logo.jpeg" class="logo" onerror="this.style.display='none'">
     <div>
-      <h1>SB Personal Coach Gestionale 11.8.1.1 HOTFIX Rinnovo</h1>
-      <div class="subtitle">HOTFIX Migliorie · 29/07/2026</div>
+      <h1>SB Personal Coach Gestionale 11.8.1.2 HOTFIX Migliorie</h1>
+      <div class="subtitle">HOTFIX Migliorie corrette · 29/07/2026</div>
     </div>
   </div>
   <nav id="nav">
@@ -488,12 +488,16 @@ function normalizeClientPhone(v){
  if(!p)return "";
  return p.startsWith("39")?p:"39"+p.replace(/^0+/,"");
 }
-function whatsappCliente(c,rinnovo=false){
- const phone=normalizeClientPhone(c.telefono);
+function whatsappCliente(c,tipo="generico"){
+ const phone=normalizeClientPhone(c?.telefono);
  if(!phone)return alert("Numero WhatsApp non presente nella scheda cliente.");
- const msg=rinnovo
-  ? `Ciao ${c.nome||nome(c)}, ti ricordo che ti rimane una sola lezione del pacchetto. Per garantire continuità al percorso, possiamo procedere con il rinnovo. Salvatore`
-  : `Ciao ${c.nome||nome(c)},`;
+ const firstName=String(c?.nome||nome(c)||"Cliente").trim();
+ let msg=`Ciao ${firstName},`;
+ if(tipo==="rinnovo"){
+  msg=`Ciao ${firstName}, ti ricordo che ti rimane una sola lezione del pacchetto. Per garantire continuità al percorso, possiamo procedere con il rinnovo. Salvatore`;
+ }else if(tipo==="saldo"){
+  msg=`Ciao ${firstName}, risulta un saldo residuo di ${euro(residuoEuro(c))}. Ti chiedo gentilmente di provvedere al pagamento. Grazie, Salvatore`;
+ }
  window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`,"_blank");
 }
 window.whatsappCliente=whatsappCliente;
@@ -509,8 +513,8 @@ function clientCard(c){
    <p class="meta">${c.regolamentoAccettato ? "📋 Regolamento accettato il " + (c.regolamentoAccettatoAtLabel || c.regolamentoAccettatoAt || "-") : "📋 Regolamento non ancora accettato"}</p>
    <span class="badge ${r<=3?"warn":"ok"}">${r} residue su ${c.lezioniTotali||0}</span>${res>0?`<span class="badge bad">Residuo ${euro(res)}</span>`:""}
    <div class="actions">
-     <button type="button" class="btn whatsapp" onclick="whatsappCliente(clienti.find(x=>x.id==='${c.id}'))">WhatsApp</button>
-     ${r===1?`<button type="button" class="btn whatsapp" onclick="whatsappCliente(clienti.find(x=>x.id==='${c.id}'),true)">📲 Messaggio rinnovo</button>`:""}
+     <button type="button" class="btn whatsapp" onclick="whatsappCliente(clienti.find(x=>x.id==='${c.id}'),'generico')">WhatsApp</button>
+     ${r===1?`<button type="button" class="btn whatsapp" onclick="whatsappCliente(clienti.find(x=>x.id==='${c.id}'),'rinnovo')">📲 Messaggio rinnovo</button>`:""}
      <button type="button" class="btn light" onclick="sbAddLesson('${c.id}')">+ Lezione</button>
      <button type="button" class="btn light" onclick="sbReturnLesson('${c.id}')">Restituisci</button>
      <button type="button" class="btn gold" onclick="rinnova('${c.id}')">Rinnova</button>
@@ -527,7 +531,10 @@ function renderDashboard(){const att=clienti.filter(c=>(c.stato||"attivo")!=="in
 function renderCalendario(){if(!$("calDal").value)$("calDal").value=todayISO();if(!$("calAl").value){const d=new Date();d.setDate(d.getDate()+14);$("calAl").value=d.toISOString().slice(0,10)}const dal=$("calDal").value,al=$("calAl").value;const list=eventi.filter(e=>e.data>=dal&&e.data<=al).sort((a,b)=>a.data.localeCompare(b.data)||String(a.ora).localeCompare(String(b.ora)));$("listaCalendario").innerHTML=list.map(e=>`<div class="card"><h3>${e.clienteNome}</h3><p class="meta">${fmt(e.data)} ore ${e.ora} · ${e.stato||"Prenotata"}</p></div>`).join("")||'<div class="empty">Nessuna lezione.</div>'}
 function renderRegistroSelect(){const cur=$("registroCliente").value;$("registroCliente").innerHTML='<option value="">Seleziona cliente</option>'+clienti.map(c=>`<option value="${c.id}">${nome(c)}</option>`).join("");if(cur)$("registroCliente").value=cur}
 window.renderRegistro=()=>{renderRegistroSelect();const id=$("registroCliente").value,c=clienti.find(x=>x.id===id);if(!c){$("registroLista").innerHTML='<div class="empty">Seleziona un cliente.</div>';return}const evs=eventi.filter(e=>e.clienteId===id).sort((a,b)=>a.data.localeCompare(b.data)||String(a.ora).localeCompare(String(b.ora)));$("regTotali").textContent=c.lezioniTotali||0;$("regFatte").textContent=fatte(id);$("regResidue").textContent=residue(c);$("regPeriodo").textContent=`${fmt(c.inizio)} → ${fmt(c.scadenza)}`;$("registroLista").innerHTML=evs.map(e=>`<div class="check"><h3>${fmt(e.data)} ore ${e.ora}</h3><p class="meta">Stato: ${e.stato||"Prenotata"}</p><span class="badge ${consumes(e.stato)?"ok":historical(e.stato)?"bad":"warn"}">${e.stato||"Prenotata"}</span></div>`).join("")||'<div class="empty">Nessuna lezione.</div>'}
-function renderContattare(){const list=clienti.filter(c=>(c.stato||"attivo")!=="inattivo"&&residuoEuro(c)>0);$("listaContattare").innerHTML=list.map(c=>`<div class="check"><h3>${nome(c)}</h3><p class="meta">Residuo ${euro(residuoEuro(c))}</p><button class="btn whatsapp full" onclick="window.open('https://wa.me/${String(c.telefono||"").replace(/\D/g,"")}')">WhatsApp</button></div>`).join("")||'<div class="empty">Nessun cliente da contattare.</div>'}
+function renderContattare(){
+ const list=clienti.filter(c=>(c.stato||"attivo")!=="inattivo"&&residuoEuro(c)>0);
+ $("listaContattare").innerHTML=list.map(c=>`<div class="check"><h3>${nome(c)}</h3><p class="meta">Residuo ${euro(residuoEuro(c))}</p><button class="btn whatsapp full" onclick="whatsappCliente(clienti.find(x=>x.id==='${c.id}'),'saldo')">WhatsApp pagamento</button></div>`).join("")||'<div class="empty">Nessun cliente da contattare.</div>';
+}
 window.eliminaRinnovo=async id=>{if(confirm("Eliminare rinnovo?"))await deleteDoc(docPath("rinnovi",id))}
 function renderRinnovi(){$("listaRinnovi").innerHTML=rinnovi.map(r=>`<div class="check" style="position:relative;padding-right:60px"><button class="btn red" style="position:absolute;right:8px;top:8px;width:auto" onclick="eliminaRinnovo('${r.id}')">✕</button><h3>${r.cliente||"Cliente"}</h3><p class="meta">${r.pacchetto||""} lezioni · ${fmt(r.data)} · ${euro(r.importo)}</p></div>`).join("")||'<div class="empty">Nessun rinnovo.</div>'}
 function renderContabilita(){const now=new Date();if(!$("contMese").value)$("contMese").value=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0");const mese=$("contMese").value;const mov=[...rinnovi.map(r=>({tipo:"rinnovo",data:r.data,mese:String(r.data||"").slice(0,7),nome:r.cliente,importo:Number(r.importo||0)})),...pagamenti.map(p=>({tipo:"pagamento",data:p.data,mese:p.mese||String(p.data||"").slice(0,7),nome:p.clienteNome,importo:Number(p.importo||0)}))];const movM=mov.filter(m=>m.mese===mese);const att=clienti.filter(c=>(c.stato||"attivo")!=="inattivo");$("contIncassato").textContent=euro(movM.reduce((s,m)=>s+m.importo,0));$("contDaIncassare").textContent=euro(att.reduce((s,c)=>s+residuoEuro(c),0));$("contValorePacchetti").textContent=euro(att.reduce((s,c)=>s+valore(c),0));$("contTotaleStorico").textContent=euro(mov.reduce((s,m)=>s+m.importo,0));$("contClientiResiduo").innerHTML=att.filter(c=>residuoEuro(c)>0).map(c=>`<div class="check"><h3>${nome(c)}</h3><p class="meta">Pagato ${euro(pagato(c))} · Dovuto ${euro(valore(c))}</p><span class="badge bad">Residuo ${euro(residuoEuro(c))}</span></div>`).join("")||'<div class="empty">Nessun residuo.</div>';$("contPacchettiAttivi").innerHTML=att.map(c=>`<div class="check"><h3>${nome(c)}</h3><p class="meta">${residue(c)} residue su ${c.lezioniTotali||0}</p><span class="badge ok">${euro(valore(c))}</span></div>`).join("")||'<div class="empty">Nessun pacchetto.</div>';$("contMovimenti").innerHTML=movM.map(m=>`<div class="check"><h3>${m.nome||"Cliente"}</h3><p class="meta">${fmt(m.data)} · ${m.tipo}</p><span class="badge ok">${euro(m.importo)}</span></div>`).join("")||'<div class="empty">Nessun movimento nel mese.</div>'}
@@ -1557,7 +1564,7 @@ async function salvaModificaLezione1179(){
 }
 window.salvaModificaLezione1179=salvaModificaLezione1179;
 
-window.renderCalendario=function(){
+renderCalendario=window.renderCalendario=function(){
  if(!$("calDal").value)$("calDal").value=todayISO();
  if(!$("calAl").value){
    const d=new Date();
