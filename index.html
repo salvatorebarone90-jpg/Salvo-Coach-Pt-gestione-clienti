@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>SB Personal Coach Gestionale 11.8.1.4</title>
+<title>SB Personal Coach Gestionale 11.8.1.5</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--dark:#101827;--blue:#17233a;--gold:#d5ad52;--bg:#f4f6f8;--card:#fff;--muted:#667085;--ok:#13915f;--bad:#c0392b;--warn:#c47d00}
@@ -59,7 +59,7 @@ hr{border:0;border-top:1px solid #e5e7eb;margin:12px 0}
   <div class="header-inner">
     <img src="logo.jpeg" class="logo" onerror="this.style.display='none'">
     <div>
-      <h1>SB Personal Coach Gestionale 11.8.1.4</h1>
+      <h1>SB Personal Coach Gestionale 11.8.1.5</h1>
       <div class="subtitle">Promemoria pagamento corretto · 30/07/2026</div>
     </div>
   </div>
@@ -402,12 +402,14 @@ function formData(){
 async function generaEventi(clienteId,c,startDate){
  const days=parseDays(c.giorni), hours=parseHours(c.orari);
  if(!days.length||!hours.length)return;
- let created=0, d=new Date(startDate);
+ const hourByDay=new Map();
+ days.forEach((day,index)=>hourByDay.set(day,hours[index]||hours[0]));
+ let created=0, d=localDateFromISO(startDate);
  const max=Number(c.lezioniTotali||0);
  while(created<max && created<200){
-   if(days.includes(d.getDay())){
-     const hour=hours[created%hours.length]||hours[0];
-     await addDoc(path("eventi"),{clienteId,clienteNome:nome(c),data:d.toISOString().slice(0,10),ora:hour,durata:Number(c.durata||60),stato:"Prenotata",storico:false,scalata:false,createdAt:serverTimestamp()});
+   if(hourByDay.has(d.getDay())){
+     const hour=hourByDay.get(d.getDay());
+     await addDoc(path("eventi"),{clienteId,clienteNome:nome(c),data:localISO(d),ora:hour,durata:Number(c.durata||60),stato:"Prenotata",storico:false,scalata:false,createdAt:serverTimestamp()});
      created++;
    }
    d.setDate(d.getDate()+1);
@@ -1859,7 +1861,8 @@ async function reconcileCalendar1181(id,newData,{ask=true}={}){
  const sc=normalizedSchedule1181();
  if(!sc.length)throw new Error("Seleziona almeno un giorno e un orario.");
 
- const consumed=eventi.filter(e=>e.clienteId===id && consumes(e.stato)).length;
+ const packageStart=String(oldC.inizio||newData.inizio||todayISO());
+ const consumed=eventi.filter(e=>e.clienteId===id && String(e.data||"")>=packageStart && consumes(e.stato)).length;
  const targetTotal=Math.max(0,Number(newData.lezioniTotali||0));
  const targetRemaining=Math.max(0,targetTotal-consumed);
  const start=todayISO();
