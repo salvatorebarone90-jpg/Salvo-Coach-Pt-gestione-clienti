@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>SB Personal Coach Gestionale 11.8.0.1</title>
+<title>SB Personal Coach Gestionale 11.8.1.4</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--dark:#101827;--blue:#17233a;--gold:#d5ad52;--bg:#f4f6f8;--card:#fff;--muted:#667085;--ok:#13915f;--bad:#c0392b;--warn:#c47d00}
@@ -59,8 +59,8 @@ hr{border:0;border-top:1px solid #e5e7eb;margin:12px 0}
   <div class="header-inner">
     <img src="logo.jpeg" class="logo" onerror="this.style.display='none'">
     <div>
-      <h1>SB Personal Coach Gestionale 11.8.1.2 HOTFIX Migliorie</h1>
-      <div class="subtitle">HOTFIX Migliorie corrette · 29/07/2026</div>
+      <h1>SB Personal Coach Gestionale 11.8.1.4</h1>
+      <div class="subtitle">Promemoria pagamento corretto · 30/07/2026</div>
     </div>
   </div>
   <nav id="nav">
@@ -504,17 +504,22 @@ function sbToast(message){
 }
 function whatsappPagamentoById(clienteId){
  const c=clienti.find(x=>x.id===clienteId);
- if(!c)return alert("Cliente non trovato.");
- if(residuoEuro(c)<=0)return alert("Il cliente risulta già in regola con il pagamento.");
+ if(!c){alert("Cliente non trovato.");return false}
+ if(residuoEuro(c)<=0){alert("Il cliente risulta già in regola con il pagamento.");return false}
  const phone=normalizeClientPhone(c.telefono);
- if(!phone)return alert("Numero di telefono non presente nella scheda cliente.");
+ if(!phone){alert("Numero di telefono non presente nella scheda cliente.");return false}
  const last=ultimaLezioneEffettuata(c.id);
- if(!last)return alert("Impossibile trovare l'ultima lezione effettuata.");
+ if(!last){alert("Impossibile trovare l'ultima lezione effettuata.");return false}
  const firstName=String(c.nome||nome(c)||"Cliente").trim().split(/\s+/)[0];
- const msg=`Ciao ${firstName}! 👋\n\nTi informo che il tuo pacchetto è stato rinnovato in seguito all'ultima lezione effettuata il ${fmt(last.data)}.\n\nTi chiedo gentilmente di procedere con il saldo del rinnovo, così da mantenere il servizio regolarmente attivo.\n\nGrazie mille e ci vediamo al prossimo allenamento! 💪`;
+ const lastDate=fmt(last.data);
+ const conferma=confirm(`Inviare il promemoria pagamento a ${nome(c)}?\n\nUltima lezione effettuata: ${lastDate}`);
+ if(!conferma)return false;
+ const msg=`Ciao ${firstName}! \u{1F44B}\n\nTi informo che il tuo pacchetto è stato rinnovato in seguito all'ultima lezione effettuata il ${lastDate}.\n\nTi chiedo gentilmente di procedere con il saldo del rinnovo, così da mantenere il servizio regolarmente attivo.\n\nGrazie mille e ci vediamo al prossimo allenamento! \u{1F4AA}`;
  sbToast("Preparazione messaggio...");
  const url=`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
- setTimeout(()=>{const w=window.open(url,"_blank");if(!w)location.href=url},180);
+ const w=window.open(url,"_blank");
+ if(!w)window.location.href=url;
+ return true;
 }
 window.whatsappPagamentoById=whatsappPagamentoById;
 function whatsappCliente(c,tipo="generico"){
@@ -559,12 +564,21 @@ function renderRegistroSelect(){const cur=$("registroCliente").value;$("registro
 window.renderRegistro=()=>{renderRegistroSelect();const id=$("registroCliente").value,c=clienti.find(x=>x.id===id);if(!c){$("registroLista").innerHTML='<div class="empty">Seleziona un cliente.</div>';return}const evs=eventi.filter(e=>e.clienteId===id).sort((a,b)=>a.data.localeCompare(b.data)||String(a.ora).localeCompare(String(b.ora)));$("regTotali").textContent=c.lezioniTotali||0;$("regFatte").textContent=fatte(id);$("regResidue").textContent=residue(c);$("regPeriodo").textContent=`${fmt(c.inizio)} → ${fmt(c.scadenza)}`;$("registroLista").innerHTML=evs.map(e=>`<div class="check"><h3>${fmt(e.data)} ore ${e.ora}</h3><p class="meta">Stato: ${e.stato||"Prenotata"}</p><span class="badge ${consumes(e.stato)?"ok":historical(e.stato)?"bad":"warn"}">${e.stato||"Prenotata"}</span></div>`).join("")||'<div class="empty">Nessuna lezione.</div>'}
 function renderContattare(){
  const list=clienti.filter(c=>(c.stato||"attivo")!=="inattivo"&&residuoEuro(c)>0);
- $("listaContattare").innerHTML=list.map(c=>{
-   const haRinnovo=Boolean(c.pagamentoRinnovoDaSaldare)||rinnovi.some(r=>r.clienteId===c.id);
-   return `<div class="check"><h3>${nome(c)}</h3><p class="meta">Residuo ${euro(residuoEuro(c))}</p>${haRinnovo?`<button type="button" class="btn whatsapp full js-wa-pagamento" data-client-id="${c.id}">WhatsApp pagamento</button>`:""}</div>`;
- }).join("")||'<div class="empty">Nessun cliente da contattare.</div>';
+ $("listaContattare").innerHTML=list.map(c=>`<div class="check"><h3>${nome(c)}</h3><p class="meta">Residuo ${euro(residuoEuro(c))}</p><button type="button" class="btn whatsapp full js-wa-pagamento" data-client-id="${c.id}">&#128242; Invia promemoria pagamento</button></div>`).join("")||'<div class="empty">Nessun cliente da contattare.</div>';
 }
-document.addEventListener("click",e=>{const btn=e.target.closest(".js-wa-pagamento");if(!btn)return;e.preventDefault();e.stopPropagation();whatsappPagamentoById(btn.dataset.clientId)});
+document.addEventListener("click",e=>{
+ const btn=e.target.closest(".js-wa-pagamento");
+ if(!btn||btn.disabled)return;
+ e.preventDefault();e.stopPropagation();
+ const opened=whatsappPagamentoById(btn.dataset.clientId);
+ if(opened){
+  btn.disabled=true;
+  btn.innerHTML="&#9989; Promemoria inviato";
+  btn.style.background="#16794b";
+  btn.style.cursor="default";
+  btn.style.opacity="1";
+ }
+});
 window.eliminaRinnovo=async id=>{if(confirm("Eliminare rinnovo?"))await deleteDoc(docPath("rinnovi",id))}
 function renderRinnovi(){$("listaRinnovi").innerHTML=rinnovi.map(r=>`<div class="check" style="position:relative;padding-right:60px"><button class="btn red" style="position:absolute;right:8px;top:8px;width:auto" onclick="eliminaRinnovo('${r.id}')">✕</button><h3>${r.cliente||"Cliente"}</h3><p class="meta">${r.pacchetto||""} lezioni · ${fmt(r.data)} · ${euro(r.importo)}</p></div>`).join("")||'<div class="empty">Nessun rinnovo.</div>'}
 function renderContabilita(){const now=new Date();if(!$("contMese").value)$("contMese").value=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0");const mese=$("contMese").value;const mov=[...rinnovi.map(r=>({tipo:"rinnovo",data:r.data,mese:String(r.data||"").slice(0,7),nome:r.cliente,importo:Number(r.importo||0)})),...pagamenti.map(p=>({tipo:"pagamento",data:p.data,mese:p.mese||String(p.data||"").slice(0,7),nome:p.clienteNome,importo:Number(p.importo||0)}))];const movM=mov.filter(m=>m.mese===mese);const att=clienti.filter(c=>(c.stato||"attivo")!=="inattivo");$("contIncassato").textContent=euro(movM.reduce((s,m)=>s+m.importo,0));$("contDaIncassare").textContent=euro(att.reduce((s,c)=>s+residuoEuro(c),0));$("contValorePacchetti").textContent=euro(att.reduce((s,c)=>s+valore(c),0));$("contTotaleStorico").textContent=euro(mov.reduce((s,m)=>s+m.importo,0));$("contClientiResiduo").innerHTML=att.filter(c=>residuoEuro(c)>0).map(c=>`<div class="check"><h3>${nome(c)}</h3><p class="meta">Pagato ${euro(pagato(c))} · Dovuto ${euro(valore(c))}</p><span class="badge bad">Residuo ${euro(residuoEuro(c))}</span></div>`).join("")||'<div class="empty">Nessun residuo.</div>';$("contPacchettiAttivi").innerHTML=att.map(c=>`<div class="check"><h3>${nome(c)}</h3><p class="meta">${residue(c)} residue su ${c.lezioniTotali||0}</p><span class="badge ok">${euro(valore(c))}</span></div>`).join("")||'<div class="empty">Nessun pacchetto.</div>';$("contMovimenti").innerHTML=movM.map(m=>`<div class="check"><h3>${m.nome||"Cliente"}</h3><p class="meta">${fmt(m.data)} · ${m.tipo}</p><span class="badge ok">${euro(m.importo)}</span></div>`).join("")||'<div class="empty">Nessun movimento nel mese.</div>'}
