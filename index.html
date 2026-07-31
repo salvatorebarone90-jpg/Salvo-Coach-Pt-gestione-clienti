@@ -1982,6 +1982,145 @@ window.disattivaBacheca=async()=>{
  await setDoc(doc(db,"users",user.uid,"comunicazioni","bachecaAttiva"),{attiva:false,updatedAt:serverTimestamp()},{merge:true});
 };
 
+
+
+/* =========================================================
+   SB PERSONAL COACH 12.0 LTS
+   Motore stabile: ogni comando ha una sola responsabilita.
+   Questa sezione e autorevole e sovrascrive le vecchie versioni.
+   ========================================================= */
+const LTS120 = (()=>{
+ const DAY_MAP=[
+  ["Lunedi","lun",1],["Martedi","mar",2],["Mercoledi","mer",3],
+  ["Giovedi","gio",4],["Venerdi","ven",5],["Sabato","sab",6],["Domenica","dom",0]
+ ];
+ function log(action,details={}){
+  try{
+   const key="sbpc_lts_logs";
+   const arr=JSON.parse(localStorage.getItem(key)||"[]");
+   arr.unshift({at:new Date().toISOString(),action,details});
+   localStorage.setItem(key,JSON.stringify(arr.slice(0,300)));
+  }catch(e){console.warn("LTS log non disponibile",e);}
+ }
+ function scheduleFromForm(){
+  if(typeof syncScheduleFields112==="function")syncScheduleFields112();
+  return DAY_MAP.filter(([label,key])=>$("day_"+key)?.checked && $("time_"+key)?.value)
+    .map(([label,key,dow])=>({label,key,dow,ora:$("time_"+key).value}));
+ }
+ function futurePendingFor(id,from=todayISO()){
+  return eventi.filter(e=>e.clienteId===id && String(e.data||"")>=from && e.processed!==true && e.scalata!==true && !historical(e.stato));
+ }
+ async function deleteFuturePending(id,from=todayISO()){
+  const list=futurePendingFor(id,from);
+  for(const ev of list)await deleteDoc(docPath("eventi",ev.id));
+  return list.length;
+ }
+ async function createFutureLessons(id,c,sc,count,startISO){
+  if(count<=0)return [];
+  const occupied=new Set(eventi.filter(e=>e.clienteId===id && String(e.data||"")>=startISO && !futurePendingFor(id,startISO).some(x=>x.id===e.id)).map(e=>`${e.data}|${e.ora}`));
+  const created=[];
+  let d=localDateFromISO(startISO); d.setHours(0,0,0,0);
+  let guard=0;
+  while(created.length<count && guard<1000){
+   const slot=sc.find(x=>x.dow===d.getDay());
+   if(slot){
+    const data=localISO11801(d), key=`${data}|${slot.ora}`;
+    if(!occupied.has(key)){created.push({data,ora:slot.ora});occupied.add(key);}
+   }
+   d.setDate(d.getDate()+1); guard++;
+  }
+  if(created.length!==count)throw new Error("Non e stato possibile generare tutte le lezioni richieste.");
+  for(const item of created){
+   await addDoc(path("eventi"),{
+    clienteId:id,clienteNome:nome(c),data:item.data,ora:item.ora,
+    durata:Number(c.durata||60),stato:"Prenotata",processed:false,
+    storico:false,scalata:false,createdAt:serverTimestamp()
+   });
+  }
+  return created;
+ }
+ function firstUseful(sc,fromISO){
+  let d=localDateFromISO(fromISO);d.setHours(0,0,0,0);
+  for(let i=0;i<370;i++){if(sc.some(x=>x.dow===d.getDay()))return localISO11801(d);d.setDate(d.getDate()+1);}
+  throw new Error("Nessun giorno utile trovato.");
+ }
+ async function updateCalendarOnly(){
+  const id=$("clienteId")?.value;if(!id)return alert("Apri prima il cliente da modificare.");
+  const c=clienti.find(x=>x.id===id);if(!c)return alert("Cliente non trovato.");
+  const sc=scheduleFromForm();if(!sc.length)return alert("Seleziona almeno un giorno e un orario.");
+  const remaining=Math.max(0,Number(c.lezioniResidue||0));
+  const from=todayISO();
+  if(!confirm(`Aggiornare solo il calendario futuro?\n\nLezioni residue da programmare: ${remaining}.\nStorico, contatore, saldo e rinnovo non verranno modificati.`))return;
+  try{
+   const deleted=await deleteFuturePending(id,from);
+   const cForCalendar={...c,durata:Number($("durata")?.value||c.durata||60)};
+   const created=await createFutureLessons(id,cForCalendar,sc,remaining,from);
+   const expiry=created.length?created[created.length-1].data:(c.scadenza||from);
+   await setDoc(docPath("clienti",id),{
+    frequenza:Number($("frequenza")?.value||sc.length),
+    durata:Number($("durata")?.value||c.durata||60),
+    giorni:sc.map(x=>x.label),orari:sc.map(x=>x.ora),scadenza:expiry,updatedAt:serverTimestamp()
+   },{merge:true});
+   if($("scadenza"))$("scadenza").value=expiry;
+   log("calendario_aggiornato",{clienteId:id,cliente:nome(c),eliminate:deleted,create:created.length,scadenza:expiry});
+   alert(`Calendario aggiornato.\n\nLezioni eliminate: ${deleted}\nLezioni create: ${created.length}\nScadenza: ${fmt(expiry)}\n\nContatore e pacchetto invariati.`);
+  }catch(e){console.error(e);alert(e.message||String(e));}
+ }
+ async function renewPackageOnly(id){
+  const c=clienti.find(x=>x.id===id);if(!c)return;
+  const sc=(Array.isArray(c.giorni)?c.giorni:String(c.giorni||"").split(/[,;\n]+/)).map((d,i)=>{
+   const nd=normDay(d);const item=DAY_MAP.find(([label,key])=>normDay(label)===nd||key===nd.slice(0,3));
+   const hours=Array.isArray(c.orari)?c.orari:String(c.orari||"").split(/[,;\n]+/).map(x=>x.trim()).filter(Boolean);
+   return item?{label:item[0],key:item[1],dow:item[2],ora:hours[i]||hours[0]}:null;
+  }).filter(x=>x&&x.ora);
+  if(!sc.length)return alert("Impossibile rinnovare: controlla giorni e orari del cliente.");
+  const start=firstUseful(sc,tomorrowISO());
+  const total=Math.max(0,Number(c.lezioniTotali||0));
+  if(!confirm(`Rinnovare il pacchetto dal ${fmt(start)}?\n\nSaranno generate ${total} lezioni. Storico e vecchi pacchetti non verranno modificati.`))return;
+  try{
+   const deleted=await deleteFuturePending(id,start);
+   const created=await createFutureLessons(id,c,sc,total,start);
+   const expiry=created.length?created[created.length-1].data:start;
+   await addDoc(path("rinnovi"),{cliente:nome(c),clienteId:id,pacchetto:total,data:start,importo:valore(c),createdAt:serverTimestamp()});
+   await setDoc(docPath("clienti",id),{
+    stato:"attivo",lezioniFatte:0,lezioniResidue:total,inizio:start,scadenza:expiry,
+    pagamentoRinnovoDaSaldare:true,updatedAt:serverTimestamp()
+   },{merge:true});
+   log("pacchetto_rinnovato",{clienteId:id,cliente:nome(c),totale:total,inizio:start,scadenza:expiry,eliminate:deleted});
+   alert(`Pacchetto rinnovato correttamente.\n\nPrima lezione: ${fmt(start)}\nLezioni create: ${created.length}\nScadenza: ${fmt(expiry)}`);
+  }catch(e){console.error(e);alert(e.message||String(e));}
+ }
+ async function recalcCounterOnly(){
+  const id=$("clienteId")?.value;if(!id)return alert("Apri prima il cliente.");
+  const c=clienti.find(x=>x.id===id);if(!c)return alert("Cliente non trovato.");
+  const start=String(c.inizio||todayISO());
+  const consumed=eventi.filter(e=>e.clienteId===id && String(e.data||"")>=start && consumes(e.stato)).length;
+  const total=Math.max(0,Number(c.lezioniTotali||0));
+  const remaining=Math.max(0,total-consumed);
+  if(!confirm(`Ricalcolare solo il contatore del pacchetto attuale?\n\nEffettuate/consumate: ${consumed}\nResidue: ${remaining}\nIl calendario non verra modificato.`))return;
+  await setDoc(docPath("clienti",id),{lezioniFatte:consumed,lezioniResidue:remaining,updatedAt:serverTimestamp()},{merge:true});
+  log("contatore_ricalcolato",{clienteId:id,cliente:nome(c),consumate:consumed,residue:remaining});
+  alert(`Contatore aggiornato.\n\nConsumate: ${consumed}\nResidue: ${remaining}`);
+ }
+ async function saveProfileOnly(){
+  const id=$("clienteId")?.value;if(!id)return;
+  const c=clienti.find(x=>x.id===id);if(!c)return alert("Cliente non trovato.");
+  const d=formData();
+  const safe={nome:d.nome,cognome:d.cognome,telefono:d.telefono,emailCliente:d.emailCliente,servizio:d.servizio,note:d.note,dovuto:d.dovuto,pagato:d.pagato,pagamentoRinnovoDaSaldare:d.pagato<d.dovuto,updatedAt:serverTimestamp()};
+  await setDoc(docPath("clienti",id),safe,{merge:true});
+  log("profilo_cliente_salvato",{clienteId:id,cliente:nome({...c,...safe})});
+  alert("Dati anagrafici e saldo salvati. Calendario, pacchetto e contatore non modificati.");
+ }
+ return {updateCalendarOnly,renewPackageOnly,recalcCounterOnly,saveProfileOnly,log};
+})();
+
+window.aggiornaCalendarioFuturo11801=LTS120.updateCalendarOnly;
+window.aggiornaCalendarioFuturo1180=LTS120.updateCalendarOnly;
+window.aggiornaCalendarioFuturo=LTS120.updateCalendarOnly;
+window.rinnova=LTS120.renewPackageOnly;
+window.ricalcolaContatoreCliente=LTS120.recalcCounterOnly;
+window.salvaDatiCliente=LTS120.saveProfileOnly;
+
 </script>
 
 <div id="editLessonModal1179" class="edit-lesson-modal">
