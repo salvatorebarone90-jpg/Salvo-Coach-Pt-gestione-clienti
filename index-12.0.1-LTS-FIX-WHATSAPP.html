@@ -1,0 +1,2180 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>SB Personal Coach Gestionale 12.0.1 LTS</title>
+<link rel="manifest" href="manifest.json">
+<style>
+:root{--dark:#101827;--blue:#17233a;--gold:#d5ad52;--bg:#f4f6f8;--card:#fff;--muted:#667085;--ok:#13915f;--bad:#c0392b;--warn:#c47d00}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:var(--bg);color:#111827}
+header{background:linear-gradient(135deg,var(--dark),var(--blue));color:#fff;padding:18px 14px;position:sticky;top:0;z-index:20;box-shadow:0 8px 24px rgba(0,0,0,.18)}
+.header-inner{display:flex;align-items:center;gap:12px;max-width:1150px;margin:auto}
+.logo{width:52px;height:52px;border-radius:50%;object-fit:cover;background:#fff}
+h1{font-size:20px;margin:0}
+.subtitle{font-size:12px;color:#e5e7eb;margin-top:3px}
+nav{display:flex;gap:8px;overflow-x:auto;max-width:1150px;margin:14px auto 0;padding-bottom:2px}
+nav button{border:0;border-radius:999px;padding:10px 14px;background:rgba(255,255,255,.14);color:#fff;font-weight:700;white-space:nowrap}
+nav button.active{background:var(--gold);color:#111827}
+main{max-width:1150px;margin:auto;padding:14px}
+.section{display:none}
+.section.active{display:block}
+.card{background:var(--card);border-radius:18px;padding:16px;margin:12px 0;box-shadow:0 8px 24px rgba(16,24,39,.08)}
+.card h2{margin:0 0 8px;font-size:20px}
+.card h3{margin:0 0 6px;font-size:17px}
+.meta{color:var(--muted);font-size:13px;line-height:1.35}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px}
+.kpi{background:#fff;border-radius:18px;padding:16px;box-shadow:0 8px 22px rgba(16,24,39,.07)}
+.kpi strong{font-size:25px;display:block}
+.kpi span{font-size:12px;color:var(--muted)}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}
+label{font-size:12px;font-weight:800;color:#344054;display:block;margin:8px 0 5px}
+input,select,textarea{width:100%;padding:12px;border:1px solid #d0d5dd;border-radius:12px;font-size:15px;background:#fff}
+textarea{min-height:80px}
+.btn{border:0;border-radius:12px;padding:11px 13px;font-weight:800;margin:4px 4px 4px 0;cursor:pointer}
+.btn.full{width:100%;margin:8px 0 0}
+.sb-toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#17233a;color:#fff;padding:12px 18px;border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.25);z-index:99999;font-weight:700;opacity:0;pointer-events:none;transition:opacity .2s ease}.sb-toast.show{opacity:1}
+.gold{background:var(--gold);color:#111827}.dark{background:var(--dark);color:#fff}.light{background:#e8edf5;color:#17233a}.red{background:#ffe3e0;color:#a62018}.green{background:#dcfce7;color:#166534}.whatsapp{background:#25D366;color:#fff}
+.badge{display:inline-block;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:800;margin:3px}
+.badge.ok{background:#dcfce7;color:#166534}.badge.bad{background:#fee2e2;color:#991b1b}.badge.warn{background:#fef3c7;color:#92400e}.badge.info{background:#e0f2fe;color:#075985}
+.check{border:1px solid #e5e7eb;border-radius:14px;padding:12px;margin:10px 0;background:#fff}
+.empty{padding:18px;text-align:center;color:var(--muted)}
+.actions{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.hidden{display:none!important}
+.small{font-size:12px}
+hr{border:0;border-top:1px solid #e5e7eb;margin:12px 0}
+
+.edit-lesson-modal{position:fixed;inset:0;background:rgba(15,23,42,.72);display:none;align-items:center;justify-content:center;padding:16px;z-index:9999}
+.edit-lesson-modal.active{display:flex}
+.edit-lesson-box{width:min(560px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:20px;padding:20px;box-shadow:0 24px 70px rgba(0,0,0,.28)}
+.edit-lesson-box h2{margin-top:0}
+.edit-lesson-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+@media(max-width:600px){.edit-lesson-actions{grid-template-columns:1fr}}
+
+</style>
+</head>
+<body>
+<header>
+  <div class="header-inner">
+    <img src="logo.jpeg" class="logo" onerror="this.style.display='none'">
+    <div>
+      <h1>SB Personal Coach Gestionale 12.0.1 LTS</h1>
+      <div class="subtitle">Fix WhatsApp rinnovo · 01/08/2026</div>
+    </div>
+  </div>
+  <nav id="nav">
+    <button data-tab="dashboard" class="active">Dashboard</button>
+    <button data-tab="clienti">Clienti</button>
+    <button data-tab="calendario">Calendario</button>
+    <button data-tab="recuperi">Recuperi</button>
+    <button data-tab="registro">Registro Cliente</button>
+    <button data-tab="contattare">Da contattare</button>
+    <button data-tab="rinnovi">Rinnovi</button>
+    <button data-tab="contabilita">Contabilità</button>
+    <button data-tab="impostazioni">Impostazioni</button>
+    <button data-tab="backup">Backup</button>
+      <button data-tab="contattiCoach">Contatti Coach</button>
+      <button data-tab="bacheca">Bacheca</button>
+  </nav>
+</header>
+
+<main id="app">
+<section id="login" class="section">
+  <div class="card">
+    <h2>Accesso Coach</h2>
+    <label>Email</label><input id="loginEmail" type="email">
+    <label>Password</label><input id="loginPassword" type="password">
+    <button class="btn gold full" onclick="login()">Accedi</button>
+    <p id="loginStatus" class="meta"></p>
+  </div>
+</section>
+
+<section id="dashboard" class="section active">
+  <div class="card">
+    <h2>👋 Smart Coach</h2>
+    <div id="smartCoachBox"></div>
+  </div>
+  <div class="grid">
+    <div class="kpi"><strong id="kClienti">0</strong><span>Clienti attivi</span></div>
+    <div class="kpi"><strong id="kOggi">0</strong><span>Lezioni oggi</span></div>
+    <div class="kpi"><strong id="kDaConf">0</strong><span>Da confermare oggi</span></div>
+    <div class="kpi"><strong id="kResidui">€0</strong><span>Da incassare</span></div>
+  </div>
+</section>
+
+<section id="clienti" class="section">
+  <div class="card">
+    <h2 id="formTitle">Nuovo Cliente</h2>
+    <input id="clienteId" type="hidden">
+    <div class="row">
+      <div><label>Nome</label><input id="nome"></div>
+      <div><label>Cognome</label><input id="cognome"></div>
+    </div>
+    <div class="row">
+      <div><label>Telefono / WhatsApp</label><input id="telefono"></div>
+      <div><label>Email</label><input id="emailCliente"></div>
+    </div>
+    <div class="row">
+      <div><label>Servizio</label><select id="servizio"><option>Personal Training</option><option>Coaching Online</option><option>Nutrizione</option><option>BIA</option><option>Plicometria</option><option>Preparazione gara</option><option>Altro</option></select></div>
+      <div><label>Lezioni totali</label><input id="lezioniTotali" type="number" value="12"></div>
+    </div>
+    <div class="row">
+      <div><label>Frequenza settimanale</label><input id="frequenza" type="number" value="2"></div>
+      <div><label>Durata lezione minuti</label><input id="durata" type="number" value="60"></div>
+    </div>
+    <div class="card" style="background:#f8fafc;margin-top:8px">
+      <h3>Giorni e orari settimanali</h3>
+      <p class="meta small">Attiva i giorni del cliente e inserisci l'orario corrispondente.</p>
+      <div class="row">
+        <div><label><input id="day_lun" type="checkbox" style="width:auto"> Lunedì</label><input id="time_lun" type="time"></div>
+        <div><label><input id="day_mar" type="checkbox" style="width:auto"> Martedì</label><input id="time_mar" type="time"></div>
+        <div><label><input id="day_mer" type="checkbox" style="width:auto"> Mercoledì</label><input id="time_mer" type="time"></div>
+      </div>
+      <div class="row">
+        <div><label><input id="day_gio" type="checkbox" style="width:auto"> Giovedì</label><input id="time_gio" type="time"></div>
+        <div><label><input id="day_ven" type="checkbox" style="width:auto"> Venerdì</label><input id="time_ven" type="time"></div>
+        <div><label><input id="day_sab" type="checkbox" style="width:auto"> Sabato</label><input id="time_sab" type="time"></div>
+      </div>
+      <input id="giorni" type="hidden">
+      <input id="orari" type="hidden">
+      <p id="anteprimaOrari" class="meta"><b>-</b></p>
+    </div>
+    <div class="row">
+      <div><label>Data inizio pacchetto</label><input id="inizio" type="date"></div>
+      <div><label>Scadenza/Fine pacchetto</label><input id="scadenza" type="date"></div>
+    </div>
+    <div class="row">
+      <div><label>Dovuto €</label><input id="dovuto" type="number" step="0.01"></div>
+      <div><label>Pagato €</label><input id="pagato" type="number" step="0.01"></div>
+    </div>
+    <label>Note</label><textarea id="note"></textarea>
+    <div id="newActions">
+      <button class="btn gold full" onclick="creaCliente()">Crea cliente + genera calendario</button>
+    </div>
+    <div id="editActions" class="hidden">
+      <button class="btn green" onclick="salvaSaldoCliente()">💰 Modifica solo saldo</button>
+      <button class="btn gold" onclick="aggiornaCalendarioFuturo11801()">📅 Aggiorna calendario futuro</button>
+      <button class="btn light" onclick="ricalcolaContatoreCliente()">🔄 Ricalcola contatore</button>
+      <button class="btn dark" onclick="salvaDatiCliente()">💾 Salva dati cliente</button>
+      <button class="btn light" onclick="pulisciForm()">Nuovo cliente</button>
+    </div>
+    <p class="meta">Regola calendario: modifiche a giorni/orari/frequenza partono sempre da domani. Oggi e storico non vengono toccati.</p>
+  </div>
+  <div id="listaClienti"></div>
+</section>
+
+<section id="calendario" class="section">
+  <div class="card">
+    <h2>📅 Calendario</h2>
+    <div class="row">
+      <div><label>Dal</label><input id="calDal" type="date"></div>
+      <div><label>Al</label><input id="calAl" type="date"></div>
+    </div>
+    <button class="btn gold full" onclick="renderCalendario()">Aggiorna calendario</button>
+  </div>
+  <div id="listaCalendario"></div>
+</section>
+
+
+<section id="recuperi" class="section">
+  <div class="card">
+    <h2>🔄 Recuperi richiesti</h2>
+    <p class="meta">Richieste inviate dai clienti entro le 24 ore previste dal regolamento.</p>
+    <div id="listaRecuperi"></div>
+  </div>
+</section>
+
+<section id="registro" class="section">
+  <div class="card">
+    <h2>📚 Registro Cliente</h2>
+    <p class="meta">Storico completo: inizio/fine pacchetto, lezioni, stati, residue.</p>
+    <label>Seleziona cliente</label>
+    <select id="registroCliente" onchange="renderRegistro()"></select>
+  </div>
+  <div class="grid">
+    <div class="kpi"><strong id="regTotali">0</strong><span>Lezioni pacchetto</span></div>
+    <div class="kpi"><strong id="regFatte">0</strong><span>Consumate</span></div>
+    <div class="kpi"><strong id="regResidue">0</strong><span>Residue</span></div>
+    <div class="kpi"><strong id="regPeriodo">-</strong><span>Periodo</span></div>
+  </div>
+  <div class="card"><h2>🗓️ Lezioni</h2><div id="registroLista"></div></div>
+</section>
+
+<section id="contattare" class="section">
+  <div class="card"><h2>💬 Da contattare</h2><div id="listaContattare"></div></div>
+</section>
+
+<section id="rinnovi" class="section">
+  <div class="card"><h2>🔁 Storico rinnovi</h2><div id="listaRinnovi"></div></div>
+</section>
+
+<section id="contabilita" class="section">
+  <div class="card">
+    <h2>💰 Contabilità</h2>
+    <label>Mese</label><input id="contMese" type="month"><label>Periodo</label><select id="contMesi"><option value="1">Solo mese selezionato</option><option value="4">Ultimi 4 mesi</option><option value="12">Ultimi 12 mesi</option></select>
+    <button class="btn gold full" onclick="renderContabilita()">Aggiorna</button>
+  </div>
+  <div class="grid">
+    <div class="kpi"><strong id="contIncassato">€0</strong><span>Incassato mese</span></div>
+    <div class="kpi"><strong id="contDaIncassare">€0</strong><span>Da incassare</span></div>
+    <div class="kpi"><strong id="contValorePacchetti">€0</strong><span>Valore pacchetti</span></div>
+    <div class="kpi"><strong id="contTotaleStorico">€0</strong><span>Totale storico</span></div>
+  </div>
+  <div class="card"><h2>📌 Clienti con residuo</h2><div id="contClientiResiduo"></div></div>
+  <div class="card"><h2>📦 Pacchetti attivi</h2><div id="contPacchettiAttivi"></div></div>
+  <div class="card"><h2>🧾 Movimenti</h2><div id="contMovimenti"></div></div>
+</section>
+
+<section id="backup" class="section">
+  <div class="card">
+    <h2>💾 Backup</h2>
+    <button class="btn gold full" onclick="esportaBackup()">Esporta backup JSON</button>
+  </div>
+</section>
+
+<section id="impostazioni" class="section">
+  <div class="card">
+    <h2>⚙️ Impostazioni</h2>
+    <p class="meta">Modifica solo quando una lezione deve comparire nella Smart Dashboard.</p>
+    <label>Mostra le lezioni da confermare dopo</label>
+    <select id="smartDelaySelect">
+      <option value="0.5">30 minuti</option>
+      <option value="1">1 ora</option>
+      <option value="2">2 ore</option>
+      <option value="3">3 ore</option>
+    </select>
+    <button class="btn gold full" onclick="salvaImpostazioniSmart1178()">Salva impostazione</button>
+    <p id="smartDelayInfo" class="meta"></p>
+  </div>
+</section>
+
+
+<section id="contattiCoach" class="section">
+  <div class="card">
+    <h2>📇 Contatti Coach</h2>
+    <p class="meta">Questi dati vengono utilizzati nell’Area Cliente.</p>
+    <label>Numero WhatsApp Business</label>
+    <input id="coachWhatsapp" inputmode="tel" placeholder="3793701208">
+    <label>Email</label>
+    <input id="coachEmail" type="email">
+    <label>Instagram</label>
+    <input id="coachInstagram" placeholder="@salvo_coach90">
+    <label>Sito web</label>
+    <input id="coachWebsite" placeholder="https://www.salvatorebarone.com">
+    <button class="btn gold full" onclick="salvaContattiCoach1180()">Salva contatti</button>
+    <p id="coachContactsInfo" class="meta"></p>
+  </div>
+</section>
+
+<section id="bacheca" class="section">
+  <div class="card">
+    <h2>📣 Bacheca comunicazioni</h2>
+    <p class="meta">Pubblica un avviso visibile a tutti i clienti nell’Area Cliente. La comunicazione scade automaticamente alla data indicata.</p>
+    <label>Titolo</label><input id="bachecaTitolo" placeholder="Es. Chiusura estiva">
+    <label>Messaggio</label><textarea id="bachecaMessaggio" placeholder="Scrivi qui la comunicazione..."></textarea>
+    <div class="row">
+      <div><label>Visibile dal</label><input id="bachecaDal" type="date"></div>
+      <div><label>Visibile fino al</label><input id="bachecaAl" type="date"></div>
+    </div>
+    <label><input id="bachecaAttiva" type="checkbox" style="width:auto" checked> Comunicazione attiva</label>
+    <button class="btn gold full" onclick="salvaBacheca()">Pubblica / aggiorna</button>
+    <button class="btn red full" onclick="disattivaBacheca()">Disattiva comunicazione</button>
+    <p id="bachecaStato" class="meta"></p>
+  </div>
+</section>
+
+</main>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, doc, addDoc, setDoc, deleteDoc, getDoc, getDocs, onSnapshot, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { firebaseConfig } from "./firebase-config.js";
+
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
+
+let user=null, clienti=[], eventi=[], rinnovi=[], pagamenti=[], recuperi=[], settings={}, coachSettings={}, bachecaData={};
+const $=id=>document.getElementById(id);
+const path=name=>collection(db,"users",user.uid,name);
+const docPath=(name,id)=>doc(db,"users",user.uid,name,id);
+
+function todayISO(){return new Date().toISOString().slice(0,10)}
+function tomorrowISO(){const d=new Date();d.setDate(d.getDate()+1);return d.toISOString().slice(0,10)}
+function fmt(d){if(!d||d==="-"||String(d).length<8)return d||"-";const [y,m,day]=String(d).slice(0,10).split("-");return `${day}/${m}/${y}`}
+function euro(n){return "€"+Number(n||0).toLocaleString("it-IT",{minimumFractionDigits:0,maximumFractionDigits:2})}
+function nome(c){return `${c.nome||""} ${c.cognome||""}`.trim()}
+function daysFromFreq(total,freq){return Math.ceil((Number(total||0)/Math.max(1,Number(freq||1)))*7)}
+function calcExpiry(start,total,freq){const d=new Date(start);d.setDate(d.getDate()+daysFromFreq(total,freq));return d.toISOString().slice(0,10)}
+function normDay(s){return String(s||"").trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"")}
+const dayMap={domenica:0,lunedi:1,lunedì:1,martedi:2,martedì:2,mercoledi:3,mercoledì:3,giovedi:4,giovedì:4,venerdi:5,venerdì:5,sabato:6};
+
+function shortDayLabel(day){
+ const d=normDay(day);
+ const map={lunedi:"Lun",martedi:"Mar",mercoledi:"Mer",giovedi:"Gio",venerdi:"Ven",sabato:"Sab",domenica:"Dom"};
+ return map[d]||String(day||"").trim();
+}
+function scheduleSummary(c){
+ const giorni=String(c.giorni||"").split(/[,\n;]/).map(x=>x.trim()).filter(Boolean);
+ const orari=String(c.orari||"").split(/[,\n;]/).map(x=>x.trim()).filter(Boolean);
+ if(!giorni.length)return "-";
+ return giorni.map((g,i)=>`${shortDayLabel(g)} ${orari[i]||orari[0]||""}`.trim()).join(", ");
+}
+window.aggiornaAnteprimaOrari=()=>{
+ const c={giorni:$("giorni")?.value||"",orari:$("orari")?.value||""};
+ const el=$("anteprimaOrari");
+ if(el)el.textContent=scheduleSummary(c)==="-"?"Inserisci giorni e orari per vedere il riepilogo.":scheduleSummary(c);
+};
+
+function parseDays(s){return String(s||"").split(/[,\n;]/).map(x=>dayMap[normDay(x)]).filter(x=>x!==undefined)}
+function parseHours(s){return String(s||"").split(/[,\n;]/).map(x=>x.trim()).filter(Boolean)}
+function localDateFromISO(iso){const [y,m,d]=String(iso||"").split("-").map(Number);return new Date(y,m-1,d,12,0,0)}
+function localISO(date){const y=date.getFullYear(),m=String(date.getMonth()+1).padStart(2,"0"),d=String(date.getDate()).padStart(2,"0");return `${y}-${m}-${d}`}
+function primoGiornoUtile(c,fromDate=tomorrowISO()){
+ const days=parseDays(c.giorni);
+ if(!days.length)return fromDate;
+ const d=localDateFromISO(fromDate);
+ for(let i=0;i<14;i++){if(days.includes(d.getDay()))return localISO(d);d.setDate(d.getDate()+1)}
+ return fromDate;
+}
+function ultimaDataProgrammata(c,startDate){
+ const days=parseDays(c.giorni), max=Number(c.lezioniTotali||0);
+ if(!days.length||max<=0)return calcExpiry(startDate,c.lezioniTotali,c.frequenza);
+ let created=0,d=localDateFromISO(startDate),last=startDate,safety=0;
+ while(created<max && safety<730){
+  if(days.includes(d.getDay())){last=localISO(d);created++}
+  d.setDate(d.getDate()+1);safety++;
+ }
+ return last;
+}
+function eventStart(ev){const [y,m,d]=String(ev.data||"").split("-").map(Number);let h=9,mi=0;if(ev.ora){const p=String(ev.ora).split(":").map(Number);h=p[0]||0;mi=p[1]||0}return new Date(y,m-1,d,h,mi,0)}
+function eventEnd(ev){return new Date(eventStart(ev).getTime()+Number(ev.durata||60)*60000)}
+function historical(st){return ["Effettuata","Assente","Recuperata","Annullata","Annullata dal cliente"].includes(st||"")}
+function consumes(st){return ["Effettuata","Assente","Recuperata"].includes(st||"")}
+function fatte(id){return eventi.filter(e=>e.clienteId===id&&consumes(e.stato)).length}
+function residue(c){return Math.max(0,Number(c.lezioniTotali||0)-fatte(c.id))}
+function valore(c){return Number(c.dovuto||0)}
+function pagato(c){return Number(c.pagato||0)}
+function residuoEuro(c){return Math.max(0,valore(c)-pagato(c))}
+
+function showTab(tab){
+ document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+ document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("active",b.dataset.tab===tab));
+ const el=$(tab); if(el)el.classList.add("active");
+ render();
+ if(tab==="calendario")renderCalendario();
+ if(tab==="bacheca")renderBachecaCoach();
+}
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+
+window.login=async()=>{
+ try{await signInWithEmailAndPassword(auth,$("loginEmail").value,$("loginPassword").value)}
+ catch(e){$("loginStatus").textContent=e.message}
+};
+
+onAuthStateChanged(auth,u=>{
+ user=u;
+ if(!u){document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));$("login").classList.add("active");return}
+ document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));$("dashboard").classList.add("active");
+ subscribe();
+});
+
+function subscribe(){
+ onSnapshot(path("clienti"),s=>{clienti=s.docs.map(d=>({id:d.id,...d.data()}));render()});
+ onSnapshot(path("eventi"),s=>{eventi=s.docs.map(d=>({id:d.id,...d.data()}));render()});
+ onSnapshot(path("rinnovi"),s=>{rinnovi=s.docs.map(d=>({id:d.id,...d.data()}));render()});
+ onSnapshot(path("pagamenti"),s=>{pagamenti=s.docs.map(d=>({id:d.id,...d.data()}));render()});
+ onSnapshot(path("recuperi"),s=>{recuperi=s.docs.map(d=>({id:d.id,...d.data()}));render()});
+ onSnapshot(doc(db,"users",user.uid,"comunicazioni","bachecaAttiva"),snap=>{bachecaData=snap.exists()?snap.data():{};renderBachecaCoach();});
+}
+
+function formData(){
+ const total=Number($("lezioniTotali").value||0), freq=Number($("frequenza").value||1), start=$("inizio").value||todayISO();
+ return {
+  nome:$("nome").value.trim(),cognome:$("cognome").value.trim(),telefono:$("telefono").value.trim(),emailCliente:$("emailCliente").value.trim(),
+  servizio:$("servizio").value,lezioniTotali:total,frequenza:freq,durata:Number($("durata").value||60),giorni:$("giorni").value,orari:$("orari").value,
+  inizio:start,scadenza:$("scadenza").value||calcExpiry(start,total,freq),dovuto:Number($("dovuto").value||0),pagato:Number($("pagato").value||0),note:$("note").value,
+  updatedAt:serverTimestamp()
+ }
+}
+async function generaEventi(clienteId,c,startDate){
+ const days=parseDays(c.giorni), hours=parseHours(c.orari);
+ if(!days.length||!hours.length)return;
+ const hourByDay=new Map();
+ days.forEach((day,index)=>hourByDay.set(day,hours[index]||hours[0]));
+ let created=0, d=localDateFromISO(startDate);
+ const max=Number(c.lezioniTotali||0);
+ while(created<max && created<200){
+   if(hourByDay.has(d.getDay())){
+     const hour=hourByDay.get(d.getDay());
+     await addDoc(path("eventi"),{clienteId,clienteNome:nome(c),data:localISO(d),ora:hour,durata:Number(c.durata||60),stato:"Prenotata",storico:false,scalata:false,createdAt:serverTimestamp()});
+     created++;
+   }
+   d.setDate(d.getDate()+1);
+ }
+}
+window.creaCliente=async()=>{
+ const c=formData();
+ if(!c.nome)return alert("Inserisci nome");
+ c.lezioniFatte=0;c.lezioniResidue=Number(c.lezioniTotali||0);c.stato="attivo";c.createdAt=serverTimestamp();
+ const ref=await addDoc(path("clienti"),c);
+ await generaEventi(ref.id,{...c,id:ref.id},c.inizio);
+ pulisciForm();
+};
+function setEditMode(isEdit){$("newActions").classList.toggle("hidden",isEdit);$("editActions").classList.toggle("hidden",!isEdit);$("formTitle").textContent=isEdit?"Modifica Cliente":"Nuovo Cliente"}
+window.pulisciForm=()=>{["clienteId","nome","cognome","telefono","emailCliente","giorni","orari","inizio","scadenza","dovuto","pagato","note"].forEach(id=>{if($(id))$(id).value=""});$("lezioniTotali").value=12;$("frequenza").value=2;$("durata").value=60;setEditMode(false)}
+window.editCliente=id=>{
+ const c=clienti.find(x=>x.id===id); if(!c)return;
+ $("clienteId").value=id;["nome","cognome","telefono","emailCliente","servizio","lezioniTotali","frequenza","durata","giorni","orari","inizio","scadenza","dovuto","pagato","note"].forEach(k=>{if($(k))$(k).value=c[k]??""});
+ setEditMode(true);aggiornaAnteprimaOrari();showTab("clienti");window.scrollTo({top:0,behavior:"smooth"});
+}
+window.salvaDatiCliente=async()=>{const id=$("clienteId").value;if(!id)return;await setDoc(docPath("clienti",id),formData(),{merge:true});alert("Dati cliente salvati.")}
+window.salvaSaldoCliente=async()=>{const id=$("clienteId").value;if(!id)return;const dovuto=Number($("dovuto").value||0),pagato=Number($("pagato").value||0);await setDoc(docPath("clienti",id),{dovuto,pagato,pagamentoRinnovoDaSaldare:pagato<dovuto,updatedAt:serverTimestamp()},{merge:true});alert("Saldo aggiornato.")}
+window.ricalcolaContatoreCliente=async()=>{const id=$("clienteId").value;if(!id)return;const c=clienti.find(x=>x.id===id);await setDoc(docPath("clienti",id),{lezioniFatte:fatte(id),lezioniResidue:residue(c),updatedAt:serverTimestamp()},{merge:true});alert("Contatore ricalcolato.")}
+
+window.aggiornaCalendarioFuturo=async()=>{
+ const id=$("clienteId").value;if(!id)return;
+ const cOld=clienti.find(x=>x.id===id);if(!cOld)return;
+ if(!confirm("Aggiornare il calendario SOLO da domani in poi? Oggi e lo storico non verranno toccati."))return;
+ const beforeF=fatte(id), beforeR=residue(cOld);
+ const tomorrow=tomorrowISO();
+ for(const ev of eventi.filter(e=>e.clienteId===id && e.data>=tomorrow && !historical(e.stato))){await deleteDoc(docPath("eventi",ev.id))}
+ const c={...cOld,...formData(),id};
+ await setDoc(docPath("clienti",id),{...formData(),lezioniFatte:beforeF,lezioniResidue:beforeR},{merge:true});
+ await generaEventi(id,c,tomorrow);
+ alert("Calendario futuro aggiornato. Storico e contatore invariati.");
+}
+
+window.lezione=async id=>{const c=clienti.find(x=>x.id===id);if(!c)return;if(!confirm("Scalare 1 lezione manualmente?"))return;await setDoc(docPath("clienti",id),{lezioniFatte:Number(c.lezioniFatte||0)+1,lezioniResidue:Math.max(0,Number(c.lezioniResidue||0)-1)},{merge:true})}
+window.restituisci=async id=>{const c=clienti.find(x=>x.id===id);if(!c)return;if(!confirm("Restituire 1 lezione?"))return;await setDoc(docPath("clienti",id),{lezioniFatte:Math.max(0,Number(c.lezioniFatte||0)-1),lezioniResidue:Number(c.lezioniResidue||0)+1},{merge:true})}
+window.inattivo=async id=>{const c=clienti.find(x=>x.id===id);if(!c)return;const nuovo=(c.stato||"attivo")==="inattivo"?"attivo":"inattivo";await setDoc(docPath("clienti",id),{stato:nuovo},{merge:true})}
+window.rinnova=async id=>{
+ const c=clienti.find(x=>x.id===id);if(!c)return;
+ const days=parseDays(c.giorni),hours=parseHours(c.orari);
+ if(!days.length||!hours.length)return alert("Impossibile rinnovare: controlla giorni e orari settimanali del cliente.");
+ const start=primoGiornoUtile(c,tomorrowISO());
+ const end=ultimaDataProgrammata(c,start);
+ if(!confirm(`Rinnovare il pacchetto dal ${fmt(start)}? Le nuove lezioni saranno generate dal primo giorno utile.`))return;
+ try{
+  // Rimuove soltanto eventuali lezioni future non storiche del vecchio pacchetto.
+  // Storico, lezioni effettuate, assenze e recuperi non vengono modificati.
+  for(const ev of eventi.filter(e=>e.clienteId===id && e.data>=start && !historical(e.stato))){await deleteDoc(docPath("eventi",ev.id))}
+  await addDoc(path("rinnovi"),{cliente:nome(c),clienteId:id,pacchetto:c.lezioniTotali,data:start,importo:valore(c),createdAt:serverTimestamp()});
+  await setDoc(docPath("clienti",id),{stato:"attivo",lezioniFatte:0,lezioniResidue:Number(c.lezioniTotali||0),inizio:start,scadenza:end,pagamentoRinnovoDaSaldare:true,updatedAt:serverTimestamp()},{merge:true});
+  await generaEventi(id,{...c,inizio:start,scadenza:end},start);
+  alert(`Pacchetto rinnovato. Prima lezione: ${fmt(start)}. Calendario generato correttamente.`);
+ }catch(e){console.error("Errore rinnovo pacchetto",e);alert("Errore durante il rinnovo. Nessuna modifica al Calendario Intelligente. Riprova o controlla la connessione.")}
+}
+window.eliminaCliente=async id=>{const c=clienti.find(x=>x.id===id);if(!c)return;if(!confirm("Eliminare cliente?"))return;await deleteDoc(docPath("clienti",id))}
+window.inviaAccessoCliente=id=>{const url=location.origin+location.pathname.replace("index.html","")+"cliente.html?id="+id;navigator.clipboard?.writeText(url);alert("Link copiato.")}
+
+function lezioniDaConfermare(){
+ const now=new Date(), today=todayISO();
+ return eventi.filter(ev=>{
+   if(ev.data!==today)return false;
+   if(historical(ev.stato))return false;
+   const end=eventEnd(ev);
+   if(end>now)return false;
+   if(ev.stato==="Da confermare")return true;
+   return ["Prenotata","Bloccata","Programmata"].includes(ev.stato||"Prenotata") && now>=new Date(end.getTime()+2*60*60000);
+ });
+}
+window.confermaEffettuata=async id=>setStatoEvento(id,"Effettuata");
+window.confermaAssente=async id=>setStatoEvento(id,"Assente");
+async function setStatoEvento(id,stato){const ev=eventi.find(e=>e.id===id);if(!ev)return;await setDoc(docPath("eventi",id),{stato,storico:true,scalata:consumes(stato),updatedAt:serverTimestamp()},{merge:true});const c=clienti.find(x=>x.id===ev.clienteId);await setDoc(docPath("clienti",ev.clienteId),{lezioniFatte:fatte(ev.clienteId)+1,lezioniResidue:Math.max(0,Number(c?.lezioniTotali||0)-fatte(ev.clienteId)-1)},{merge:true})}
+window.confermaTutteEffettuate=async()=>{for(const ev of lezioniDaConfermare())await setStatoEvento(ev.id,"Effettuata")}
+
+function normalizeClientPhone(v){
+ let p=String(v||"").trim().replace(/^00/,"").replace(/\D/g,"");
+ if(!p)return "";
+ if(p.startsWith("39"))return p;
+ if(p.startsWith("3") && p.length===10)return "39"+p;
+ return p;
+}
+function ultimaLezioneEffettuata(clienteId){
+ return eventi
+  .filter(e=>e.clienteId===clienteId && String(e.stato||"").trim().toLowerCase()==="effettuata")
+  .sort((a,b)=>String(b.data||"").localeCompare(String(a.data||"")) || String(b.ora||"").localeCompare(String(a.ora||"")))[0] || null;
+}
+function sbToast(message){
+ let el=document.getElementById("sbToast");
+ if(!el){el=document.createElement("div");el.id="sbToast";el.className="sb-toast";document.body.appendChild(el)}
+ el.textContent=message;el.classList.add("show");
+ clearTimeout(window.__sbToastTimer);window.__sbToastTimer=setTimeout(()=>el.classList.remove("show"),1100);
+}
+function whatsappPagamentoById(clienteId){
+ const c=clienti.find(x=>x.id===clienteId);
+ if(!c){alert("Cliente non trovato.");return false}
+ if(residuoEuro(c)<=0){alert("Il cliente risulta già in regola con il pagamento.");return false}
+ const phone=normalizeClientPhone(c.telefono);
+ if(!phone){alert("Numero di telefono non presente nella scheda cliente.");return false}
+ const last=ultimaLezioneEffettuata(c.id);
+ if(!last){alert("Impossibile trovare l'ultima lezione effettuata.");return false}
+ const firstName=String(c.nome||nome(c)||"Cliente").trim().split(/\s+/)[0];
+ const lastDate=fmt(last.data);
+ const conferma=confirm(`Inviare il promemoria pagamento a ${nome(c)}?\n\nUltima lezione effettuata: ${lastDate}`);
+ if(!conferma)return false;
+ const msg=`Ciao ${firstName}! \u{1F44B}\n\nTi informo che il tuo pacchetto è stato rinnovato in seguito all'ultima lezione effettuata il ${lastDate}.\n\nTi chiedo gentilmente di procedere con il saldo del rinnovo, così da mantenere il servizio regolarmente attivo.\n\nGrazie mille e ci vediamo al prossimo allenamento! \u{1F4AA}`;
+ sbToast("Preparazione messaggio...");
+ const url=`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+ const w=window.open(url,"_blank");
+ if(!w)window.location.href=url;
+ return true;
+}
+window.whatsappPagamentoById=whatsappPagamentoById;
+function whatsappCliente(c,tipo="generico"){
+ if(tipo==="saldo")return whatsappPagamentoById(c?.id);
+ const phone=normalizeClientPhone(c?.telefono);
+ if(!phone)return alert("Numero WhatsApp non presente nella scheda cliente.");
+ const firstName=String(c?.nome||nome(c)||"Cliente").trim().split(/\s+/)[0];
+ let msg=`Ciao ${firstName}!`;
+ if(tipo==="rinnovo")msg=`Ciao ${firstName}! 👋\n\nTi ricordo che ti rimane una sola lezione del pacchetto. Per garantire continuità al percorso, possiamo procedere con il rinnovo.\n\nSalvatore`;
+ window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`,"_blank");
+}
+window.whatsappCliente=whatsappCliente;
+
+document.addEventListener("click",e=>{
+ const btnRinnovo=e.target.closest(".js-wa-rinnovo");
+ if(btnRinnovo){
+  e.preventDefault();
+  e.stopPropagation();
+  const c=clienti.find(x=>x.id===btnRinnovo.dataset.clientId);
+  if(!c)return alert("Cliente non trovato.");
+  whatsappCliente(c,"rinnovo");
+  return;
+ }
+ const btnGenerico=e.target.closest(".js-wa-generico");
+ if(btnGenerico){
+  e.preventDefault();
+  e.stopPropagation();
+  const c=clienti.find(x=>x.id===btnGenerico.dataset.clientId);
+  if(!c)return alert("Cliente non trovato.");
+  whatsappCliente(c,"generico");
+ }
+});
+
+function clientCard(c){
+ const inactive=(c.stato||"attivo")==="inattivo";
+ const res=residuoEuro(c);
+ const r=Number(c.lezioniResidue ?? residue(c) ?? 0);
+ return `<div class="card client-card" data-client-id="${c.id}">
+   <h2>${nome(c)}</h2>
+   <p class="meta">${c.servizio||""} · ${inactive?"Inattivo":"Attivo"}</p>
+   <p class="meta"><b>${scheduleSummary(c)}</b></p>
+   <p class="meta">${c.regolamentoAccettato ? "📋 Regolamento accettato il " + (c.regolamentoAccettatoAtLabel || c.regolamentoAccettatoAt || "-") : "📋 Regolamento non ancora accettato"}</p>
+   <span class="badge ${r<=3?"warn":"ok"}">${r} residue su ${c.lezioniTotali||0}</span>${res>0?`<span class="badge bad">Residuo ${euro(res)}</span>`:""}
+   <div class="actions">
+     ${r<=1
+       ? `<button type="button" class="btn whatsapp js-wa-rinnovo" data-client-id="${c.id}">📲 WhatsApp rinnovo</button>`
+       : `<button type="button" class="btn whatsapp js-wa-generico" data-client-id="${c.id}">WhatsApp</button>`}
+     <button type="button" class="btn light" onclick="sbAddLesson('${c.id}')">+ Lezione</button>
+     <button type="button" class="btn light" onclick="sbReturnLesson('${c.id}')">Restituisci</button>
+     <button type="button" class="btn gold" onclick="rinnova('${c.id}')">Rinnova</button>
+     <button type="button" class="btn dark" onclick="editCliente('${c.id}')">Modifica</button>
+     <button type="button" class="btn light" onclick="inattivo('${c.id}')">${inactive?"Riattiva":"Inattivo"}</button>
+     <button type="button" class="btn light" onclick="sbInviteClient('${c.id}')">Invia accesso cliente</button>
+     <button type="button" class="btn red" onclick="eliminaCliente('${c.id}')">Elimina cliente</button>
+   </div>
+ </div>`;
+}
+function renderClienti(){const list=clienti.slice().sort((a,b)=>nome(a).localeCompare(nome(b)));$("listaClienti").innerHTML=list.map(clientCard).join("")||'<div class="empty">Nessun cliente.</div>'}
+function renderSmart(){const list=lezioniDaConfermare();$("smartCoachBox").innerHTML=list.length?`<div class="check"><h3>⏳ Lezioni da confermare oggi</h3>${list.map(ev=>`<div class="check"><b>${ev.clienteNome||""}</b><p class="meta">${fmt(ev.data)} ore ${ev.ora}</p><button class="btn green" onclick="confermaEffettuata('${ev.id}',this)">Effettuata</button><button class="btn red" onclick="confermaAssente('${ev.id}',this)">Assente</button></div>`).join("")}<button class="btn gold full" onclick="confermaTutteEffettuate()">Conferma tutte</button></div>`:'<p class="meta">Nessuna lezione di oggi da confermare.</p>'}
+function renderDashboard(){const att=clienti.filter(c=>(c.stato||"attivo")!=="inattivo");$("kClienti").textContent=att.length;$("kOggi").textContent=eventi.filter(e=>e.data===todayISO()).length;$("kDaConf").textContent=lezioniDaConfermare().length;$("kResidui").textContent=euro(att.reduce((s,c)=>s+residuoEuro(c),0));renderSmart()}
+function renderCalendario(){if(!$("calDal").value)$("calDal").value=todayISO();if(!$("calAl").value){const d=new Date();d.setDate(d.getDate()+14);$("calAl").value=d.toISOString().slice(0,10)}const dal=$("calDal").value,al=$("calAl").value;const list=eventi.filter(e=>e.data>=dal&&e.data<=al).sort((a,b)=>a.data.localeCompare(b.data)||String(a.ora).localeCompare(String(b.ora)));$("listaCalendario").innerHTML=list.map(e=>`<div class="card"><h3>${e.clienteNome}</h3><p class="meta">${fmt(e.data)} ore ${e.ora} · ${e.stato||"Prenotata"}</p></div>`).join("")||'<div class="empty">Nessuna lezione.</div>'}
+function renderRegistroSelect(){const cur=$("registroCliente").value;$("registroCliente").innerHTML='<option value="">Seleziona cliente</option>'+clienti.map(c=>`<option value="${c.id}">${nome(c)}</option>`).join("");if(cur)$("registroCliente").value=cur}
+window.renderRegistro=()=>{renderRegistroSelect();const id=$("registroCliente").value,c=clienti.find(x=>x.id===id);if(!c){$("registroLista").innerHTML='<div class="empty">Seleziona un cliente.</div>';return}const evs=eventi.filter(e=>e.clienteId===id).sort((a,b)=>a.data.localeCompare(b.data)||String(a.ora).localeCompare(String(b.ora)));$("regTotali").textContent=c.lezioniTotali||0;$("regFatte").textContent=fatte(id);$("regResidue").textContent=residue(c);$("regPeriodo").textContent=`${fmt(c.inizio)} → ${fmt(c.scadenza)}`;$("registroLista").innerHTML=evs.map(e=>`<div class="check"><h3>${fmt(e.data)} ore ${e.ora}</h3><p class="meta">Stato: ${e.stato||"Prenotata"}</p><span class="badge ${consumes(e.stato)?"ok":historical(e.stato)?"bad":"warn"}">${e.stato||"Prenotata"}</span></div>`).join("")||'<div class="empty">Nessuna lezione.</div>'}
+function renderContattare(){
+ const list=clienti.filter(c=>(c.stato||"attivo")!=="inattivo"&&residuoEuro(c)>0);
+ $("listaContattare").innerHTML=list.map(c=>`<div class="check"><h3>${nome(c)}</h3><p class="meta">Residuo ${euro(residuoEuro(c))}</p><button type="button" class="btn whatsapp full js-wa-pagamento" data-client-id="${c.id}">&#128242; Invia promemoria pagamento</button></div>`).join("")||'<div class="empty">Nessun cliente da contattare.</div>';
+}
+document.addEventListener("click",e=>{
+ const btn=e.target.closest(".js-wa-pagamento");
+ if(!btn||btn.disabled)return;
+ e.preventDefault();e.stopPropagation();
+ const opened=whatsappPagamentoById(btn.dataset.clientId);
+ if(opened){
+  btn.disabled=true;
+  btn.innerHTML="&#9989; Promemoria inviato";
+  btn.style.background="#16794b";
+  btn.style.cursor="default";
+  btn.style.opacity="1";
+ }
+});
+window.eliminaRinnovo=async id=>{if(confirm("Eliminare rinnovo?"))await deleteDoc(docPath("rinnovi",id))}
+function renderRinnovi(){$("listaRinnovi").innerHTML=rinnovi.map(r=>`<div class="check" style="position:relative;padding-right:60px"><button class="btn red" style="position:absolute;right:8px;top:8px;width:auto" onclick="eliminaRinnovo('${r.id}')">✕</button><h3>${r.cliente||"Cliente"}</h3><p class="meta">${r.pacchetto||""} lezioni · ${fmt(r.data)} · ${euro(r.importo)}</p></div>`).join("")||'<div class="empty">Nessun rinnovo.</div>'}
+function renderContabilita(){const now=new Date();if(!$("contMese").value)$("contMese").value=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0");const mese=$("contMese").value;const mov=[...rinnovi.map(r=>({tipo:"rinnovo",data:r.data,mese:String(r.data||"").slice(0,7),nome:r.cliente,importo:Number(r.importo||0)})),...pagamenti.map(p=>({tipo:"pagamento",data:p.data,mese:p.mese||String(p.data||"").slice(0,7),nome:p.clienteNome,importo:Number(p.importo||0)}))];const movM=mov.filter(m=>m.mese===mese);const att=clienti.filter(c=>(c.stato||"attivo")!=="inattivo");$("contIncassato").textContent=euro(movM.reduce((s,m)=>s+m.importo,0));$("contDaIncassare").textContent=euro(att.reduce((s,c)=>s+residuoEuro(c),0));$("contValorePacchetti").textContent=euro(att.reduce((s,c)=>s+valore(c),0));$("contTotaleStorico").textContent=euro(mov.reduce((s,m)=>s+m.importo,0));$("contClientiResiduo").innerHTML=att.filter(c=>residuoEuro(c)>0).map(c=>`<div class="check"><h3>${nome(c)}</h3><p class="meta">Pagato ${euro(pagato(c))} · Dovuto ${euro(valore(c))}</p><span class="badge bad">Residuo ${euro(residuoEuro(c))}</span></div>`).join("")||'<div class="empty">Nessun residuo.</div>';$("contPacchettiAttivi").innerHTML=att.map(c=>`<div class="check"><h3>${nome(c)}</h3><p class="meta">${residue(c)} residue su ${c.lezioniTotali||0}</p><span class="badge ok">${euro(valore(c))}</span></div>`).join("")||'<div class="empty">Nessun pacchetto.</div>';$("contMovimenti").innerHTML=movM.map(m=>`<div class="check"><h3>${m.nome||"Cliente"}</h3><p class="meta">${fmt(m.data)} · ${m.tipo}</p><span class="badge ok">${euro(m.importo)}</span></div>`).join("")||'<div class="empty">Nessun movimento nel mese.</div>'}
+
+/* 11.6 - Gestione recuperi richiesti dal cliente */
+async function accettaRecupero(id){
+ const r=recuperi.find(x=>x.id===id);
+ if(!r)return alert("Richiesta non trovata.");
+ if(!confirm("Accettare questa richiesta di recupero?"))return;
+ await setDoc(docPath("recuperi",id),{
+   stato:"Accettata",
+   rispostaAt:new Date().toISOString(),
+   rispostaAtLabel:new Date().toLocaleDateString("it-IT")+" ore "+new Date().toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"}),
+   updatedAt:serverTimestamp()
+ },{merge:true});
+ if(r.eventoId){
+   await setDoc(docPath("eventi",r.eventoId),{
+     stato:"Recupero approvato",
+     recuperoRichiesto:true,
+     updatedAt:serverTimestamp()
+   },{merge:true});
+ }
+}
+async function rifiutaRecupero(id){
+ const r=recuperi.find(x=>x.id===id);
+ if(!r)return alert("Richiesta non trovata.");
+ const motivo=prompt("Motivo del rifiuto, facoltativo:")||"";
+ await setDoc(docPath("recuperi",id),{
+   stato:"Rifiutata",
+   motivoRifiuto:motivo,
+   rispostaAt:new Date().toISOString(),
+   rispostaAtLabel:new Date().toLocaleDateString("it-IT")+" ore "+new Date().toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"}),
+   updatedAt:serverTimestamp()
+ },{merge:true});
+}
+window.accettaRecupero=accettaRecupero;
+window.rifiutaRecupero=rifiutaRecupero;
+
+function renderRecuperi(){
+ const box=$("listaRecuperi");
+ if(!box)return;
+ const list=recuperi.slice().sort((a,b)=>String(b.createdAt||"").localeCompare(String(a.createdAt||"")));
+ box.innerHTML=list.length?list.map(r=>{
+   const pending=(r.stato||"Richiesta")==="Richiesta";
+   return `<div class="check">
+     <h3>${r.clienteNome||"Cliente"}</h3>
+     <p class="meta">Lezione: ${fmt(r.data)} ore ${r.ora||"-"}<br>Richiesta: ${r.createdAtLabel||"-"}<br>Stato: <b>${r.stato||"Richiesta"}</b>${r.motivoRifiuto?`<br>Motivo: ${r.motivoRifiuto}`:""}</p>
+     ${pending?`<button class="btn green" onclick="accettaRecupero('${r.id}')">Accetta</button><button class="btn red" onclick="rifiutaRecupero('${r.id}')">Rifiuta</button>`:""}
+   </div>`;
+ }).join(""):'<div class="empty">Nessuna richiesta di recupero.</div>';
+}
+
+window.esportaBackup=()=>{const data={clienti,eventi,rinnovi,pagamenti,exported:new Date().toISOString()};const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="backup_sb_coach_11.json";a.click()}
+function render(){if(!user)return;renderDashboard();renderClienti();renderCalendario();renderRegistroSelect();renderContattare();renderRinnovi();renderContabilita();renderRecuperi()}
+window.addEventListener("load",()=>{if(!$("inizio").value)$("inizio").value=todayISO();if(!$("calDal").value)$("calDal").value=todayISO()})
+
+/* 11.2 Solo Fix */
+const dayFields112=[["lun","Lunedì","Lun"],["mar","Martedì","Mar"],["mer","Mercoledì","Mer"],["gio","Giovedì","Gio"],["ven","Venerdì","Ven"],["sab","Sabato","Sab"]];
+function syncScheduleFields112(){
+ const giorni=[],orari=[];
+ dayFields112.forEach(([k,full])=>{
+   const chk=$("day_"+k), tm=$("time_"+k);
+   if(chk && chk.checked){giorni.push(full);orari.push(tm?.value||"");}
+ });
+ if($("giorni"))$("giorni").value=giorni.join(",");
+ if($("orari"))$("orari").value=orari.join(",");
+ const txt=scheduleSummary({giorni:giorni.join(","),orari:orari.join(",")});
+ if($("anteprimaOrari"))$("anteprimaOrari").innerHTML="<b>"+(txt||"-")+"</b>";
+}
+function setScheduleFields112(c){
+ const giorni=String(c.giorni||"").split(/[,\n;]/).map(x=>normDay(x.trim())).filter(Boolean);
+ const orari=String(c.orari||"").split(/[,\n;]/).map(x=>x.trim()).filter(Boolean);
+ dayFields112.forEach(([k,full])=>{
+   const idx=giorni.indexOf(normDay(full));
+   if($("day_"+k))$("day_"+k).checked=idx>=0;
+   if($("time_"+k))$("time_"+k).value=idx>=0?(orari[idx]||orari[0]||""):"";
+ });
+ syncScheduleFields112();
+}
+setTimeout(()=>{dayFields112.forEach(([k])=>{if($("day_"+k))$("day_"+k).addEventListener("change",syncScheduleFields112);if($("time_"+k))$("time_"+k).addEventListener("input",syncScheduleFields112);});},300);
+const oldFormData112=formData;
+formData=()=>{syncScheduleFields112();return oldFormData112();};
+
+window.editCliente=id=>{
+ const c=clienti.find(x=>x.id===id); if(!c)return;
+ $("clienteId").value=id;
+ ["nome","cognome","telefono","emailCliente","servizio","lezioniTotali","frequenza","durata","inizio","scadenza","dovuto","pagato","note"].forEach(k=>{if($(k))$(k).value=c[k]??""});
+ setScheduleFields112(c); setEditMode(true); showTab("clienti"); window.scrollTo({top:0,behavior:"smooth"});
+};
+window.lezione=async id=>{const c=clienti.find(x=>x.id===id);if(!c)return alert("Cliente non trovato");if(!confirm("Scalare 1 lezione manualmente?"))return;await setDoc(docPath("clienti",id),{lezioniFatte:Number(c.lezioniFatte||0)+1,lezioniResidue:Math.max(0,Number(c.lezioniResidue||residue(c))-1),updatedAt:serverTimestamp()},{merge:true});};
+window.restituisci=async id=>{const c=clienti.find(x=>x.id===id);if(!c)return alert("Cliente non trovato");if(!confirm("Restituire 1 lezione?"))return;await setDoc(docPath("clienti",id),{lezioniFatte:Math.max(0,Number(c.lezioniFatte||0)-1),lezioniResidue:Number(c.lezioniResidue||residue(c))+1,updatedAt:serverTimestamp()},{merge:true});};
+
+window.aggiornaCalendarioFuturo=async()=>{
+ const id=$("clienteId").value;if(!id)return alert("Apri prima un cliente in modifica.");
+ const cOld=clienti.find(x=>x.id===id);if(!cOld)return;
+ if(!confirm("Aggiornare il calendario SOLO da domani in poi?"))return;
+ syncScheduleFields112();
+ const beforeF=fatte(id), beforeR=residue(cOld), tomorrow=tomorrowISO();
+ for(const ev of eventi.filter(e=>e.clienteId===id && e.data>=tomorrow && !historical(e.stato))) await deleteDoc(docPath("eventi",ev.id));
+ const c={...cOld,...formData(),id};
+ await setDoc(docPath("clienti",id),{...formData(),lezioniFatte:beforeF,lezioniResidue:beforeR,updatedAt:serverTimestamp()},{merge:true});
+ await generaEventi(id,c,tomorrow);
+ alert("Calendario futuro aggiornato.");
+};
+window.apriGoogleCalendarEvento=(id)=>{
+ const ev=eventi.find(e=>e.id===id); if(!ev)return;
+ const f=d=>d.toISOString().replace(/[-:]/g,"").split(".")[0]+"Z";
+ const url=`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent("Lezione PT - "+(ev.clienteNome||"Cliente"))}&dates=${f(eventStart(ev))}/${f(eventEnd(ev))}&details=${encodeURIComponent("SB Personal Coach")}`;
+ window.open(url,"_blank");
+};
+renderCalendario=()=>{
+ if(!$("calDal").value)$("calDal").value=todayISO();
+ if(!$("calAl").value){const d=new Date();d.setDate(d.getDate()+14);$("calAl").value=d.toISOString().slice(0,10)}
+ const dal=$("calDal").value,al=$("calAl").value;
+ const list=eventi.filter(e=>e.data>=dal&&e.data<=al).sort((a,b)=>a.data.localeCompare(b.data)||String(a.ora).localeCompare(String(b.ora)));
+ $("listaCalendario").innerHTML=list.map(e=>`<div class="card"><h3>${e.clienteNome}</h3><p class="meta">${fmt(e.data)} ore ${e.ora} · ${e.stato||"Prenotata"}</p><button class="btn gold" onclick="apriGoogleCalendarEvento('${e.id}')">Google Calendar</button></div>`).join("")||'<div class="empty">Nessuna lezione.</div>';
+};
+window.inviaAccessoCliente=id=>{const url=location.href.split("/").slice(0,-1).join("/")+"/cliente.html?id="+encodeURIComponent(id);navigator.clipboard?.writeText(url);window.open(url,"_blank");};
+window.renderContabilita=renderContabilita;
+const oldRender112=render; render=()=>{oldRender112();syncScheduleFields112();};
+
+
+/* 11.3 Fix Reali */
+function byId113(id){return clienti.find(c=>c.id===id)}
+function monthNow113(){const d=new Date();return d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")}
+function monthNum113(m){const p=String(m||"").split("-").map(Number);return (p[0]||0)*12+(p[1]||0)}
+function cMonth113(c){return String(c.inizio||c.dataInizio||"").slice(0,7)}
+function cVal113(c){return Number(c.dovuto||0)}
+function cPaid113(c){return Number(c.pagato||0)}
+function cResidEuro113(c){return Math.max(0,cVal113(c)-cPaid113(c))}
+async function counter113(id,delta){
+ const c=byId113(id); if(!c)return alert("Cliente non trovato.");
+ const current=Number(c.lezioniResidue ?? residue(c) ?? 0);
+ const newResid=Math.max(0,current+delta);
+ const newFatte=Math.max(0,Number(c.lezioniTotali||0)-newResid);
+ await setDoc(docPath("clienti",id),{lezioniResidue:newResid,lezioniFatte:newFatte,updatedAt:serverTimestamp()},{merge:true});
+}
+window.lezione=async id=>{if(!confirm("Scalare 1 lezione?"))return;await counter113(id,-1)};
+window.restituisci=async id=>{if(!confirm("Restituire 1 lezione?"))return;await counter113(id,1)};
+
+window.renderCalendario=()=>{
+ if(!$("calDal").value)$("calDal").value=todayISO();
+ if(!$("calAl").value){const d=new Date();d.setDate(d.getDate()+14);$("calAl").value=d.toISOString().slice(0,10)}
+ const dal=$("calDal").value, al=$("calAl").value;
+ const list=eventi.filter(e=>String(e.data||"")>=dal && String(e.data||"")<=al)
+   .sort((a,b)=>String(a.data||"").localeCompare(String(b.data||"")) || String(a.ora||"").localeCompare(String(b.ora||"")));
+ $("listaCalendario").innerHTML=list.map(e=>`<div class="card"><h3>${e.clienteNome||"Cliente"}</h3><p class="meta">${fmt(e.data)} ore ${e.ora||"-"} · ${e.stato||"Prenotata"}</p><button class="btn gold" onclick="apriGoogleCalendarEvento113('${e.id}')">Google Calendar</button></div>`).join("")||'<div class="empty">Nessuna lezione in questo intervallo.</div>';
+};
+window.apriGoogleCalendarEvento113=(id)=>{
+ const ev=eventi.find(e=>e.id===id); if(!ev)return;
+ const f=d=>d.toISOString().replace(/[-:]/g,"").split(".")[0]+"Z";
+ window.open(`https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent("Lezione PT - "+(ev.clienteNome||"Cliente"))}&dates=${f(eventStart(ev))}/${f(eventEnd(ev))}&details=${encodeURIComponent("SB Personal Coach")}`,"_blank");
+};
+window.apriGoogleCalendarEvento=window.apriGoogleCalendarEvento113;
+
+window.inviaAccessoCliente=id=>window.sbInviteClient(id);
+
+window.renderContabilita=()=>{
+ if(!$("contMese").value)$("contMese").value=monthNow113();
+ const mese=$("contMese").value, range=Number($("contMesi")?.value||1), target=monthNum113(mese);
+ const inRange=m=>{const n=monthNum113(m);return range===1?n===target:(n<=target && n>target-range)};
+ const cls=clienti.filter(c=>(c.stato||"attivo")!=="inattivo" && inRange(cMonth113(c)));
+ const inc=cls.reduce((s,c)=>s+cPaid113(c),0), val=cls.reduce((s,c)=>s+cVal113(c),0), res=cls.reduce((s,c)=>s+cResidEuro113(c),0);
+ $("contIncassato").textContent=euro(inc);
+ $("contDaIncassare").textContent=euro(res);
+ $("contValorePacchetti").textContent=euro(val);
+ $("contTotaleStorico").textContent=euro(val);
+ $("contClientiResiduo").innerHTML=cls.filter(c=>cResidEuro113(c)>0).map(c=>`<div class="check"><h3>${nome(c)}</h3><p class="meta">Pagato ${euro(cPaid113(c))} · Dovuto ${euro(cVal113(c))}</p><span class="badge bad">Residuo ${euro(cResidEuro113(c))}</span></div>`).join("")||'<div class="empty">Nessun residuo nel periodo.</div>';
+ $("contPacchettiAttivi").innerHTML=cls.map(c=>`<div class="check"><h3>${nome(c)}</h3><p class="meta">Inizio ${fmt(c.inizio)} · ${c.lezioniResidue ?? residue(c)} residue su ${c.lezioniTotali||0}</p><span class="badge ok">${euro(cVal113(c))}</span></div>`).join("")||'<div class="empty">Nessun pacchetto nel periodo.</div>';
+ $("contMovimenti").innerHTML=cls.map(c=>`<div class="check"><h3>${nome(c)}</h3><p class="meta">Pacchetto assegnato a ${fmt(c.inizio)} · pagato ${euro(cPaid113(c))}</p><span class="badge ok">${euro(cVal113(c))}</span></div>`).join("")||'<div class="empty">Nessun pacchetto nel periodo.</div>';
+};
+
+function patchButtons113(){
+ document.querySelectorAll(".card").forEach(card=>{
+   const title=card.querySelector("h2,h3")?.textContent?.trim();
+   const c=clienti.find(x=>nome(x)===title);
+   if(!c)return;
+   card.querySelectorAll("button").forEach(btn=>{
+     const t=btn.textContent.trim().toLowerCase();
+     if(t.includes("+ lezione"))btn.onclick=(e)=>{e.preventDefault();window.lezione(c.id)};
+     if(t.includes("restituisci"))btn.onclick=(e)=>{e.preventDefault();window.restituisci(c.id)};
+     if(t.includes("invia accesso"))btn.onclick=(e)=>{e.preventDefault();window.inviaAccessoCliente(c.id)};
+   });
+ });
+}
+const renderOld113=render;
+render=()=>{renderOld113();setTimeout(patchButtons113,50);};
+setTimeout(patchButtons113,500);
+
+
+/* 11.4 - Fix stabile tasti cliente + link area cliente */
+function sbGetClient(id){ return clienti.find(c=>c.id===id); }
+
+window.sbAddLesson = async function(id){
+ const c = sbGetClient(id);
+ if(!c) return alert("Cliente non trovato.");
+ if(!confirm("Scalare 1 lezione dal contatore?")) return;
+ const currentResidue = Number(c.lezioniResidue ?? residue(c) ?? c.lezioniTotali ?? 0);
+ const newResidue = Math.max(0, currentResidue - 1);
+ const newFatte = Math.max(0, Number(c.lezioniTotali||0) - newResidue);
+ await setDoc(docPath("clienti", id), {
+   lezioniResidue: newResidue,
+   lezioniFatte: newFatte,
+   updatedAt: serverTimestamp()
+ }, {merge:true});
+};
+
+window.sbReturnLesson = async function(id){
+ const c = sbGetClient(id);
+ if(!c) return alert("Cliente non trovato.");
+ if(!confirm("Restituire 1 lezione al contatore?")) return;
+ const total = Number(c.lezioniTotali||0);
+ const currentResidue = Number(c.lezioniResidue ?? residue(c) ?? 0);
+ const newResidue = Math.min(total || currentResidue + 1, currentResidue + 1);
+ const newFatte = Math.max(0, total - newResidue);
+ await setDoc(docPath("clienti", id), {
+   lezioniResidue: newResidue,
+   lezioniFatte: newFatte,
+   updatedAt: serverTimestamp()
+ }, {merge:true});
+};
+
+window.lezione = window.sbAddLesson;
+window.restituisci = window.sbReturnLesson;
+
+function sbNewClientToken(){
+ const bytes=new Uint8Array(24);
+ crypto.getRandomValues(bytes);
+ return Array.from(bytes,b=>b.toString(16).padStart(2,"0")).join("");
+}
+
+window.sbClientLink = function(id, token){
+ const base = location.href.split("/").slice(0,-1).join("/");
+ return `${base}/cliente.html?token=${encodeURIComponent(token)}`;
+};
+
+window.sbInviteClient = async function(id){
+ const c = sbGetClient(id);
+ if(!c) return alert("Cliente non trovato.");
+
+ let token=String(c.accessToken||"").trim();
+ if(!token){
+   token=sbNewClientToken();
+   await setDoc(docPath("clienti",id),{accessToken:token,updatedAt:serverTimestamp()},{merge:true});
+ }
+
+ await setDoc(doc(db,"clientInvites",token),{
+   ownerUid:user.uid,
+   clientId:id,
+   active:true,
+   updatedAt:serverTimestamp()
+ },{merge:true});
+
+ const link = sbClientLink(id,token);
+ const phone = String(c.telefono||"").replace(/\D/g,"");
+ const text = encodeURIComponent(`Ciao ${c.nome||""}, ecco il link per accedere alla tua Area Cliente Premium:\n${link}`);
+ if(phone){
+   window.open(`https://wa.me/${phone}?text=${text}`, "_blank");
+ }else{
+   await navigator.clipboard?.writeText(link);
+   window.open(link, "_blank");
+ }
+};
+
+window.inviaAccessoCliente = window.sbInviteClient;
+
+function sbPatchButtons114(){
+ document.querySelectorAll(".client-card").forEach(card=>{
+   const id = card.getAttribute("data-client-id");
+   if(!id) return;
+   card.querySelectorAll("button").forEach(btn=>{
+     const t = btn.textContent.trim().toLowerCase();
+     if(t.includes("+ lezione")) btn.onclick = (e)=>{e.preventDefault(); sbAddLesson(id);};
+     if(t.includes("restituisci")) btn.onclick = (e)=>{e.preventDefault(); sbReturnLesson(id);};
+     if(t.includes("invia accesso")) btn.onclick = (e)=>{e.preventDefault(); sbInviteClient(id);};
+   });
+ });
+}
+const sbOldRender114 = render;
+render = ()=>{ sbOldRender114(); setTimeout(sbPatchButtons114, 50); };
+setTimeout(sbPatchButtons114, 500);
+
+
+/* 11.7.2 - Hotfix calendario pulito */
+function activeClientIds1172(){
+ return new Set(clienti.map(c=>c.id));
+}
+
+window.renderCalendario = function(){
+ if(!$("calDal").value)$("calDal").value=todayISO();
+ if(!$("calAl").value){
+   const d=new Date();
+   d.setDate(d.getDate()+14);
+   $("calAl").value=d.toISOString().slice(0,10);
+ }
+ const dal=$("calDal").value, al=$("calAl").value;
+ const ids=activeClientIds1172();
+ const list=eventi
+   .filter(e=>ids.has(e.clienteId))
+   .filter(e=>String(e.data||"")>=dal && String(e.data||"")<=al)
+   .sort((a,b)=>String(a.data||"").localeCompare(String(b.data||"")) || String(a.ora||"").localeCompare(String(b.ora||"")));
+ $("listaCalendario").innerHTML=list.map(e=>`<div class="card"><h3>${e.clienteNome||"Cliente"}</h3><p class="meta">${fmt(e.data)} ore ${e.ora||"-"} · ${e.stato||"Prenotata"}</p><button class="btn gold" onclick="apriGoogleCalendarEvento('${e.id}')">Google Calendar</button></div>`).join("")||'<div class="empty">Nessuna lezione in questo intervallo.</div>';
+};
+
+window.eliminaCliente = async function(id){
+ const c=clienti.find(x=>x.id===id);
+ if(!c)return alert("Cliente non trovato.");
+ if(!confirm("Eliminare cliente e tutte le sue lezioni dal calendario?"))return;
+
+ for(const ev of eventi.filter(e=>e.clienteId===id)){
+   await deleteDoc(docPath("eventi", ev.id));
+ }
+ if(typeof recuperi !== "undefined"){
+   for(const r of recuperi.filter(x=>x.clienteId===id)){
+     await deleteDoc(docPath("recuperi", r.id));
+   }
+ }
+ await deleteDoc(docPath("clienti", id));
+};
+
+window.pulisciEventiOrfani = async function(){
+ const ids=activeClientIds1172();
+ const orfani=eventi.filter(e=>!ids.has(e.clienteId));
+ if(!orfani.length)return alert("Nessun evento orfano trovato.");
+ if(!confirm(`Trovati ${orfani.length} eventi di clienti eliminati. Vuoi rimuoverli dal calendario?`))return;
+ for(const ev of orfani){
+   await deleteDoc(docPath("eventi", ev.id));
+ }
+ alert("Calendario ripulito.");
+};
+
+function addCleanCalendarButton1172(){
+ const box=document.querySelector("#calendario .card");
+ if(!box || document.getElementById("btnPulisciEventiOrfani"))return;
+ const btn=document.createElement("button");
+ btn.id="btnPulisciEventiOrfani";
+ btn.className="btn light full";
+ btn.textContent="Pulisci eventi di clienti eliminati";
+ btn.onclick=()=>window.pulisciEventiOrfani();
+ box.appendChild(btn);
+}
+const oldRender1172=render;
+render=()=>{oldRender1172();setTimeout(addCleanCalendarButton1172,50);};
+setTimeout(addCleanCalendarButton1172,500);
+
+
+/* 11.7.3 - Recuperi Smart */
+function smartDelayHours1173(){ return 2; }
+function eventEnd1173(ev){ return new Date(eventStart(ev).getTime()+Number(ev.durata||60)*60000); }
+function dueForConfirm1173(ev){
+  if(!ev || !ev.data) return false;
+  if(historical(ev.stato)) return false;
+  const endPlusDelay = new Date(eventEnd1173(ev).getTime()+smartDelayHours1173()*60*60*1000);
+  return new Date() >= endPlusDelay;
+}
+function isToday1173(dateStr){ return String(dateStr||"")===todayISO(); }
+
+window.lezioniDaConfermare = function(){
+ const ids = new Set(clienti.map(c=>c.id));
+ return eventi.filter(ev=>{
+   if(!ids.has(ev.clienteId)) return false;
+   if(!isToday1173(ev.data)) return false;
+   if(historical(ev.stato)) return false;
+   return dueForConfirm1173(ev);
+ });
+};
+
+async function creaRecuperoManuale1173(){
+ const clienteId = $("recCliente")?.value || "";
+ const data = $("recData")?.value || "";
+ const ora = $("recOra")?.value || "";
+ const durata = Number($("recDurata")?.value || 60);
+ const note = $("recNote")?.value || "";
+ if(!clienteId || !data || !ora) return alert("Seleziona cliente, data e ora.");
+ const c = clienti.find(x=>x.id===clienteId);
+ if(!c) return alert("Cliente non trovato.");
+
+ await addDoc(path("eventi"),{
+   clienteId,
+   clienteNome:nome(c),
+   data,
+   ora,
+   durata,
+   stato:"Recupero programmato",
+   tipo:"recupero",
+   recuperoManuale:true,
+   note,
+   createdAt:serverTimestamp()
+ });
+
+ if(c.scadenza && data > c.scadenza){
+   await setDoc(docPath("clienti",clienteId),{scadenza:data,updatedAt:serverTimestamp()},{merge:true});
+ }
+
+ await addDoc(path("recuperi"),{
+   clienteId,
+   clienteNome:nome(c),
+   data,
+   ora,
+   durata,
+   note,
+   stato:"Recupero programmato manualmente",
+   manuale:true,
+   createdAt:new Date().toISOString(),
+   createdAtLabel:new Date().toLocaleDateString("it-IT")+" ore "+new Date().toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"}),
+   updatedAt:serverTimestamp()
+ });
+
+ alert("Recupero manuale creato. Il contatore non è stato modificato.");
+ if($("recData")) $("recData").value="";
+ if($("recOra")) $("recOra").value="";
+ if($("recNote")) $("recNote").value="";
+}
+window.creaRecuperoManuale1173=creaRecuperoManuale1173;
+
+function renderRecuperi1173(){
+ const box=$("listaRecuperi");
+ if(!box) return;
+ const clientOptions = clienti.slice().sort((a,b)=>nome(a).localeCompare(nome(b))).map(c=>`<option value="${c.id}">${nome(c)}</option>`).join("");
+ const form = `<div class="card" style="background:#f8fafc">
+   <h3>➕ Nuovo recupero manuale</h3>
+   <p class="meta">Crea una nuova data di recupero senza modificare il contatore. Se la data supera la scadenza pacchetto, la scadenza viene aggiornata.</p>
+   <div class="row">
+     <div><label>Cliente</label><select id="recCliente"><option value="">Seleziona cliente</option>${clientOptions}</select></div>
+     <div><label>Data recupero</label><input id="recData" type="date"></div>
+   </div>
+   <div class="row">
+     <div><label>Ora</label><input id="recOra" type="time"></div>
+     <div><label>Durata minuti</label><input id="recDurata" type="number" value="60"></div>
+   </div>
+   <label>Note</label><textarea id="recNote" placeholder="Es. recupero approvato per assenza comunicata entro 24h"></textarea>
+   <button class="btn gold full" onclick="creaRecuperoManuale1173()">Crea recupero manuale</button>
+ </div>`;
+
+ const list = (typeof recuperi !== "undefined" ? recuperi : []).slice().sort((a,b)=>String(b.createdAt||"").localeCompare(String(a.createdAt||"")));
+ const richieste = list.length ? list.map(r=>{
+   const pending=(r.stato||"Richiesta")==="Richiesta";
+   const manuale=!!r.manuale;
+   return `<div class="check">
+     <h3>${r.clienteNome||"Cliente"}</h3>
+     <p class="meta">
+       ${manuale?"Recupero manuale":"Richiesta cliente"}<br>
+       Lezione/recupero: ${fmt(r.data)} ore ${r.ora||"-"}<br>
+       Inserita: ${r.createdAtLabel||"-"}<br>
+       Stato: <b>${r.stato||"Richiesta"}</b>
+       ${r.motivoRifiuto?`<br>Motivo: ${r.motivoRifiuto}`:""}
+       ${r.note?`<br>Note: ${r.note}`:""}
+     </p>
+     ${pending?`<button class="btn green" onclick="accettaRecupero('${r.id}')">Accetta</button><button class="btn red" onclick="rifiutaRecupero('${r.id}')">Rifiuta</button>`:""}
+   </div>`;
+ }).join("") : '<div class="empty">Nessuna richiesta o recupero programmato.</div>';
+ box.innerHTML = form + richieste;
+}
+
+window.accettaRecupero = async function(id){
+ const r=recuperi.find(x=>x.id===id);
+ if(!r) return alert("Richiesta non trovata.");
+ if(!confirm("Accettare questa richiesta? Il contatore resterà invariato.")) return;
+ await setDoc(docPath("recuperi",id),{
+   stato:"Accettata",
+   rispostaAt:new Date().toISOString(),
+   rispostaAtLabel:new Date().toLocaleDateString("it-IT")+" ore "+new Date().toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"}),
+   updatedAt:serverTimestamp()
+ },{merge:true});
+ if(r.eventoId){
+   await setDoc(docPath("eventi",r.eventoId),{
+     stato:"Recupero approvato",
+     recuperoRichiesto:true,
+     updatedAt:serverTimestamp()
+   },{merge:true});
+ }
+};
+
+window.rifiutaRecupero = async function(id){
+ const r=recuperi.find(x=>x.id===id);
+ if(!r) return alert("Richiesta non trovata.");
+ const motivo=prompt("Motivo del rifiuto, facoltativo:")||"";
+ await setDoc(docPath("recuperi",id),{
+   stato:"Rifiutata",
+   motivoRifiuto:motivo,
+   rispostaAt:new Date().toISOString(),
+   rispostaAtLabel:new Date().toLocaleDateString("it-IT")+" ore "+new Date().toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"}),
+   updatedAt:serverTimestamp()
+ },{merge:true});
+};
+
+const oldRender1173 = render;
+render = ()=>{
+  oldRender1173();
+  renderRecuperi1173();
+};
+
+
+/* 11.7.4 - Hotfix Smart pulito: esclude eventi di clienti eliminati */
+function activeClientIds1174(){
+ return new Set(clienti.map(c=>c.id));
+}
+function validEvent1174(ev){
+ return activeClientIds1174().has(ev.clienteId);
+}
+function smartDelayHours1174(){ return 2; }
+function eventEnd1174(ev){ return new Date(eventStart(ev).getTime()+Number(ev.durata||60)*60000); }
+function dueForConfirm1174(ev){
+ if(!ev || !ev.data) return false;
+ if(!validEvent1174(ev)) return false;
+ if(historical(ev.stato)) return false;
+ const endPlusDelay = new Date(eventEnd1174(ev).getTime()+smartDelayHours1174()*60*60*1000);
+ return new Date() >= endPlusDelay;
+}
+
+window.lezioniDaConfermare = function(){
+ return eventi.filter(ev=>{
+   if(!validEvent1174(ev)) return false;
+   if(String(ev.data||"")!==todayISO()) return false;
+   if(historical(ev.stato)) return false;
+   return dueForConfirm1174(ev);
+ });
+};
+
+window.renderCalendario = function(){
+ if(!$("calDal").value)$("calDal").value=todayISO();
+ if(!$("calAl").value){
+   const d=new Date();
+   d.setDate(d.getDate()+14);
+   $("calAl").value=d.toISOString().slice(0,10);
+ }
+ const dal=$("calDal").value, al=$("calAl").value;
+ const list=eventi
+   .filter(validEvent1174)
+   .filter(e=>String(e.data||"")>=dal && String(e.data||"")<=al)
+   .sort((a,b)=>String(a.data||"").localeCompare(String(b.data||"")) || String(a.ora||"").localeCompare(String(b.ora||"")));
+ $("listaCalendario").innerHTML=list.map(e=>`<div class="card"><h3>${e.clienteNome||"Cliente"}</h3><p class="meta">${fmt(e.data)} ore ${e.ora||"-"} · ${e.stato||"Prenotata"}</p><button class="btn gold" onclick="apriGoogleCalendarEvento('${e.id}')">Google Calendar</button></div>`).join("")||'<div class="empty">Nessuna lezione in questo intervallo.</div>';
+};
+
+window.pulisciEventiOrfani = async function(){
+ const orfani=eventi.filter(e=>!validEvent1174(e));
+ if(!orfani.length)return alert("Nessun evento orfano trovato.");
+ if(!confirm(`Trovati ${orfani.length} eventi di clienti eliminati. Vuoi rimuoverli definitivamente?`))return;
+ for(const ev of orfani){
+   await deleteDoc(docPath("eventi", ev.id));
+ }
+ if(typeof recuperi !== "undefined"){
+   const ids=activeClientIds1174();
+   for(const r of recuperi.filter(x=>!ids.has(x.clienteId))){
+     await deleteDoc(docPath("recuperi", r.id));
+   }
+ }
+ alert("Eventi orfani rimossi. La dashboard sarà pulita.");
+};
+
+function addCleanSmartButton1174(){
+ const dash=document.querySelector("#dashboard .card");
+ if(!dash || document.getElementById("btnPulisciSmartOrfani"))return;
+ const btn=document.createElement("button");
+ btn.id="btnPulisciSmartOrfani";
+ btn.className="btn light full";
+ btn.textContent="Pulisci lezioni di clienti eliminati";
+ btn.onclick=()=>window.pulisciEventiOrfani();
+ dash.appendChild(btn);
+}
+const oldRender1174=render;
+render=()=>{oldRender1174();setTimeout(addCleanSmartButton1174,50);};
+setTimeout(addCleanSmartButton1174,500);
+
+
+/* 11.7.5 - Hotfix Annullamento Coach */
+async function annullaLezioneCoach(id){
+ const ev = eventi.find(e=>e.id===id);
+ if(!ev) return alert("Lezione non trovata.");
+ const ok = confirm(
+   "Annullare questa lezione?\n\n" +
+   "La lezione verrà registrata come 'Annullata dal coach'.\n" +
+   "Il contatore NON verrà modificato.\n" +
+   "Potrai programmare un recupero manualmente in seguito."
+ );
+ if(!ok) return;
+
+ await setDoc(docPath("eventi", id), {
+   stato: "Annullata dal coach",
+   annullataDa: "coach",
+   scalata: false,
+   storico: true,
+   updatedAt: serverTimestamp()
+ }, {merge:true});
+}
+window.annullaLezioneCoach = annullaLezioneCoach;
+
+function renderSmartCoach1175(){
+ const box = $("smartCoachBox");
+ if(!box) return;
+ const list = lezioniDaConfermare();
+ box.innerHTML = list.length ? 
+ `<div class="check">
+   <h3>⏳ Lezioni da confermare oggi</h3>
+   ${list.map(ev=>`<div class="check">
+     <b>${ev.clienteNome||""}</b>
+     <p class="meta">${fmt(ev.data)} ore ${ev.ora||"-"}</p>
+     <button class="btn green" onclick="confermaEffettuata('${ev.id}',this)">Conferma</button>
+     <button class="btn red" onclick="confermaAssente('${ev.id}',this)">Assente</button>
+     <button class="btn light" onclick="annullaLezioneCoach('${ev.id}',this)">Annulla</button>
+   </div>`).join("")}
+   <button class="btn gold full" onclick="confermaTutteEffettuate()">Conferma tutte</button>
+ </div>` :
+ '<p class="meta">Nessuna lezione di oggi da confermare.</p>';
+}
+
+const oldRenderDashboard1175 = renderDashboard;
+renderDashboard = function(){
+ oldRenderDashboard1175();
+ renderSmartCoach1175();
+};
+
+
+/* 11.7.6 - Fix Contatori Clienti: non elimina eventi */
+function countDoneEvents1176(clienteId){
+ return eventi.filter(e=>{
+   if(e.clienteId!==clienteId) return false;
+   const st=e.stato||"";
+   return ["Effettuata","Assente","Recuperata"].includes(st);
+ }).length;
+}
+function realResidue1176(c){
+ const total=Number(c.lezioniTotali||0);
+ const stored = Number(c.lezioniResidue);
+ if(Number.isFinite(stored) && stored>=0 && stored<=total){
+   return stored;
+ }
+ const done=countDoneEvents1176(c.id);
+ return Math.max(0,total-done);
+}
+function safeResidue1176(c){
+ return realResidue1176(c);
+}
+
+window.residue = safeResidue1176;
+
+if(typeof clientCard === "function"){
+ const oldClientCard1176 = clientCard;
+ clientCard = function(c){
+   const fixed = {...c, lezioniResidue:safeResidue1176(c)};
+   return oldClientCard1176(fixed);
+ };
+}
+
+async function ricalcolaContatoriClienti1176(){
+ if(!confirm("Ricalcolare e salvare i contatori lezioni residue per tutti i clienti? Nessun evento verrà eliminato."))return;
+ for(const c of clienti){
+   const r=safeResidue1176(c);
+   const fatte=Math.max(0,Number(c.lezioniTotali||0)-r);
+   await setDoc(docPath("clienti",c.id),{
+     lezioniResidue:r,
+     lezioniFatte:fatte,
+     updatedAt:serverTimestamp()
+   },{merge:true});
+ }
+ alert("Contatori clienti ricalcolati. Nessuna lezione è stata eliminata.");
+}
+window.ricalcolaContatoriClienti1176=ricalcolaContatoriClienti1176;
+
+function addFixCounterButton1176(){
+ const sec=document.querySelector("#clienti .card") || document.querySelector("#clienti");
+ if(!sec || document.getElementById("btnFixContatori1176"))return;
+ const btn=document.createElement("button");
+ btn.id="btnFixContatori1176";
+ btn.className="btn light full";
+ btn.textContent="Ricalcola contatori clienti";
+ btn.onclick=()=>window.ricalcolaContatoriClienti1176();
+ sec.prepend(btn);
+}
+
+const oldRender1176=render;
+render=()=>{
+ oldRender1176();
+ setTimeout(addFixCounterButton1176,50);
+};
+setTimeout(addFixCounterButton1176,500);
+
+
+/* 11.7.7 - Stable Protezione doppia scalata */
+function lessonConsumes1177(stato){
+ return ["Effettuata","Assente","Recuperata"].includes(stato||"");
+}
+function clientSafeResidue1177(c){
+ const total=Number(c.lezioniTotali||0);
+ const current=Number(c.lezioniResidue);
+ if(Number.isFinite(current) && current>=0 && current<=total) return current;
+ const done=eventi.filter(e=>e.clienteId===c.id && lessonConsumes1177(e.stato)).length;
+ return Math.max(0,total-done);
+}
+function setActionButtonState(btn,state,label){
+ if(!btn)return;
+ if(!btn.dataset.originalText)btn.dataset.originalText=btn.textContent;
+ btn.disabled=state==="loading";
+ btn.style.opacity=state==="loading"?".65":"1";
+ btn.textContent=state==="loading"?"⏳ Salvataggio...":state==="success"?"✅ Salvato":(label||btn.dataset.originalText);
+ if(state==="success")setTimeout(()=>{btn.textContent=btn.dataset.originalText;btn.disabled=false;btn.style.opacity="1"},900);
+}
+async function runLessonAction(btn,fn){
+ if(btn?.disabled)return;
+ setActionButtonState(btn,"loading");
+ try{await fn();setActionButtonState(btn,"success")}catch(e){console.error(e);if(btn){btn.textContent="❌ Errore";btn.disabled=false;setTimeout(()=>{btn.textContent=btn.dataset.originalText;btn.style.opacity="1"},1200)}alert("Errore durante il salvataggio. Riprova.")}
+}
+
+async function processLesson1177(id, stato){
+ const ev=eventi.find(e=>e.id===id);
+ if(!ev) return alert("Lezione non trovata.");
+
+ if(ev.processed===true || ev.scalata===true){
+   await setDoc(docPath("eventi",id),{
+     stato: ev.stato || stato,
+     processed:true,
+     updatedAt:serverTimestamp()
+   },{merge:true});
+   return;
+ }
+
+ const c=clienti.find(x=>x.id===ev.clienteId);
+ if(!c) return alert("Cliente non trovato.");
+
+ const shouldConsume=lessonConsumes1177(stato);
+ const currentResidue=clientSafeResidue1177(c);
+ const newResidue=shouldConsume ? Math.max(0,currentResidue-1) : currentResidue;
+ const newFatte=Math.max(0,Number(c.lezioniTotali||0)-newResidue);
+
+ await setDoc(docPath("eventi",id),{
+   stato,
+   scalata:shouldConsume,
+   processed:true,
+   storico:true,
+   updatedAt:serverTimestamp()
+ },{merge:true});
+
+ if(shouldConsume){
+   await setDoc(docPath("clienti",ev.clienteId),{
+     lezioniResidue:newResidue,
+     lezioniFatte:newFatte,
+     updatedAt:serverTimestamp()
+   },{merge:true});
+ }
+}
+window.processLesson1177=processLesson1177;
+
+window.confermaEffettuata=async function(id,btn){
+ await runLessonAction(btn,()=>processLesson1177(id,"Effettuata"));
+};
+window.confermaAssente=async function(id,btn){
+ await runLessonAction(btn,()=>processLesson1177(id,"Assente"));
+};
+window.annullaLezioneCoach=async function(id,btn){
+ const ev=eventi.find(e=>e.id===id);
+ if(!ev) return alert("Lezione non trovata.");
+ const ok=confirm(
+   "Annullare questa lezione?\n\n" +
+   "La lezione verrà registrata come 'Annullata dal coach'.\n" +
+   "Il contatore NON verrà modificato.\n" +
+   "Potrai programmare un recupero manualmente in seguito."
+ );
+ if(!ok) return;
+ await runLessonAction(btn,()=>processLesson1177(id,"Annullata dal coach"));
+};
+
+window.confermaTutteEffettuate=async function(){
+ const list=lezioniDaConfermare();
+ if(!list.length) return alert("Nessuna lezione da confermare.");
+ if(!confirm("Confermare tutte le lezioni come effettuate? Ogni lezione verrà scalata una sola volta.")) return;
+ for(const ev of list){
+   await processLesson1177(ev.id,"Effettuata");
+ }
+};
+
+function renderSmartCoach1177(){
+ const box=$("smartCoachBox");
+ if(!box)return;
+ const list=lezioniDaConfermare().filter(ev=>ev.processed!==true && ev.scalata!==true);
+ box.innerHTML=list.length?`<div class="check">
+   <h3>⏳ Lezioni da confermare oggi</h3>
+   ${list.map(ev=>`<div class="check">
+     <b>${ev.clienteNome||""}</b>
+     <p class="meta">${fmt(ev.data)} ore ${ev.ora||"-"}</p>
+     <button class="btn green" onclick="confermaEffettuata('${ev.id}',this)">Conferma</button>
+     <button class="btn red" onclick="confermaAssente('${ev.id}',this)">Assente</button>
+     <button class="btn light" onclick="annullaLezioneCoach('${ev.id}',this)">Annulla</button>
+   </div>`).join("")}
+   <button class="btn gold full" onclick="confermaTutteEffettuate()">Conferma tutte</button>
+ </div>`:'<p class="meta">Nessuna lezione di oggi da confermare.</p>';
+}
+
+const oldRenderDashboard1177=renderDashboard;
+renderDashboard=function(){
+ oldRenderDashboard1177();
+ renderSmartCoach1177();
+};
+
+
+/* 11.7.8 - Impostazioni Smart Delay */
+function smartDelayHours1178(){
+ const v=Number(settings.smartDelayHours ?? 2);
+ return (Number.isFinite(v) && v>0) ? v : 2;
+}
+function smartDelayLabel1178(v){
+ const n=Number(v);
+ if(n===0.5)return "30 minuti";
+ if(n===1)return "1 ora";
+ if(n===2)return "2 ore";
+ if(n===3)return "3 ore";
+ return n+" ore";
+}
+async function caricaImpostazioni1178(){
+ if(!user)return;
+ try{
+   const snap=await getDoc(doc(db,"users",user.uid,"settings","app"));
+   settings=snap.exists()?snap.data():{smartDelayHours:2};
+ }catch(e){ settings={smartDelayHours:2}; }
+ aggiornaUIImpostazioni1178();
+}
+function aggiornaUIImpostazioni1178(){
+ const sel=$("smartDelaySelect");
+ if(sel) sel.value=String(settings.smartDelayHours ?? 2);
+ const info=$("smartDelayInfo");
+ if(info) info.textContent="Valore attuale: "+smartDelayLabel1178(settings.smartDelayHours ?? 2)+" dopo la fine della lezione.";
+}
+async function salvaImpostazioniSmart1178(){
+ if(!user)return alert("Devi essere loggato.");
+ const v=Number($("smartDelaySelect")?.value || 2);
+ await setDoc(doc(db,"users",user.uid,"settings","app"),{smartDelayHours:v,updatedAt:serverTimestamp()},{merge:true});
+ settings.smartDelayHours=v;
+ aggiornaUIImpostazioni1178();
+ alert("Impostazione salvata.");
+}
+window.salvaImpostazioniSmart1178=salvaImpostazioniSmart1178;
+
+function eventEnd1178(ev){ return new Date(eventStart(ev).getTime()+Number(ev.durata||60)*60000); }
+function dueForConfirm1178(ev){
+ if(!ev || !ev.data)return false;
+ if(historical(ev.stato))return false;
+ const endPlusDelay=new Date(eventEnd1178(ev).getTime()+smartDelayHours1178()*60*60*1000);
+ return new Date()>=endPlusDelay;
+}
+window.lezioniDaConfermare=function(){
+ return eventi.filter(ev=>{
+   if(String(ev.data||"")!==todayISO()) return false;
+   if(ev.processed===true || ev.scalata===true) return false;
+   return dueForConfirm1178(ev);
+ });
+};
+
+const oldRender1178=render;
+render=()=>{oldRender1178();aggiornaUIImpostazioni1178();};
+
+const oldSubscribe1178=subscribe;
+subscribe=function(){oldSubscribe1178();caricaImpostazioni1178();};
+setTimeout(()=>{try{caricaImpostazioni1178()}catch(e){}},1000);
+
+
+/* 11.7.8.1 - Smart arretrate */
+function isPastOrToday11781(dateStr){
+  const d=String(dateStr||"");
+  return d!=="" && d<=todayISO();
+}
+function isUnprocessed11781(ev){
+  if(!ev) return false;
+  if(ev.processed===true || ev.scalata===true) return false;
+  if(historical(ev.stato)) return false;
+  return true;
+}
+function validClientEvent11781(ev){
+  const ids=new Set(clienti.map(c=>c.id));
+  return ids.has(ev.clienteId);
+}
+window.lezioniDaConfermare=function(){
+  return eventi.filter(ev=>{
+    if(!validClientEvent11781(ev)) return false;
+    if(!isPastOrToday11781(ev.data)) return false;
+    if(!isUnprocessed11781(ev)) return false;
+    return dueForConfirm1178(ev);
+  }).sort((a,b)=>
+    String(a.data||"").localeCompare(String(b.data||"")) ||
+    String(a.ora||"").localeCompare(String(b.ora||""))
+  );
+};
+
+function renderSmartCoach11781(){
+ const box=$("smartCoachBox");
+ if(!box)return;
+ const list=lezioniDaConfermare();
+ box.innerHTML=list.length?`<div class="check">
+   <h3>⏳ Lezioni da confermare</h3>
+   ${list.map(ev=>{
+     const arretrata=String(ev.data||"")<todayISO();
+     return `<div class="check">
+       <b>${ev.clienteNome||""}</b>
+       <p class="meta">${fmt(ev.data)} ore ${ev.ora||"-"}${arretrata?' · <b>Arretrata</b>':''}</p>
+       <button class="btn green" onclick="confermaEffettuata('${ev.id}',this)">Conferma</button>
+       <button class="btn red" onclick="confermaAssente('${ev.id}',this)">Assente</button>
+       <button class="btn light" onclick="annullaLezioneCoach('${ev.id}',this)">Annulla</button>
+     </div>`;
+   }).join("")}
+   <button class="btn gold full" onclick="confermaTutteEffettuate()">Conferma tutte</button>
+ </div>`:'<p class="meta">Nessuna lezione da confermare.</p>';
+}
+
+const oldRenderDashboard11781=renderDashboard;
+renderDashboard=function(){
+  oldRenderDashboard11781();
+  renderSmartCoach11781();
+};
+
+
+/* 11.7.9 - Registro intelligente + modifica singola lezione */
+
+function eventoGestibileRegistro1179(ev){
+ const stato=ev.stato||"Prenotata";
+ const nonGestito=ev.processed!==true && ev.scalata!==true && !historical(stato);
+ return String(ev.data||"")<=todayISO() && nonGestito;
+}
+
+window.renderRegistro=function(){
+ renderRegistroSelect();
+ const id=$("registroCliente").value;
+ const c=clienti.find(x=>x.id===id);
+
+ if(!c){
+   $("registroLista").innerHTML='<div class="empty">Seleziona un cliente.</div>';
+   return;
+ }
+
+ const evs=eventi
+   .filter(e=>e.clienteId===id)
+   .sort((a,b)=>String(a.data||"").localeCompare(String(b.data||""))||String(a.ora||"").localeCompare(String(b.ora||"")));
+
+ $("regTotali").textContent=c.lezioniTotali||0;
+ $("regFatte").textContent=fatte(id);
+ $("regResidue").textContent=residue(c);
+ $("regPeriodo").textContent=`${fmt(c.inizio)} → ${fmt(c.scadenza)}`;
+
+ $("registroLista").innerHTML=evs.map(e=>{
+   const gestibile=eventoGestibileRegistro1179(e);
+   return `<div class="check">
+     <h3>${fmt(e.data)} ore ${e.ora||"-"}</h3>
+     <p class="meta">Stato: ${e.stato||"Prenotata"}</p>
+     <span class="badge ${consumes(e.stato)?"ok":historical(e.stato)?"bad":"warn"}">${e.stato||"Prenotata"}</span>
+     ${gestibile?`<div class="actions" style="margin-top:10px">
+       <button class="btn green" onclick="confermaEffettuata('${e.id}',this)">Effettuata</button>
+       <button class="btn red" onclick="confermaAssente('${e.id}',this)">Assente</button>
+       <button class="btn light" onclick="annullaLezioneCoach('${e.id}',this)">Annullata Coach</button>
+     </div>`:""}
+   </div>`;
+ }).join("")||'<div class="empty">Nessuna lezione.</div>';
+};
+
+function apriModificaLezione1179(id){
+ const ev=eventi.find(e=>e.id===id);
+ if(!ev)return alert("Lezione non trovata.");
+
+ $("editLessonId1179").value=id;
+ $("editLessonData1179").value=ev.data||"";
+ $("editLessonOra1179").value=ev.ora||"";
+ $("editLessonDurata1179").value=Number(ev.durata||60);
+ $("editLessonScope1179").value="single";
+ $("editLessonCliente1179").textContent=`${ev.clienteNome||"Cliente"} · ${fmt(ev.data)} ore ${ev.ora||"-"}`;
+ $("editLessonModal1179").classList.add("active");
+}
+window.apriModificaLezione1179=apriModificaLezione1179;
+
+function chiudiModificaLezione1179(){
+ $("editLessonModal1179").classList.remove("active");
+}
+window.chiudiModificaLezione1179=chiudiModificaLezione1179;
+
+function weekday1179(dateStr){
+ const [y,m,d]=String(dateStr||"").split("-").map(Number);
+ return new Date(y,m-1,d).getDay();
+}
+
+async function salvaModificaLezione1179(){
+ const id=$("editLessonId1179").value;
+ const ev=eventi.find(e=>e.id===id);
+ if(!ev)return alert("Lezione non trovata.");
+
+ const nuovaData=$("editLessonData1179").value;
+ const nuovaOra=$("editLessonOra1179").value;
+ const nuovaDurata=Number($("editLessonDurata1179").value||60);
+ const scope=$("editLessonScope1179").value;
+
+ if(!nuovaData||!nuovaOra)return alert("Inserisci data e ora.");
+ if(nuovaDurata<15)return alert("La durata minima è 15 minuti.");
+
+ const conferma=confirm(
+   scope==="single"
+   ? "Modificare solo questa lezione? Il contatore resterà invariato."
+   : "Modificare questa lezione e tutte le successive dello stesso giorno? Le lezioni già gestite non verranno toccate."
+ );
+ if(!conferma)return;
+
+ const originalDate=ev.data;
+ const originalWeekday=weekday1179(originalDate);
+
+ await setDoc(docPath("eventi",id),{
+   data:nuovaData,
+   ora:nuovaOra,
+   durata:nuovaDurata,
+   updatedAt:serverTimestamp()
+ },{merge:true});
+
+ if(scope==="following"){
+   const successive=eventi.filter(x=>
+     x.id!==id &&
+     x.clienteId===ev.clienteId &&
+     String(x.data||"")>String(originalDate||"") &&
+     weekday1179(x.data)===originalWeekday &&
+     x.processed!==true &&
+     x.scalata!==true &&
+     !historical(x.stato)
+   );
+
+   for(const futuro of successive){
+     await setDoc(docPath("eventi",futuro.id),{
+       ora:nuovaOra,
+       durata:nuovaDurata,
+       updatedAt:serverTimestamp()
+     },{merge:true});
+   }
+ }
+
+ chiudiModificaLezione1179();
+ alert(scope==="single"?"Lezione modificata.":"Lezione e appuntamenti successivi modificati.");
+}
+window.salvaModificaLezione1179=salvaModificaLezione1179;
+
+renderCalendario=window.renderCalendario=function(){
+ if(!$("calDal").value)$("calDal").value=todayISO();
+ if(!$("calAl").value){
+   const d=new Date();
+   d.setDate(d.getDate()+14);
+   $("calAl").value=d.toISOString().slice(0,10);
+ }
+
+ const dal=$("calDal").value;
+ const al=$("calAl").value;
+ const ids=new Set(clienti.map(c=>c.id));
+
+ const list=eventi
+   .filter(e=>ids.has(e.clienteId))
+   .filter(e=>String(e.data||"")>=dal&&String(e.data||"")<=al)
+   .sort((a,b)=>String(a.data||"").localeCompare(String(b.data||""))||String(a.ora||"").localeCompare(String(b.ora||"")));
+
+ $("listaCalendario").innerHTML=list.map(e=>`
+   <div class="card">
+     <h3>${e.clienteNome||"Cliente"}</h3>
+     <p class="meta">${fmt(e.data)} ore ${e.ora||"-"} · ${e.stato||"Prenotata"}</p>
+     <button class="btn dark" onclick="apriModificaLezione1179('${e.id}')">Modifica lezione</button>
+     <button class="btn gold" onclick="apriGoogleCalendarEvento('${e.id}')">Google Calendar</button>
+   </div>
+ `).join("")||'<div class="empty">Nessuna lezione in questo intervallo.</div>';
+};
+
+
+/* 11.8.0 - Contatti Coach */
+function normalizePhone1180(v){
+ let p=String(v||"").replace(/\D/g,"");
+ if(p.startsWith("39"))return p;
+ return "39"+p.replace(/^0+/,"");
+}
+async function caricaContattiCoach1180(){
+ if(!user)return;
+ try{
+  const s=await getDoc(doc(db,"users",user.uid,"settings","coachContacts"));
+  coachSettings=s.exists()?s.data():{whatsapp:"3793701208",email:"",instagram:"",website:""};
+ }catch(e){coachSettings={whatsapp:"3793701208",email:"",instagram:"",website:""}}
+ aggiornaUIContattiCoach1180();
+}
+function aggiornaUIContattiCoach1180(){
+ if($("coachWhatsapp"))$("coachWhatsapp").value=coachSettings.whatsapp||"3793701208";
+ if($("coachEmail"))$("coachEmail").value=coachSettings.email||"";
+ if($("coachInstagram"))$("coachInstagram").value=coachSettings.instagram||"";
+ if($("coachWebsite"))$("coachWebsite").value=coachSettings.website||"";
+ if($("coachContactsInfo"))$("coachContactsInfo").textContent="WhatsApp attuale: +"+normalizePhone1180(coachSettings.whatsapp||"3793701208");
+}
+async function salvaContattiCoach1180(){
+ const data={
+  whatsapp:($("coachWhatsapp")?.value||"3793701208").trim(),
+  email:($("coachEmail")?.value||"").trim(),
+  instagram:($("coachInstagram")?.value||"").trim(),
+  website:($("coachWebsite")?.value||"").trim(),
+  updatedAt:serverTimestamp()
+ };
+ await setDoc(doc(db,"users",user.uid,"settings","coachContacts"),data,{merge:true});
+ coachSettings=data; aggiornaUIContattiCoach1180(); alert("Contatti Coach salvati.");
+}
+window.salvaContattiCoach1180=salvaContattiCoach1180;
+
+/* 11.8.0 - Rigenerazione calendario futuro */
+function futurePending1180(e){
+ return e && String(e.data||"")>=todayISO() && e.processed!==true && e.scalata!==true && !historical(e.stato);
+}
+function schedule1180(){
+ const map=[["Lunedi","lun"],["Martedi","mar"],["Mercoledi","mer"],["Giovedi","gio"],["Venerdi","ven"],["Sabato","sab"],["Domenica","dom"]];
+ return map.filter(([l,k])=>$("day_"+k)?.checked && $("time_"+k)?.value).map(([l,k])=>({label:l,key:k,ora:$("time_"+k).value}));
+}
+function weekdayKey1180(d){return ["dom","lun","mar","mer","gio","ven","sab"][d.getDay()]}
+async function aggiornaCalendarioFuturo1180(){
+ const id=editingId, c=clienti.find(x=>x.id===id);
+ if(!c)return alert("Seleziona prima un cliente.");
+ const sc=schedule1180(); if(!sc.length)return alert("Seleziona almeno un giorno e un orario.");
+ const residue=Number(c.lezioniResidue||0);
+ if(!confirm("Rigenerare solo le lezioni future ancora Prenotate?\n\nLo storico non verrà toccato. Verranno create esattamente "+residue+" lezioni residue e sarà ricalcolata la scadenza."))return;
+
+ for(const e of eventi.filter(x=>x.clienteId===id && futurePending1180(x))) await deleteDoc(docPath("eventi",e.id));
+
+ const created=[]; let cursor=new Date(); cursor.setHours(0,0,0,0); let guard=0;
+ while(created.length<residue && guard<370){
+  const slot=sc.find(s=>s.key===weekdayKey1180(cursor));
+  if(slot)created.push({data:cursor.toISOString().slice(0,10),ora:slot.ora});
+  cursor.setDate(cursor.getDate()+1); guard++;
+ }
+ if(created.length!==residue)return alert("Impossibile generare tutte le lezioni.");
+
+ for(const x of created){
+  await addDoc(path("eventi"),{
+   clienteId:id, clienteNome:(c.nome+" "+c.cognome).trim(),
+   data:x.data, ora:x.ora, durata:Number($("durata")?.value||c.durata||60),
+   stato:"Prenotata", processed:false, scalata:false, createdAt:serverTimestamp()
+  });
+ }
+
+ const nuovaScadenza=created.length?created[created.length-1].data:todayISO();
+ await setDoc(docPath("clienti",id),{
+  frequenza:Number($("frequenza")?.value||sc.length),
+  giorni:sc.map(x=>x.label), orari:sc.map(x=>x.ora),
+  scadenza:nuovaScadenza, updatedAt:serverTimestamp()
+ },{merge:true});
+ if($("scadenza"))$("scadenza").value=nuovaScadenza;
+ alert("Calendario rigenerato con "+residue+" lezioni residue.");
+}
+window.aggiornaCalendarioFuturo1180=aggiornaCalendarioFuturo1180;
+window.aggiornaCalendarioFuturo=aggiornaCalendarioFuturo1180;
+
+const oldSubscribe1180=subscribe;
+subscribe=function(){oldSubscribe1180();caricaContattiCoach1180();};
+const oldRender1180=render;
+render=()=>{oldRender1180();aggiornaUIContattiCoach1180();};
+
+
+/* 11.8.0.1 - Rigenerazione calendario futuro corretta */
+function localISO11801(d){
+ const y=d.getFullYear();
+ const m=String(d.getMonth()+1).padStart(2,"0");
+ const day=String(d.getDate()).padStart(2,"0");
+ return `${y}-${m}-${day}`;
+}
+function futurePending11801(e){
+ return e &&
+   String(e.data||"")>=todayISO() &&
+   e.processed!==true &&
+   e.scalata!==true &&
+   !historical(e.stato);
+}
+function schedule11801(){
+ const map=[
+  ["Lunedi","lun"],["Martedi","mar"],["Mercoledi","mer"],
+  ["Giovedi","gio"],["Venerdi","ven"],["Sabato","sab"],["Domenica","dom"]
+ ];
+ return map
+  .filter(([label,key])=>$("day_"+key)?.checked && $("time_"+key)?.value)
+  .map(([label,key])=>({label,key,ora:$("time_"+key).value}));
+}
+function weekdayKey11801(d){
+ return ["dom","lun","mar","mer","gio","ven","sab"][d.getDay()];
+}
+async function aggiornaCalendarioFuturo11801(){
+ const id=$("clienteId")?.value;
+ if(!id)return alert("Apri prima il cliente da modificare.");
+
+ const c=clienti.find(x=>x.id===id);
+ if(!c)return alert("Cliente non trovato.");
+
+ if(typeof syncScheduleFields112==="function") syncScheduleFields112();
+
+ const sc=schedule11801();
+ if(!sc.length)return alert("Seleziona almeno un giorno e un orario.");
+
+ const residue=Number(c.lezioniResidue||0);
+
+ const ok=confirm(
+  "Rigenerare il calendario da oggi in poi?\\n\\n"+
+  "• Le lezioni Effettuate, Assenti e Annullate resteranno invariate.\\n"+
+  "• Verranno eliminate solo le lezioni ancora Prenotate da oggi in poi.\\n"+
+  "• Verranno create esattamente "+residue+" lezioni residue.\\n"+
+  "• La data di fine pacchetto verrà aggiornata automaticamente."
+ );
+ if(!ok)return;
+
+ const pending=eventi.filter(e=>e.clienteId===id && futurePending11801(e));
+ for(const ev of pending){
+  await deleteDoc(docPath("eventi",ev.id));
+ }
+
+ const created=[];
+ let cursor=new Date();
+ cursor.setHours(0,0,0,0);
+ let guard=0;
+
+ while(created.length<residue && guard<370){
+  const slot=sc.find(s=>s.key===weekdayKey11801(cursor));
+  if(slot){
+   created.push({data:localISO11801(cursor),ora:slot.ora});
+  }
+  cursor.setDate(cursor.getDate()+1);
+  guard++;
+ }
+
+ if(created.length!==residue){
+  return alert("Non è stato possibile generare tutte le lezioni residue.");
+ }
+
+ for(const item of created){
+  await addDoc(path("eventi"),{
+   clienteId:id,
+   clienteNome:(c.nome+" "+c.cognome).trim(),
+   data:item.data,
+   ora:item.ora,
+   durata:Number($("durata")?.value||c.durata||60),
+   stato:"Prenotata",
+   processed:false,
+   scalata:false,
+   createdAt:serverTimestamp()
+  });
+ }
+
+ const nuovaScadenza=created.length
+  ? created[created.length-1].data
+  : todayISO();
+
+ await setDoc(docPath("clienti",id),{
+  frequenza:Number($("frequenza")?.value||sc.length),
+  giorni:sc.map(x=>x.label),
+  orari:sc.map(x=>x.ora),
+  scadenza:nuovaScadenza,
+  updatedAt:serverTimestamp()
+ },{merge:true});
+
+ if($("scadenza"))$("scadenza").value=nuovaScadenza;
+
+ alert(
+  "Calendario aggiornato correttamente.\\n\\n"+
+  "Lezioni future create: "+created.length+"\\n"+
+  "Nuova scadenza: "+fmt(nuovaScadenza)
+ );
+}
+window.aggiornaCalendarioFuturo11801=aggiornaCalendarioFuturo11801;
+window.aggiornaCalendarioFuturo1180=aggiornaCalendarioFuturo11801;
+window.aggiornaCalendarioFuturo=aggiornaCalendarioFuturo11801;
+
+
+/* 11.8.1 - Calendario intelligente su modifica pacchetto/orari */
+function normalizedSchedule1181(){
+ if(typeof syncScheduleFields112==="function") syncScheduleFields112();
+ return schedule11801();
+}
+function scheduleSignature1181(sc){
+ return sc.map(x=>`${x.key}:${x.ora}`).sort().join("|");
+}
+function clientScheduleSignature1181(c){
+ const days=Array.isArray(c?.giorni)?c.giorni:String(c?.giorni||"").split(/[,;\n]+/).map(x=>x.trim()).filter(Boolean);
+ const hours=Array.isArray(c?.orari)?c.orari:String(c?.orari||"").split(/[,;\n]+/).map(x=>x.trim()).filter(Boolean);
+ const keyMap={lunedi:"lun",lunedì:"lun",lun:"lun",martedi:"mar",martedì:"mar",mar:"mar",mercoledi:"mer",mercoledì:"mer",mer:"mer",giovedi:"gio",giovedì:"gio",gio:"gio",venerdi:"ven",venerdì:"ven",ven:"ven",sabato:"sab",sab:"sab",domenica:"dom",dom:"dom"};
+ return days.map((d,i)=>`${keyMap[normDay(d)]||normDay(d)}:${hours[i]||hours[0]||""}`).filter(x=>!x.endsWith(":" )).sort().join("|");
+}
+function calendarFieldsChanged1181(oldC,newData,sc){
+ return Number(oldC?.lezioniTotali||0)!==Number(newData.lezioniTotali||0)
+  || Number(oldC?.frequenza||0)!==Number(newData.frequenza||0)
+  || Number(oldC?.durata||60)!==Number(newData.durata||60)
+  || clientScheduleSignature1181(oldC)!==scheduleSignature1181(sc);
+}
+async function reconcileCalendar1181(id,newData,{ask=true}={}){
+ const oldC=clienti.find(x=>x.id===id);
+ if(!oldC)throw new Error("Cliente non trovato.");
+ const sc=normalizedSchedule1181();
+ if(!sc.length)throw new Error("Seleziona almeno un giorno e un orario.");
+
+ const packageStart=String(oldC.inizio||newData.inizio||todayISO());
+ const consumed=eventi.filter(e=>e.clienteId===id && String(e.data||"")>=packageStart && consumes(e.stato)).length;
+ const targetTotal=Math.max(0,Number(newData.lezioniTotali||0));
+ const targetRemaining=Math.max(0,targetTotal-consumed);
+ const start=todayISO();
+ const pending=eventi.filter(e=>e.clienteId===id && String(e.data||"")>=start && futurePending11801(e));
+
+ if(ask){
+  const diff=targetTotal-Number(oldC.lezioniTotali||0);
+  const text=[
+   "Aggiornare il calendario da oggi in poi?",
+   "",
+   "• Storico, lezioni effettuate, assenze e annullamenti resteranno invariati.",
+   "• Verranno sostituite soltanto le lezioni future ancora Prenotate.",
+   `• Pacchetto: ${oldC.lezioniTotali||0} → ${targetTotal} lezioni${diff>0?` (+${diff})`:diff<0?` (${diff})`:""}.`,
+   `• Lezioni già consumate: ${consumed}.`,
+   `• Lezioni future da programmare: ${targetRemaining}.`,
+   "• Giorni, orari e scadenza verranno aggiornati automaticamente."
+  ].join("\\n");
+  if(!confirm(text))return false;
+ }
+
+ for(const ev of pending)await deleteDoc(docPath("eventi",ev.id));
+
+ // Evita sovrapposizioni con lezioni storiche o non eliminabili già presenti.
+ const deletedIds=new Set(pending.map(e=>e.id));
+ const occupied=new Set(eventi.filter(e=>e.clienteId===id && !deletedIds.has(e.id)).map(e=>`${e.data}|${e.ora}`));
+ const created=[];
+ let cursor=new Date();cursor.setHours(0,0,0,0);
+ let guard=0;
+ while(created.length<targetRemaining && guard<730){
+  const slot=sc.find(s=>s.key===weekdayKey11801(cursor));
+  if(slot){
+   const data=localISO11801(cursor), key=`${data}|${slot.ora}`;
+   if(!occupied.has(key)){
+    created.push({data,ora:slot.ora});
+    occupied.add(key);
+   }
+  }
+  cursor.setDate(cursor.getDate()+1);guard++;
+ }
+ if(created.length!==targetRemaining)throw new Error("Non è stato possibile generare tutte le lezioni richieste.");
+
+ for(const item of created){
+  await addDoc(path("eventi"),{
+   clienteId:id,clienteNome:`${newData.nome||oldC.nome||""} ${newData.cognome||oldC.cognome||""}`.trim(),
+   data:item.data,ora:item.ora,durata:Number(newData.durata||oldC.durata||60),
+   stato:"Prenotata",processed:false,storico:false,scalata:false,createdAt:serverTimestamp()
+  });
+ }
+
+ const latestProtected=eventi.filter(e=>e.clienteId===id && !deletedIds.has(e.id)).map(e=>String(e.data||"")).filter(Boolean).sort().pop();
+ const nuovaScadenza=created.length?created[created.length-1].data:(latestProtected||todayISO());
+ await setDoc(docPath("clienti",id),{
+  ...newData,
+  lezioniTotali:targetTotal,
+  frequenza:Number(newData.frequenza||sc.length),
+  giorni:sc.map(x=>x.label),
+  orari:sc.map(x=>x.ora),
+  lezioniFatte:consumed,
+  lezioniResidue:targetRemaining,
+  scadenza:nuovaScadenza,
+  updatedAt:serverTimestamp()
+ },{merge:true});
+ if($("scadenza"))$("scadenza").value=nuovaScadenza;
+ return {created:created.length,remaining:targetRemaining,expiry:nuovaScadenza,consumed};
+}
+
+window.aggiornaCalendarioFuturo11801=async()=>{
+ const id=$("clienteId")?.value;
+ if(!id)return alert("Apri prima il cliente da modificare.");
+ try{
+  const result=await reconcileCalendar1181(id,formData(),{ask:true});
+  if(!result)return;
+  alert(`Calendario aggiornato correttamente.\\n\\nLezioni future create: ${result.created}\\nLezioni residue: ${result.remaining}\\nNuova scadenza: ${fmt(result.expiry)}`);
+ }catch(e){alert(e.message||String(e));}
+};
+window.aggiornaCalendarioFuturo1180=window.aggiornaCalendarioFuturo11801;
+window.aggiornaCalendarioFuturo=window.aggiornaCalendarioFuturo11801;
+
+window.salvaDatiCliente=async()=>{
+ const id=$("clienteId")?.value;if(!id)return;
+ const oldC=clienti.find(x=>x.id===id);if(!oldC)return alert("Cliente non trovato.");
+ const data=formData();
+ const sc=normalizedSchedule1181();
+ try{
+  if(calendarFieldsChanged1181(oldC,data,sc)){
+   const result=await reconcileCalendar1181(id,data,{ask:true});
+   if(!result)return;
+   alert(`Dati e calendario aggiornati.\\n\\nLezioni future create: ${result.created}\\nNuova scadenza: ${fmt(result.expiry)}`);
+  }else{
+   await setDoc(docPath("clienti",id),data,{merge:true});
+   alert("Dati cliente salvati.");
+  }
+ }catch(e){alert(e.message||String(e));}
+};
+
+
+function renderBachecaCoach(){
+ if(!$(("bachecaTitolo")))return;
+ $("bachecaTitolo").value=bachecaData.titolo||"";
+ $("bachecaMessaggio").value=bachecaData.messaggio||"";
+ $("bachecaDal").value=bachecaData.dal||todayISO();
+ $("bachecaAl").value=bachecaData.al||"";
+ $("bachecaAttiva").checked=bachecaData.attiva!==false;
+ const active=bachecaData.attiva!==false && (!bachecaData.al || bachecaData.al>=todayISO());
+ $("bachecaStato").textContent=bachecaData.titolo?(active?"🟢 Comunicazione attualmente visibile ai clienti.":"⚪ Comunicazione scaduta o disattivata."):"Nessuna comunicazione pubblicata.";
+}
+window.salvaBacheca=async()=>{
+ const titolo=$("bachecaTitolo").value.trim(),messaggio=$("bachecaMessaggio").value.trim();
+ if(!titolo||!messaggio)return alert("Inserisci titolo e messaggio.");
+ const dal=$("bachecaDal").value||todayISO(),al=$("bachecaAl").value;
+ if(al&&al<dal)return alert("La data finale non può precedere quella iniziale.");
+ await setDoc(doc(db,"users",user.uid,"comunicazioni","bachecaAttiva"),{titolo,messaggio,dal,al,attiva:$("bachecaAttiva").checked,updatedAt:serverTimestamp()},{merge:true});
+ alert("Comunicazione pubblicata.");
+};
+window.disattivaBacheca=async()=>{
+ if(!confirm("Disattivare la comunicazione attuale?"))return;
+ await setDoc(doc(db,"users",user.uid,"comunicazioni","bachecaAttiva"),{attiva:false,updatedAt:serverTimestamp()},{merge:true});
+};
+
+
+
+/* =========================================================
+   SB PERSONAL COACH 12.0 LTS
+   Motore stabile: ogni comando ha una sola responsabilita.
+   Questa sezione e autorevole e sovrascrive le vecchie versioni.
+   ========================================================= */
+const LTS120 = (()=>{
+ const DAY_MAP=[
+  ["Lunedi","lun",1],["Martedi","mar",2],["Mercoledi","mer",3],
+  ["Giovedi","gio",4],["Venerdi","ven",5],["Sabato","sab",6],["Domenica","dom",0]
+ ];
+ function log(action,details={}){
+  try{
+   const key="sbpc_lts_logs";
+   const arr=JSON.parse(localStorage.getItem(key)||"[]");
+   arr.unshift({at:new Date().toISOString(),action,details});
+   localStorage.setItem(key,JSON.stringify(arr.slice(0,300)));
+  }catch(e){console.warn("LTS log non disponibile",e);}
+ }
+ function scheduleFromForm(){
+  if(typeof syncScheduleFields112==="function")syncScheduleFields112();
+  return DAY_MAP.filter(([label,key])=>$("day_"+key)?.checked && $("time_"+key)?.value)
+    .map(([label,key,dow])=>({label,key,dow,ora:$("time_"+key).value}));
+ }
+ function futurePendingFor(id,from=todayISO()){
+  return eventi.filter(e=>e.clienteId===id && String(e.data||"")>=from && e.processed!==true && e.scalata!==true && !historical(e.stato));
+ }
+ async function deleteFuturePending(id,from=todayISO()){
+  const list=futurePendingFor(id,from);
+  for(const ev of list)await deleteDoc(docPath("eventi",ev.id));
+  return list.length;
+ }
+ async function createFutureLessons(id,c,sc,count,startISO){
+  if(count<=0)return [];
+  const occupied=new Set(eventi.filter(e=>e.clienteId===id && String(e.data||"")>=startISO && !futurePendingFor(id,startISO).some(x=>x.id===e.id)).map(e=>`${e.data}|${e.ora}`));
+  const created=[];
+  let d=localDateFromISO(startISO); d.setHours(0,0,0,0);
+  let guard=0;
+  while(created.length<count && guard<1000){
+   const slot=sc.find(x=>x.dow===d.getDay());
+   if(slot){
+    const data=localISO11801(d), key=`${data}|${slot.ora}`;
+    if(!occupied.has(key)){created.push({data,ora:slot.ora});occupied.add(key);}
+   }
+   d.setDate(d.getDate()+1); guard++;
+  }
+  if(created.length!==count)throw new Error("Non e stato possibile generare tutte le lezioni richieste.");
+  for(const item of created){
+   await addDoc(path("eventi"),{
+    clienteId:id,clienteNome:nome(c),data:item.data,ora:item.ora,
+    durata:Number(c.durata||60),stato:"Prenotata",processed:false,
+    storico:false,scalata:false,createdAt:serverTimestamp()
+   });
+  }
+  return created;
+ }
+ function firstUseful(sc,fromISO){
+  let d=localDateFromISO(fromISO);d.setHours(0,0,0,0);
+  for(let i=0;i<370;i++){if(sc.some(x=>x.dow===d.getDay()))return localISO11801(d);d.setDate(d.getDate()+1);}
+  throw new Error("Nessun giorno utile trovato.");
+ }
+ async function updateCalendarOnly(){
+  const id=$("clienteId")?.value;if(!id)return alert("Apri prima il cliente da modificare.");
+  const c=clienti.find(x=>x.id===id);if(!c)return alert("Cliente non trovato.");
+  const sc=scheduleFromForm();if(!sc.length)return alert("Seleziona almeno un giorno e un orario.");
+  const remaining=Math.max(0,Number(c.lezioniResidue||0));
+  const from=todayISO();
+  if(!confirm(`Aggiornare solo il calendario futuro?\n\nLezioni residue da programmare: ${remaining}.\nStorico, contatore, saldo e rinnovo non verranno modificati.`))return;
+  try{
+   const deleted=await deleteFuturePending(id,from);
+   const cForCalendar={...c,durata:Number($("durata")?.value||c.durata||60)};
+   const created=await createFutureLessons(id,cForCalendar,sc,remaining,from);
+   const expiry=created.length?created[created.length-1].data:(c.scadenza||from);
+   await setDoc(docPath("clienti",id),{
+    frequenza:Number($("frequenza")?.value||sc.length),
+    durata:Number($("durata")?.value||c.durata||60),
+    giorni:sc.map(x=>x.label),orari:sc.map(x=>x.ora),scadenza:expiry,updatedAt:serverTimestamp()
+   },{merge:true});
+   if($("scadenza"))$("scadenza").value=expiry;
+   log("calendario_aggiornato",{clienteId:id,cliente:nome(c),eliminate:deleted,create:created.length,scadenza:expiry});
+   alert(`Calendario aggiornato.\n\nLezioni eliminate: ${deleted}\nLezioni create: ${created.length}\nScadenza: ${fmt(expiry)}\n\nContatore e pacchetto invariati.`);
+  }catch(e){console.error(e);alert(e.message||String(e));}
+ }
+ async function renewPackageOnly(id){
+  const c=clienti.find(x=>x.id===id);if(!c)return;
+  const sc=(Array.isArray(c.giorni)?c.giorni:String(c.giorni||"").split(/[,;\n]+/)).map((d,i)=>{
+   const nd=normDay(d);const item=DAY_MAP.find(([label,key])=>normDay(label)===nd||key===nd.slice(0,3));
+   const hours=Array.isArray(c.orari)?c.orari:String(c.orari||"").split(/[,;\n]+/).map(x=>x.trim()).filter(Boolean);
+   return item?{label:item[0],key:item[1],dow:item[2],ora:hours[i]||hours[0]}:null;
+  }).filter(x=>x&&x.ora);
+  if(!sc.length)return alert("Impossibile rinnovare: controlla giorni e orari del cliente.");
+  const start=firstUseful(sc,tomorrowISO());
+  const total=Math.max(0,Number(c.lezioniTotali||0));
+  if(!confirm(`Rinnovare il pacchetto dal ${fmt(start)}?\n\nSaranno generate ${total} lezioni. Storico e vecchi pacchetti non verranno modificati.`))return;
+  try{
+   const deleted=await deleteFuturePending(id,start);
+   const created=await createFutureLessons(id,c,sc,total,start);
+   const expiry=created.length?created[created.length-1].data:start;
+   await addDoc(path("rinnovi"),{cliente:nome(c),clienteId:id,pacchetto:total,data:start,importo:valore(c),createdAt:serverTimestamp()});
+   await setDoc(docPath("clienti",id),{
+    stato:"attivo",lezioniFatte:0,lezioniResidue:total,inizio:start,scadenza:expiry,
+    pagamentoRinnovoDaSaldare:true,updatedAt:serverTimestamp()
+   },{merge:true});
+   log("pacchetto_rinnovato",{clienteId:id,cliente:nome(c),totale:total,inizio:start,scadenza:expiry,eliminate:deleted});
+   alert(`Pacchetto rinnovato correttamente.\n\nPrima lezione: ${fmt(start)}\nLezioni create: ${created.length}\nScadenza: ${fmt(expiry)}`);
+  }catch(e){console.error(e);alert(e.message||String(e));}
+ }
+ async function recalcCounterOnly(){
+  const id=$("clienteId")?.value;if(!id)return alert("Apri prima il cliente.");
+  const c=clienti.find(x=>x.id===id);if(!c)return alert("Cliente non trovato.");
+  const start=String(c.inizio||todayISO());
+  const consumed=eventi.filter(e=>e.clienteId===id && String(e.data||"")>=start && consumes(e.stato)).length;
+  const total=Math.max(0,Number(c.lezioniTotali||0));
+  const remaining=Math.max(0,total-consumed);
+  if(!confirm(`Ricalcolare solo il contatore del pacchetto attuale?\n\nEffettuate/consumate: ${consumed}\nResidue: ${remaining}\nIl calendario non verra modificato.`))return;
+  await setDoc(docPath("clienti",id),{lezioniFatte:consumed,lezioniResidue:remaining,updatedAt:serverTimestamp()},{merge:true});
+  log("contatore_ricalcolato",{clienteId:id,cliente:nome(c),consumate:consumed,residue:remaining});
+  alert(`Contatore aggiornato.\n\nConsumate: ${consumed}\nResidue: ${remaining}`);
+ }
+ async function saveProfileOnly(){
+  const id=$("clienteId")?.value;if(!id)return;
+  const c=clienti.find(x=>x.id===id);if(!c)return alert("Cliente non trovato.");
+  const d=formData();
+  const safe={nome:d.nome,cognome:d.cognome,telefono:d.telefono,emailCliente:d.emailCliente,servizio:d.servizio,note:d.note,dovuto:d.dovuto,pagato:d.pagato,pagamentoRinnovoDaSaldare:d.pagato<d.dovuto,updatedAt:serverTimestamp()};
+  await setDoc(docPath("clienti",id),safe,{merge:true});
+  log("profilo_cliente_salvato",{clienteId:id,cliente:nome({...c,...safe})});
+  alert("Dati anagrafici e saldo salvati. Calendario, pacchetto e contatore non modificati.");
+ }
+ return {updateCalendarOnly,renewPackageOnly,recalcCounterOnly,saveProfileOnly,log};
+})();
+
+window.aggiornaCalendarioFuturo11801=LTS120.updateCalendarOnly;
+window.aggiornaCalendarioFuturo1180=LTS120.updateCalendarOnly;
+window.aggiornaCalendarioFuturo=LTS120.updateCalendarOnly;
+window.rinnova=LTS120.renewPackageOnly;
+window.ricalcolaContatoreCliente=LTS120.recalcCounterOnly;
+window.salvaDatiCliente=LTS120.saveProfileOnly;
+
+</script>
+
+<div id="editLessonModal1179" class="edit-lesson-modal">
+  <div class="edit-lesson-box">
+    <h2>✏️ Modifica lezione</h2>
+    <p id="editLessonCliente1179" class="meta"></p>
+    <input id="editLessonId1179" type="hidden">
+
+    <label>Data</label>
+    <input id="editLessonData1179" type="date">
+
+    <label>Ora</label>
+    <input id="editLessonOra1179" type="time">
+
+    <label>Durata in minuti</label>
+    <input id="editLessonDurata1179" type="number" min="15" step="15" value="60">
+
+    <label>Applica modifica</label>
+    <select id="editLessonScope1179">
+      <option value="single">Solo questa lezione</option>
+      <option value="following">Questa e tutte le successive dello stesso giorno</option>
+    </select>
+
+    <p class="meta">
+      Il contatore non verrà modificato. Le lezioni già effettuate, assenti o annullate non verranno toccate.
+    </p>
+
+    <div class="edit-lesson-actions">
+      <button class="btn gold" onclick="salvaModificaLezione1179()">Salva modifica</button>
+      <button class="btn light" onclick="chiudiModificaLezione1179()">Chiudi</button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
