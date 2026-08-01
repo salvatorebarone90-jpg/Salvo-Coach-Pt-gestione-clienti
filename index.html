@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>SB Personal Coach Gestionale 12.0.1 LTS</title>
+<title>SB Personal Coach Gestionale 12.0.2 LTS</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--dark:#101827;--blue:#17233a;--gold:#d5ad52;--bg:#f4f6f8;--card:#fff;--muted:#667085;--ok:#13915f;--bad:#c0392b;--warn:#c47d00}
@@ -59,8 +59,8 @@ hr{border:0;border-top:1px solid #e5e7eb;margin:12px 0}
   <div class="header-inner">
     <img src="logo.jpeg" class="logo" onerror="this.style.display='none'">
     <div>
-      <h1>SB Personal Coach Gestionale 12.0.1 LTS</h1>
-      <div class="subtitle">Fix WhatsApp rinnovo · 01/08/2026</div>
+      <h1>SB Personal Coach Gestionale 12.0.2 LTS</h1>
+      <div class="subtitle">Messaggi rinnovo/pagamento separati · 01/08/2026</div>
     </div>
   </div>
   <nav id="nav">
@@ -535,26 +535,6 @@ function whatsappCliente(c,tipo="generico"){
 }
 window.whatsappCliente=whatsappCliente;
 
-document.addEventListener("click",e=>{
- const btnRinnovo=e.target.closest(".js-wa-rinnovo");
- if(btnRinnovo){
-  e.preventDefault();
-  e.stopPropagation();
-  const c=clienti.find(x=>x.id===btnRinnovo.dataset.clientId);
-  if(!c)return alert("Cliente non trovato.");
-  whatsappCliente(c,"rinnovo");
-  return;
- }
- const btnGenerico=e.target.closest(".js-wa-generico");
- if(btnGenerico){
-  e.preventDefault();
-  e.stopPropagation();
-  const c=clienti.find(x=>x.id===btnGenerico.dataset.clientId);
-  if(!c)return alert("Cliente non trovato.");
-  whatsappCliente(c,"generico");
- }
-});
-
 function clientCard(c){
  const inactive=(c.stato||"attivo")==="inattivo";
  const res=residuoEuro(c);
@@ -566,9 +546,9 @@ function clientCard(c){
    <p class="meta">${c.regolamentoAccettato ? "📋 Regolamento accettato il " + (c.regolamentoAccettatoAtLabel || c.regolamentoAccettatoAt || "-") : "📋 Regolamento non ancora accettato"}</p>
    <span class="badge ${r<=3?"warn":"ok"}">${r} residue su ${c.lezioniTotali||0}</span>${res>0?`<span class="badge bad">Residuo ${euro(res)}</span>`:""}
    <div class="actions">
-     ${r<=1
-       ? `<button type="button" class="btn whatsapp js-wa-rinnovo" data-client-id="${c.id}">📲 WhatsApp rinnovo</button>`
-       : `<button type="button" class="btn whatsapp js-wa-generico" data-client-id="${c.id}">WhatsApp</button>`}
+     <button type="button" class="btn whatsapp" onclick="whatsappCliente(clienti.find(x=>x.id==='${c.id}'),'generico')">WhatsApp</button>
+     ${r===1?`<button type="button" class="btn whatsapp" onclick="whatsappCliente(clienti.find(x=>x.id==='${c.id}'),'rinnovo')">📲 Promemoria rinnovo</button>`:""}
+     ${r===0&&res>0?`<button type="button" class="btn whatsapp" onclick="whatsappPagamentoById('${c.id}')">📲 Promemoria pagamento</button>`:""}
      <button type="button" class="btn light" onclick="sbAddLesson('${c.id}')">+ Lezione</button>
      <button type="button" class="btn light" onclick="sbReturnLesson('${c.id}')">Restituisci</button>
      <button type="button" class="btn gold" onclick="rinnova('${c.id}')">Rinnova</button>
