@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>SB Personal Coach Gestionale 12.0.2.1 LTS</title>
+<title>SB Personal Coach Gestionale 12.0.2.2 LTS</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--dark:#101827;--blue:#17233a;--gold:#d5ad52;--bg:#f4f6f8;--card:#fff;--muted:#667085;--ok:#13915f;--bad:#c0392b;--warn:#c47d00}
@@ -59,8 +59,8 @@ hr{border:0;border-top:1px solid #e5e7eb;margin:12px 0}
   <div class="header-inner">
     <img src="logo.jpeg" class="logo" onerror="this.style.display='none'">
     <div>
-      <h1>SB Personal Coach Gestionale 12.0.2.1 LTS</h1>
-      <div class="subtitle">Fix tasti WhatsApp cliccabili · 01/08/2026</div>
+      <h1>SB Personal Coach Gestionale 12.0.2.2 LTS</h1>
+      <div class="subtitle">Messaggi WhatsApp con data automatica · 01/08/2026</div>
     </div>
   </div>
   <nav id="nav">
@@ -498,6 +498,13 @@ function ultimaLezioneEffettuata(clienteId){
   .filter(e=>e.clienteId===clienteId && String(e.stato||"").trim().toLowerCase()==="effettuata")
   .sort((a,b)=>String(b.data||"").localeCompare(String(a.data||"")) || String(b.ora||"").localeCompare(String(a.ora||"")))[0] || null;
 }
+function ultimaLezioneProgrammata(clienteId){
+ return eventi
+  .filter(e=>e.clienteId===clienteId)
+  .filter(e=>String(e.data||"")>=todayISO())
+  .filter(e=>e.processed!==true && e.scalata!==true && !historical(e.stato))
+  .sort((a,b)=>String(a.data||"").localeCompare(String(b.data||"")) || String(a.ora||"").localeCompare(String(b.ora||"")))[0] || null;
+}
 function sbToast(message){
  let el=document.getElementById("sbToast");
  if(!el){el=document.createElement("div");el.id="sbToast";el.className="sb-toast";document.body.appendChild(el)}
@@ -516,7 +523,7 @@ function whatsappPagamentoById(clienteId){
  const lastDate=fmt(last.data);
  const conferma=confirm(`Inviare il promemoria pagamento a ${nome(c)}?\n\nUltima lezione effettuata: ${lastDate}`);
  if(!conferma)return false;
- const msg=`Ciao ${firstName}! \u{1F44B}\n\nTi informo che il tuo pacchetto è stato rinnovato in seguito all'ultima lezione effettuata il ${lastDate}.\n\nTi chiedo gentilmente di procedere con il saldo del rinnovo, così da mantenere il servizio regolarmente attivo.\n\nGrazie mille e ci vediamo al prossimo allenamento! \u{1F4AA}`;
+ const msg=`Ciao ${firstName},\n\nti informo che il tuo pacchetto è terminato con l'ultima lezione effettuata il ${lastDate}.\n\nTi chiedo gentilmente di procedere con il saldo del rinnovo, così da mantenere il servizio regolarmente attivo.\n\nGrazie mille e ci vediamo al prossimo allenamento!\n\nSalvatore`;
  sbToast("Preparazione messaggio...");
  const url=`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
  const w=window.open(url,"_blank");
@@ -530,10 +537,24 @@ function whatsappCliente(c,tipo="generico"){
  if(!phone)return alert("Numero WhatsApp non presente nella scheda cliente.");
  const firstName=String(c?.nome||nome(c)||"Cliente").trim().split(/\s+/)[0];
  let msg=`Ciao ${firstName}!`;
- if(tipo==="rinnovo")msg=`Ciao ${firstName}! 👋\n\nTi ricordo che ti rimane una sola lezione del pacchetto. Per garantire continuità al percorso, possiamo procedere con il rinnovo.\n\nSalvatore`;
- window.open(`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`,"_blank");
+ if(tipo==="rinnovo"){
+  const last=ultimaLezioneProgrammata(c?.id);
+  if(!last)return alert("Impossibile trovare l'ultima lezione programmata.");
+  const lastDate=fmt(last.data);
+  const lastTime=String(last.ora||"").trim();
+  msg=`Ciao ${firstName},\n\nti ricordo che ti rimane una sola lezione del pacchetto.\n\nL'ultima lezione è programmata per il ${lastDate}${lastTime?` alle ore ${lastTime}`:""}.\n\nPer garantire continuità al percorso, possiamo procedere con il rinnovo del nuovo pacchetto.\n\nGrazie,\nSalvatore`;
+ }
+ const url=`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
+ const w=window.open(url,"_blank");
+ if(!w)window.location.href=url;
+ return true;
 }
 window.whatsappCliente=whatsappCliente;
+window.whatsappClienteById=function(clienteId,tipo="generico"){
+ const c=clienti.find(x=>x.id===clienteId);
+ if(!c)return alert("Cliente non trovato.");
+ return whatsappCliente(c,tipo);
+};
 
 function clientCard(c){
  const inactive=(c.stato||"attivo")==="inattivo";
@@ -546,9 +567,9 @@ function clientCard(c){
    <p class="meta">${c.regolamentoAccettato ? "📋 Regolamento accettato il " + (c.regolamentoAccettatoAtLabel || c.regolamentoAccettatoAt || "-") : "📋 Regolamento non ancora accettato"}</p>
    <span class="badge ${r<=3?"warn":"ok"}">${r} residue su ${c.lezioniTotali||0}</span>${res>0?`<span class="badge bad">Residuo ${euro(res)}</span>`:""}
    <div class="actions">
-     <button type="button" class="btn whatsapp js-wa-generico" data-client-id="${c.id}">WhatsApp</button>
-     ${r===1?`<button type="button" class="btn whatsapp js-wa-rinnovo" data-client-id="${c.id}">📲 Promemoria rinnovo</button>`:""}
-     ${r===0&&res>0?`<button type="button" class="btn whatsapp js-wa-pagamento" data-client-id="${c.id}">📲 Promemoria pagamento</button>`:""}
+     <button type="button" class="btn whatsapp js-wa-cliente" data-client-id="${c.id}" data-wa-type="generico">WhatsApp</button>
+     ${r===1?`<button type="button" class="btn whatsapp js-wa-cliente" data-client-id="${c.id}" data-wa-type="rinnovo">📲 Promemoria rinnovo</button>`:""}
+     ${r===0&&res>0?`<button type="button" class="btn whatsapp js-wa-cliente" data-client-id="${c.id}" data-wa-type="saldo">📲 Promemoria pagamento</button>`:""}
      <button type="button" class="btn light" onclick="sbAddLesson('${c.id}')">+ Lezione</button>
      <button type="button" class="btn light" onclick="sbReturnLesson('${c.id}')">Restituisci</button>
      <button type="button" class="btn gold" onclick="rinnova('${c.id}')">Rinnova</button>
@@ -570,25 +591,17 @@ function renderContattare(){
  $("listaContattare").innerHTML=list.map(c=>`<div class="check"><h3>${nome(c)}</h3><p class="meta">Residuo ${euro(residuoEuro(c))}</p><button type="button" class="btn whatsapp full js-wa-pagamento" data-client-id="${c.id}">&#128242; Invia promemoria pagamento</button></div>`).join("")||'<div class="empty">Nessun cliente da contattare.</div>';
 }
 document.addEventListener("click",e=>{
- const btn=e.target.closest(".js-wa-generico,.js-wa-rinnovo,.js-wa-pagamento");
+ const btn=e.target.closest(".js-wa-cliente");
  if(!btn||btn.disabled)return;
- e.preventDefault();
- e.stopPropagation();
+ e.preventDefault();e.stopPropagation();
+ window.whatsappClienteById(btn.dataset.clientId,btn.dataset.waType||"generico");
+});
 
- const c=clienti.find(x=>x.id===btn.dataset.clientId);
- if(!c)return alert("Cliente non trovato.");
-
- if(btn.classList.contains("js-wa-generico")){
-  whatsappCliente(c,"generico");
-  return;
- }
-
- if(btn.classList.contains("js-wa-rinnovo")){
-  whatsappCliente(c,"rinnovo");
-  return;
- }
-
- const opened=whatsappPagamentoById(c.id);
+document.addEventListener("click",e=>{
+ const btn=e.target.closest(".js-wa-pagamento");
+ if(!btn||btn.disabled)return;
+ e.preventDefault();e.stopPropagation();
+ const opened=whatsappPagamentoById(btn.dataset.clientId);
  if(opened){
   btn.disabled=true;
   btn.innerHTML="&#9989; Promemoria inviato";
