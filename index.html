@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>SB Personal Coach Gestionale 12.0.3 LTS</title>
+<title>SB Personal Coach Gestionale 12.0.2.2 LTS</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--dark:#101827;--blue:#17233a;--gold:#d5ad52;--bg:#f4f6f8;--card:#fff;--muted:#667085;--ok:#13915f;--bad:#c0392b;--warn:#c47d00}
@@ -52,13 +52,6 @@ hr{border:0;border-top:1px solid #e5e7eb;margin:12px 0}
 .edit-lesson-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
 @media(max-width:600px){.edit-lesson-actions{grid-template-columns:1fr}}
 
-.renew-package-modal{position:fixed;inset:0;background:rgba(15,23,42,.72);display:none;align-items:center;justify-content:center;padding:16px;z-index:10000}
-.renew-package-modal.active{display:flex}
-.renew-package-box{width:min(580px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:20px;padding:20px;box-shadow:0 24px 70px rgba(0,0,0,.28)}
-.renew-package-box h2{margin-top:0}
-.renew-package-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
-@media(max-width:600px){.renew-package-actions{grid-template-columns:1fr}}
-
 </style>
 </head>
 <body>
@@ -66,7 +59,7 @@ hr{border:0;border-top:1px solid #e5e7eb;margin:12px 0}
   <div class="header-inner">
     <img src="logo.jpeg" class="logo" onerror="this.style.display='none'">
     <div>
-      <h1>SB Personal Coach Gestionale 12.0.3 LTS</h1>
+      <h1>SB Personal Coach Gestionale 12.0.2.2 LTS</h1>
       <div class="subtitle">Messaggi WhatsApp con data automatica · 01/08/2026</div>
     </div>
   </div>
@@ -2103,135 +2096,29 @@ const LTS120 = (()=>{
   }catch(e){console.error(e);alert(e.message||String(e));}
  }
  async function renewPackageOnly(id){
-  const c=clienti.find(x=>x.id===id);
-  if(!c)return alert("Cliente non trovato.");
-
-  const sc=(Array.isArray(c.giorni)?c.giorni:String(c.giorni||"").split(/[,;
-]+/)).map((d,i)=>{
-   const nd=normDay(d);
-   const item=DAY_MAP.find(([label,key])=>normDay(label)===nd||key===nd.slice(0,3));
-   const hours=Array.isArray(c.orari)?c.orari:String(c.orari||"").split(/[,;
-]+/).map(x=>x.trim()).filter(Boolean);
+  const c=clienti.find(x=>x.id===id);if(!c)return;
+  const sc=(Array.isArray(c.giorni)?c.giorni:String(c.giorni||"").split(/[,;\n]+/)).map((d,i)=>{
+   const nd=normDay(d);const item=DAY_MAP.find(([label,key])=>normDay(label)===nd||key===nd.slice(0,3));
+   const hours=Array.isArray(c.orari)?c.orari:String(c.orari||"").split(/[,;\n]+/).map(x=>x.trim()).filter(Boolean);
    return item?{label:item[0],key:item[1],dow:item[2],ora:hours[i]||hours[0]}:null;
   }).filter(x=>x&&x.ora);
-
-  if(!sc.length)return alert("Impossibile rinnovare: controlla prima i giorni e gli orari del cliente.");
-
+  if(!sc.length)return alert("Impossibile rinnovare: controlla giorni e orari del cliente.");
   const start=firstUseful(sc,tomorrowISO());
-  $("renewPackageClientId1203").value=id;
-  $("renewPackageClient1203").textContent=nome(c);
-  $("renewPackagePrevious1203").textContent=`${Number(c.lezioniTotali||0)} lezioni · ${Number(c.frequenza||sc.length)} sedute/settimana · ${euro(c.dovuto||0)}`;
-  const currentTotal=String(Number(c.lezioniTotali||1));
-  const standard=["1","3","8","10","12","16"];
-  $("renewPackageTotal1203").value=standard.includes(currentTotal)?currentTotal:"custom";
-  $("renewPackageCustomTotal1203").disabled=standard.includes(currentTotal);
-  $("renewPackageCustomTotal1203").value=standard.includes(currentTotal)?"":currentTotal;
-  $("renewPackageFrequency1203").value=String(Math.min(6,Math.max(1,Number(c.frequenza||sc.length||1))));
-  $("renewPackageAmount1203").value=Number(c.dovuto||0);
-  $("renewPackagePaid1203").value=0;
-  $("renewPackageStart1203").value=fmt(start);
-  $("renewPackageSchedule1203").innerHTML=`Programmazione salvata: <b>${scheduleSummary(c)}</b>`;
-  $("renewPackageModal1203").classList.add("active");
- }
-
- async function confirmRenewPackage(){
-  const id=$("renewPackageClientId1203")?.value;
-  const c=clienti.find(x=>x.id===id);
-  if(!c)return alert("Cliente non trovato.");
-
-  const selected=$("renewPackageTotal1203").value;
-  const total=selected==="custom"
-   ? Number($("renewPackageCustomTotal1203").value||0)
-   : Number(selected||0);
-  const frequency=Number($("renewPackageFrequency1203").value||1);
-  const amount=Number($("renewPackageAmount1203").value||0);
-  const paid=Number($("renewPackagePaid1203").value||0);
-
-  if(!Number.isInteger(total)||total<1||total>200)return alert("Inserisci un numero di lezioni valido.");
-  if(frequency<1||frequency>6)return alert("Seleziona una frequenza valida.");
-  if(amount<0||paid<0)return alert("Gli importi non possono essere negativi.");
-  if(paid>amount)return alert("L'importo pagato non può superare il dovuto.");
-
-  const sc=(Array.isArray(c.giorni)?c.giorni:String(c.giorni||"").split(/[,;
-]+/)).map((d,i)=>{
-   const nd=normDay(d);
-   const item=DAY_MAP.find(([label,key])=>normDay(label)===nd||key===nd.slice(0,3));
-   const hours=Array.isArray(c.orari)?c.orari:String(c.orari||"").split(/[,;
-]+/).map(x=>x.trim()).filter(Boolean);
-   return item?{label:item[0],key:item[1],dow:item[2],ora:hours[i]||hours[0]}:null;
-  }).filter(x=>x&&x.ora);
-
-  if(!sc.length)return alert("Giorni e orari non validi.");
-  if(frequency!==sc.length){
-   return alert(`Hai selezionato ${frequency} sedute a settimana, ma nella scheda risultano ${sc.length} giorni attivi.
-
-Apri Modifica cliente, imposta esattamente ${frequency} giorni e relativi orari, salva il calendario e poi ripeti il rinnovo.`);
-  }
-
-  const start=firstUseful(sc,tomorrowISO());
-  if(!confirm(
-   `Confermare il nuovo pacchetto?
-
-`+
-   `Cliente: ${nome(c)}
-`+
-   `Lezioni: ${total}
-`+
-   `Frequenza: ${frequency} a settimana
-`+
-   `Prima lezione: ${fmt(start)}
-`+
-   `Dovuto: ${euro(amount)}
-`+
-   `Già pagato: ${euro(paid)}
-
-`+
-   `Storico e vecchi movimenti non verranno modificati.`
-  ))return;
-
+  const total=Math.max(0,Number(c.lezioniTotali||0));
+  if(!confirm(`Rinnovare il pacchetto dal ${fmt(start)}?\n\nSaranno generate ${total} lezioni. Storico e vecchi pacchetti non verranno modificati.`))return;
   try{
    const deleted=await deleteFuturePending(id,start);
-   const newClient={...c,lezioniTotali:total,frequenza:frequency,dovuto:amount,pagato:paid};
-   const created=await createFutureLessons(id,newClient,sc,total,start);
+   const created=await createFutureLessons(id,c,sc,total,start);
    const expiry=created.length?created[created.length-1].data:start;
-
-   await addDoc(path("rinnovi"),{
-    cliente:nome(c),clienteId:id,pacchetto:total,frequenza:frequency,
-    data:start,importo:amount,pagato,createdAt:serverTimestamp()
-   });
-
+   await addDoc(path("rinnovi"),{cliente:nome(c),clienteId:id,pacchetto:total,data:start,importo:valore(c),createdAt:serverTimestamp()});
    await setDoc(docPath("clienti",id),{
-    stato:"attivo",
-    lezioniTotali:total,
-    frequenza:frequency,
-    lezioniFatte:0,
-    lezioniResidue:total,
-    inizio:start,
-    scadenza:expiry,
-    dovuto:amount,
-    pagato:paid,
-    pagamentoRinnovoDaSaldare:paid<amount,
-    updatedAt:serverTimestamp()
+    stato:"attivo",lezioniFatte:0,lezioniResidue:total,inizio:start,scadenza:expiry,
+    pagamentoRinnovoDaSaldare:true,updatedAt:serverTimestamp()
    },{merge:true});
-
-   log("pacchetto_rinnovato_flessibile",{
-    clienteId:id,cliente:nome(c),precedente:Number(c.lezioniTotali||0),
-    totale:total,frequenza:frequency,inizio:start,scadenza:expiry,
-    dovuto:amount,pagato,eliminate:deleted
-   });
-
-   $("renewPackageModal1203").classList.remove("active");
-   alert(`Pacchetto rinnovato correttamente.
-
-Lezioni create: ${created.length}
-Prima lezione: ${fmt(start)}
-Scadenza: ${fmt(expiry)}`);
-  }catch(e){
-   console.error(e);
-   alert(e.message||String(e));
-  }
+   log("pacchetto_rinnovato",{clienteId:id,cliente:nome(c),totale:total,inizio:start,scadenza:expiry,eliminate:deleted});
+   alert(`Pacchetto rinnovato correttamente.\n\nPrima lezione: ${fmt(start)}\nLezioni create: ${created.length}\nScadenza: ${fmt(expiry)}`);
+  }catch(e){console.error(e);alert(e.message||String(e));}
  }
-
  async function recalcCounterOnly(){
   const id=$("clienteId")?.value;if(!id)return alert("Apri prima il cliente.");
   const c=clienti.find(x=>x.id===id);if(!c)return alert("Cliente non trovato.");
@@ -2253,7 +2140,7 @@ Scadenza: ${fmt(expiry)}`);
   log("profilo_cliente_salvato",{clienteId:id,cliente:nome({...c,...safe})});
   alert("Dati anagrafici e saldo salvati. Calendario, pacchetto e contatore non modificati.");
  }
- return {updateCalendarOnly,renewPackageOnly,confirmRenewPackage,recalcCounterOnly,saveProfileOnly,log};
+ return {updateCalendarOnly,renewPackageOnly,recalcCounterOnly,saveProfileOnly,log};
 })();
 
 window.aggiornaCalendarioFuturo11801=LTS120.updateCalendarOnly;
@@ -2262,18 +2149,6 @@ window.aggiornaCalendarioFuturo=LTS120.updateCalendarOnly;
 window.rinnova=LTS120.renewPackageOnly;
 window.ricalcolaContatoreCliente=LTS120.recalcCounterOnly;
 window.salvaDatiCliente=LTS120.saveProfileOnly;
-
-window.confermaRinnovoPacchetto1203=async function(){
- await LTS120.confirmRenewPackage();
-};
-window.chiudiRinnovoPacchetto1203=function(){
- $("renewPackageModal1203")?.classList.remove("active");
-};
-$("renewPackageTotal1203")?.addEventListener("change",function(){
- const custom=this.value==="custom";
- $("renewPackageCustomTotal1203").disabled=!custom;
- if(custom)$("renewPackageCustomTotal1203").focus();
-});
 
 </script>
 
@@ -2305,75 +2180,6 @@ $("renewPackageTotal1203")?.addEventListener("change",function(){
     <div class="edit-lesson-actions">
       <button class="btn gold" onclick="salvaModificaLezione1179()">Salva modifica</button>
       <button class="btn light" onclick="chiudiModificaLezione1179()">Chiudi</button>
-    </div>
-  </div>
-</div>
-
-<div id="renewPackageModal1203" class="renew-package-modal">
-  <div class="renew-package-box">
-    <h2>🔁 Rinnova pacchetto</h2>
-    <p id="renewPackageClient1203" class="meta"></p>
-    <input id="renewPackageClientId1203" type="hidden">
-
-    <div class="card" style="background:#f8fafc">
-      <h3>Pacchetto precedente</h3>
-      <p id="renewPackagePrevious1203" class="meta"></p>
-    </div>
-
-    <div class="row">
-      <div>
-        <label>Nuove lezioni</label>
-        <select id="renewPackageTotal1203">
-          <option value="1">1 lezione</option>
-          <option value="3">3 lezioni</option>
-          <option value="8">8 lezioni</option>
-          <option value="10">10 lezioni</option>
-          <option value="12">12 lezioni</option>
-          <option value="16">16 lezioni</option>
-          <option value="custom">Altro</option>
-        </select>
-      </div>
-      <div>
-        <label>Numero personalizzato</label>
-        <input id="renewPackageCustomTotal1203" type="number" min="1" max="200" placeholder="Es. 20" disabled>
-      </div>
-    </div>
-
-    <div class="row">
-      <div>
-        <label>Frequenza settimanale</label>
-        <select id="renewPackageFrequency1203">
-          <option value="1">1 seduta</option>
-          <option value="2">2 sedute</option>
-          <option value="3">3 sedute</option>
-          <option value="4">4 sedute</option>
-          <option value="5">5 sedute</option>
-          <option value="6">6 sedute</option>
-        </select>
-      </div>
-      <div>
-        <label>Importo dovuto €</label>
-        <input id="renewPackageAmount1203" type="number" min="0" step="0.01">
-      </div>
-    </div>
-
-    <div class="row">
-      <div>
-        <label>Già pagato €</label>
-        <input id="renewPackagePaid1203" type="number" min="0" step="0.01" value="0">
-      </div>
-      <div>
-        <label>Prima data utile</label>
-        <input id="renewPackageStart1203" type="text" readonly>
-      </div>
-    </div>
-
-    <p id="renewPackageSchedule1203" class="meta"></p>
-    <p class="meta"><b>Nota:</b> il nuovo calendario usa i giorni e gli orari attualmente salvati nella scheda del cliente. Storico, vecchie lezioni e movimenti passati restano invariati.</p>
-
-    <div class="renew-package-actions">
-      <button class="btn gold" onclick="confermaRinnovoPacchetto1203()">Conferma rinnovo</button>
-      <button class="btn light" onclick="chiudiRinnovoPacchetto1203()">Annulla</button>
     </div>
   </div>
 </div>
