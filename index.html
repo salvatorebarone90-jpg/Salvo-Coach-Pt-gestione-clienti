@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>SB Personal Coach Gestionale 12.0.3 LTS</title>
+<title>SB Personal Coach Gestionale 12.0.2.2 LTS</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--dark:#101827;--blue:#17233a;--gold:#d5ad52;--bg:#f4f6f8;--card:#fff;--muted:#667085;--ok:#13915f;--bad:#c0392b;--warn:#c47d00}
@@ -59,7 +59,7 @@ hr{border:0;border-top:1px solid #e5e7eb;margin:12px 0}
   <div class="header-inner">
     <img src="logo.jpeg" class="logo" onerror="this.style.display='none'">
     <div>
-      <h1>SB Personal Coach Gestionale 12.0.3 LTS</h1>
+      <h1>SB Personal Coach Gestionale 12.0.2.2 LTS</h1>
       <div class="subtitle">Messaggi WhatsApp con data automatica · 01/08/2026</div>
     </div>
   </div>
@@ -2096,172 +2096,28 @@ const LTS120 = (()=>{
   }catch(e){console.error(e);alert(e.message||String(e));}
  }
  async function renewPackageOnly(id){
-  const c=clienti.find(x=>x.id===id);
-  if(!c)return alert("Cliente non trovato.");
-
-  const hours=Array.isArray(c.orari)
-   ? c.orari
-   : String(c.orari||"").split(/[,;
-]+/).map(x=>x.trim()).filter(Boolean);
-
-  const sc=(Array.isArray(c.giorni)
-   ? c.giorni
-   : String(c.giorni||"").split(/[,;
-]+/).map(x=>x.trim()).filter(Boolean)
-  ).map((d,i)=>{
-   const nd=normDay(d);
-   const item=DAY_MAP.find(([label,key])=>normDay(label)===nd||key===nd.slice(0,3));
+  const c=clienti.find(x=>x.id===id);if(!c)return;
+  const sc=(Array.isArray(c.giorni)?c.giorni:String(c.giorni||"").split(/[,;\n]+/)).map((d,i)=>{
+   const nd=normDay(d);const item=DAY_MAP.find(([label,key])=>normDay(label)===nd||key===nd.slice(0,3));
+   const hours=Array.isArray(c.orari)?c.orari:String(c.orari||"").split(/[,;\n]+/).map(x=>x.trim()).filter(Boolean);
    return item?{label:item[0],key:item[1],dow:item[2],ora:hours[i]||hours[0]}:null;
   }).filter(x=>x&&x.ora);
-
-  if(!sc.length){
-   return alert("Impossibile rinnovare: controlla prima giorni e orari del cliente.");
-  }
-
-  const totalInput=prompt(
-   "Quante lezioni deve avere il NUOVO pacchetto?",
-   String(Number(c.lezioniTotali||12))
-  );
-  if(totalInput===null)return;
-
-  const total=Number(totalInput);
-  if(!Number.isInteger(total)||total<1||total>200){
-   return alert("Inserisci un numero di lezioni valido.");
-  }
-
-  const frequencyInput=prompt(
-   "Quante sedute a settimana deve fare?",
-   String(Number(c.frequenza||sc.length||1))
-  );
-  if(frequencyInput===null)return;
-
-  const frequency=Number(frequencyInput);
-  if(!Number.isInteger(frequency)||frequency<1||frequency>7){
-   return alert("Inserisci una frequenza settimanale valida.");
-  }
-
-  if(frequency!==sc.length){
-   return alert(
-    `Hai scelto ${frequency} sedute a settimana, ma nella scheda del cliente risultano ${sc.length} giorni attivi.
-
-`+
-    `Prima apri Modifica cliente, imposta esattamente ${frequency} giorni con i relativi orari, salva il calendario e poi premi nuovamente Rinnova.`
-   );
-  }
-
-  const amountInput=prompt(
-   "Importo dovuto per il NUOVO pacchetto (€):",
-   String(Number(c.dovuto||0))
-  );
-  if(amountInput===null)return;
-
-  const amount=Number(String(amountInput).replace(",","."));
-  if(!Number.isFinite(amount)||amount<0){
-   return alert("Inserisci un importo valido.");
-  }
-
-  const paidInput=prompt(
-   "Quanto è già stato pagato per il NUOVO pacchetto (€)?",
-   "0"
-  );
-  if(paidInput===null)return;
-
-  const paid=Number(String(paidInput).replace(",","."));
-  if(!Number.isFinite(paid)||paid<0||paid>amount){
-   return alert("Controlla l'importo già pagato.");
-  }
-
+  if(!sc.length)return alert("Impossibile rinnovare: controlla giorni e orari del cliente.");
   const start=firstUseful(sc,tomorrowISO());
-
-  const ok=confirm(
-   `Confermare il rinnovo?
-
-`+
-   `Cliente: ${nome(c)}
-`+
-   `Vecchio pacchetto: ${Number(c.lezioniTotali||0)} lezioni
-`+
-   `Nuovo pacchetto: ${total} lezioni
-`+
-   `Frequenza: ${frequency} sedute a settimana
-`+
-   `Prima lezione: ${fmt(start)}
-`+
-   `Dovuto: ${euro(amount)}
-`+
-   `Già pagato: ${euro(paid)}
-
-`+
-   `Storico e movimenti precedenti non verranno modificati.`
-  );
-  if(!ok)return;
-
+  const total=Math.max(0,Number(c.lezioniTotali||0));
+  if(!confirm(`Rinnovare il pacchetto dal ${fmt(start)}?\n\nSaranno generate ${total} lezioni. Storico e vecchi pacchetti non verranno modificati.`))return;
   try{
    const deleted=await deleteFuturePending(id,start);
-
-   const nuovoCliente={
-    ...c,
-    lezioniTotali:total,
-    frequenza:frequency,
-    dovuto:amount,
-    pagato:paid
-   };
-
-   const created=await createFutureLessons(id,nuovoCliente,sc,total,start);
+   const created=await createFutureLessons(id,c,sc,total,start);
    const expiry=created.length?created[created.length-1].data:start;
-
-   await addDoc(path("rinnovi"),{
-    cliente:nome(c),
-    clienteId:id,
-    pacchetto:total,
-    frequenza:frequency,
-    data:start,
-    importo:amount,
-    pagato,
-    createdAt:serverTimestamp()
-   });
-
+   await addDoc(path("rinnovi"),{cliente:nome(c),clienteId:id,pacchetto:total,data:start,importo:valore(c),createdAt:serverTimestamp()});
    await setDoc(docPath("clienti",id),{
-    stato:"attivo",
-    lezioniTotali:total,
-    frequenza:frequency,
-    lezioniFatte:0,
-    lezioniResidue:total,
-    inizio:start,
-    scadenza:expiry,
-    dovuto:amount,
-    pagato:paid,
-    pagamentoRinnovoDaSaldare:paid<amount,
-    updatedAt:serverTimestamp()
+    stato:"attivo",lezioniFatte:0,lezioniResidue:total,inizio:start,scadenza:expiry,
+    pagamentoRinnovoDaSaldare:true,updatedAt:serverTimestamp()
    },{merge:true});
-
-   log("pacchetto_rinnovato_flessibile",{
-    clienteId:id,
-    cliente:nome(c),
-    pacchettoPrecedente:Number(c.lezioniTotali||0),
-    nuovoPacchetto:total,
-    frequenza:frequency,
-    inizio:start,
-    scadenza:expiry,
-    dovuto:amount,
-    pagato,
-    eliminate:deleted
-   });
-
-   alert(
-    `Pacchetto rinnovato correttamente.
-
-`+
-    `Lezioni create: ${created.length}
-`+
-    `Prima lezione: ${fmt(start)}
-`+
-    `Scadenza: ${fmt(expiry)}`
-   );
-  }catch(e){
-   console.error(e);
-   alert(e.message||String(e));
-  }
+   log("pacchetto_rinnovato",{clienteId:id,cliente:nome(c),totale:total,inizio:start,scadenza:expiry,eliminate:deleted});
+   alert(`Pacchetto rinnovato correttamente.\n\nPrima lezione: ${fmt(start)}\nLezioni create: ${created.length}\nScadenza: ${fmt(expiry)}`);
+  }catch(e){console.error(e);alert(e.message||String(e));}
  }
  async function recalcCounterOnly(){
   const id=$("clienteId")?.value;if(!id)return alert("Apri prima il cliente.");
