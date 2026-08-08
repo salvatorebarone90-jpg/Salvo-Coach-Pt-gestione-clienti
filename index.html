@@ -60,7 +60,7 @@ hr{border:0;border-top:1px solid #e5e7eb;margin:12px 0}
     <img src="logo.jpeg" class="logo" onerror="this.style.display='none'">
     <div>
       <h1>SB Personal Coach Gestionale 12.0.2.4 LTS</h1>
-      <div class="subtitle">Messaggi WhatsApp con data automatica · 01/08/2026</div>
+      <div class="subtitle">Rinnovo flessibile su base stabile · 08/08/2026</div>
     </div>
   </div>
   <nav id="nav">
@@ -2096,189 +2096,79 @@ const LTS120 = (()=>{
   }catch(e){console.error(e);alert(e.message||String(e));}
  }
  async function renewPackageOnly(id){
-  const c=clienti.find(x=>x.id===id);
-  if(!c)return alert("Cliente non trovato.");
-
-  const hours=Array.isArray(c.orari)
-   ? c.orari
-   : String(c.orari||"").split(/[,;
-]+/).map(x=>x.trim()).filter(Boolean);
-
-  const sc=(Array.isArray(c.giorni)
-   ? c.giorni
-   : String(c.giorni||"").split(/[,;
-]+/).map(x=>x.trim()).filter(Boolean)
-  ).map((d,i)=>{
-   const nd=normDay(d);
-   const item=DAY_MAP.find(([label,key])=>normDay(label)===nd||key===nd.slice(0,3));
+  const c=clienti.find(x=>x.id===id);if(!c)return;
+  const sc=(Array.isArray(c.giorni)?c.giorni:String(c.giorni||"").split(/[,;\n]+/)).map((d,i)=>{
+   const nd=normDay(d);const item=DAY_MAP.find(([label,key])=>normDay(label)===nd||key===nd.slice(0,3));
+   const hours=Array.isArray(c.orari)?c.orari:String(c.orari||"").split(/[,;\n]+/).map(x=>x.trim()).filter(Boolean);
    return item?{label:item[0],key:item[1],dow:item[2],ora:hours[i]||hours[0]}:null;
   }).filter(x=>x&&x.ora);
+  if(!sc.length)return alert("Impossibile rinnovare: controlla giorni e orari del cliente.");
 
-  if(!sc.length){
-   return alert("Impossibile rinnovare: controlla prima giorni e orari del cliente.");
-  }
-
-  const totalInput=prompt(
-   "Quante lezioni deve avere il NUOVO pacchetto?",
-   String(Number(c.lezioniTotali||12))
-  );
+  const totalInput=prompt("Quante lezioni deve avere il NUOVO pacchetto?",String(Number(c.lezioniTotali||12)));
   if(totalInput===null)return;
+  const total=Number(String(totalInput).trim());
+  if(!Number.isInteger(total)||total<1||total>200)return alert("Inserisci un numero di lezioni valido.");
 
-  const total=Number(totalInput);
-  if(!Number.isInteger(total)||total<1||total>200){
-   return alert("Inserisci un numero di lezioni valido.");
-  }
+  const freqInput=prompt("Quante sedute a settimana deve fare nel NUOVO pacchetto?",String(Number(c.frequenza||sc.length||1)));
+  if(freqInput===null)return;
+  const freq=Number(String(freqInput).trim());
+  if(!Number.isInteger(freq)||freq<1||freq>7)return alert("Inserisci una frequenza settimanale valida.");
+  if(freq!==sc.length)return alert(`Hai scelto ${freq} sedute a settimana, ma nella scheda del cliente risultano ${sc.length} giorni attivi.\n\nPrima apri Modifica cliente, imposta esattamente ${freq} giorni con i relativi orari e salva il calendario. Poi premi nuovamente Rinnova.`);
 
-  const frequencyInput=prompt(
-   "Quante sedute a settimana deve fare?",
-   String(Number(c.frequenza||sc.length||1))
+  const importoInput=prompt("Importo dovuto per il NUOVO pacchetto (€):",String(Number(c.dovuto||0)));
+  if(importoInput===null)return;
+  const importo=Number(String(importoInput).replace(",",".").trim());
+  if(!Number.isFinite(importo)||importo<0)return alert("Inserisci un importo valido.");
+
+  const pagatoInput=prompt("Quanto è già stato pagato per il NUOVO pacchetto (€)?","0");
+  if(pagatoInput===null)return;
+  const pagatoNuovo=Number(String(pagatoInput).replace(",",".").trim());
+  if(!Number.isFinite(pagatoNuovo)||pagatoNuovo<0||pagatoNuovo>importo)return alert("Controlla l'importo già pagato.");
+
+  const dataInput=prompt(
+   "Quando vuoi far iniziare il NUOVO pacchetto?\n\nInserisci la data nel formato GG/MM/AAAA.",
+   fmt(todayISO())
   );
-  if(frequencyInput===null)return;
+  if(dataInput===null)return;
 
-  const frequency=Number(frequencyInput);
-  if(!Number.isInteger(frequency)||frequency<1||frequency>7){
-   return alert("Inserisci una frequenza settimanale valida.");
-  }
+  const parti=String(dataInput).trim().split("/");
+  if(parti.length!==3)return alert("Data non valida. Usa il formato GG/MM/AAAA.");
 
-  if(frequency!==sc.length){
-   return alert(
-    `Hai scelto ${frequency} sedute a settimana, ma nella scheda del cliente risultano ${sc.length} giorni attivi.
+  const gg=String(parti[0]).padStart(2,"0");
+  const mm=String(parti[1]).padStart(2,"0");
+  const aaaa=String(parti[2]).trim();
 
-`+
-    `Prima apri Modifica cliente, imposta esattamente ${frequency} giorni con i relativi orari, salva il calendario e poi premi nuovamente Rinnova.`
-   );
-  }
+  if(aaaa.length!==4)return alert("Data non valida. Usa il formato GG/MM/AAAA.");
 
-  const amountInput=prompt(
-   "Importo dovuto per il NUOVO pacchetto (€):",
-   String(Number(c.dovuto||0))
-  );
-  if(amountInput===null)return;
+  const dataScelta=`${aaaa}-${mm}-${gg}`;
+  const verifica=localDateFromISO(dataScelta);
 
-  const amount=Number(String(amountInput).replace(",","."));
-  if(!Number.isFinite(amount)||amount<0){
-   return alert("Inserisci un importo valido.");
-  }
-
-  const paidInput=prompt(
-   "Quanto è già stato pagato per il NUOVO pacchetto (€)?",
-   "0"
-  );
-  if(paidInput===null)return;
-
-  const paid=Number(String(paidInput).replace(",","."));
-  if(!Number.isFinite(paid)||paid<0||paid>amount){
-   return alert("Controlla l'importo già pagato.");
-  }
-
-  const defaultStart=firstUseful(sc,todayISO());
-  const startInput=prompt(
-   "Quando vuoi far iniziare il nuovo pacchetto?\n\nInserisci la data nel formato GG/MM/AAAA.\nSe non coincide con un giorno di allenamento, la prima lezione sarà il primo giorno utile successivo.",
-   fmt(defaultStart)
-  );
-  if(startInput===null)return;
-
-  const matchData=String(startInput).trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if(!matchData)return alert("Data non valida. Usa il formato GG/MM/AAAA.");
-  const gg=String(matchData[1]).padStart(2,"0");
-  const mm=String(matchData[2]).padStart(2,"0");
-  const aaaa=matchData[3];
-  const requestedStart=`${aaaa}-${mm}-${gg}`;
-  const checkDate=new Date(`${requestedStart}T12:00:00`);
-  if(Number.isNaN(checkDate.getTime())||checkDate.getFullYear()!=Number(aaaa)||checkDate.getMonth()+1!=Number(mm)||checkDate.getDate()!=Number(gg)){
+  if(
+   !verifica ||
+   Number.isNaN(verifica.getTime()) ||
+   verifica.getFullYear()!==Number(aaaa) ||
+   verifica.getMonth()+1!==Number(mm) ||
+   verifica.getDate()!==Number(gg)
+  ){
    return alert("La data inserita non esiste.");
   }
-  const start=firstUseful(sc,requestedStart);
 
-  const ok=confirm(
-   `Confermare il rinnovo?
+  const start=firstUseful(sc,dataScelta);
 
-`+
-   `Cliente: ${nome(c)}
-`+
-   `Vecchio pacchetto: ${Number(c.lezioniTotali||0)} lezioni
-`+
-   `Nuovo pacchetto: ${total} lezioni
-`+
-   `Frequenza: ${frequency} sedute a settimana
-`+
-   `Prima lezione: ${fmt(start)}
-`+
-   `Dovuto: ${euro(amount)}
-`+
-   `Già pagato: ${euro(paid)}
-
-`+
-   `Storico e movimenti precedenti non verranno modificati.`
-  );
-  if(!ok)return;
-
+  if(!confirm(`Confermare il rinnovo?\n\nCliente: ${nome(c)}\nVecchio pacchetto: ${Number(c.lezioniTotali||0)} lezioni\nNuovo pacchetto: ${total} lezioni\nFrequenza: ${freq} sedute/settimana\nData inizio scelta: ${fmt(dataScelta)}\nPrima lezione utile: ${fmt(start)}\nDovuto: ${euro(importo)}\nGià pagato: ${euro(pagatoNuovo)}\n\nStorico e movimenti precedenti non verranno modificati.`))return;
   try{
-   const deleted=await deleteFuturePending(id,start);
-
-   const nuovoCliente={
-    ...c,
-    lezioniTotali:total,
-    frequenza:frequency,
-    dovuto:amount,
-    pagato:paid
-   };
-
-   const created=await createFutureLessons(id,nuovoCliente,sc,total,start);
+   const deleted=await deleteFuturePending(id,dataScelta);
+   const cNuovo={...c,lezioniTotali:total,frequenza:freq,dovuto:importo,pagato:pagatoNuovo};
+   const created=await createFutureLessons(id,cNuovo,sc,total,start);
    const expiry=created.length?created[created.length-1].data:start;
-
-   await addDoc(path("rinnovi"),{
-    cliente:nome(c),
-    clienteId:id,
-    pacchetto:total,
-    frequenza:frequency,
-    data:start,
-    importo:amount,
-    pagato,
-    createdAt:serverTimestamp()
-   });
-
+   await addDoc(path("rinnovi"),{cliente:nome(c),clienteId:id,pacchetto:total,frequenza:freq,data:dataScelta,primaLezione:start,importo:importo,pagato:pagatoNuovo,createdAt:serverTimestamp()});
    await setDoc(docPath("clienti",id),{
-    stato:"attivo",
-    lezioniTotali:total,
-    frequenza:frequency,
-    lezioniFatte:0,
-    lezioniResidue:total,
-    inizio:requestedStart,
-    scadenza:expiry,
-    dovuto:amount,
-    pagato:paid,
-    pagamentoRinnovoDaSaldare:paid<amount,
-    updatedAt:serverTimestamp()
+    stato:"attivo",lezioniTotali:total,frequenza:freq,lezioniFatte:0,lezioniResidue:total,inizio:dataScelta,scadenza:expiry,
+    dovuto:importo,pagato:pagatoNuovo,pagamentoRinnovoDaSaldare:pagatoNuovo<importo,updatedAt:serverTimestamp()
    },{merge:true});
-
-   log("pacchetto_rinnovato_flessibile",{
-    clienteId:id,
-    cliente:nome(c),
-    pacchettoPrecedente:Number(c.lezioniTotali||0),
-    nuovoPacchetto:total,
-    frequenza:frequency,
-    inizio:start,
-    scadenza:expiry,
-    dovuto:amount,
-    pagato,
-    eliminate:deleted
-   });
-
-   alert(
-    `Pacchetto rinnovato correttamente.
-
-`+
-    `Lezioni create: ${created.length}
-`+
-    `Prima lezione: ${fmt(start)}
-`+
-    `Scadenza: ${fmt(expiry)}`
-   );
-  }catch(e){
-   console.error(e);
-   alert(e.message||String(e));
-  }
+   log("pacchetto_rinnovato_flessibile",{clienteId:id,cliente:nome(c),precedente:Number(c.lezioniTotali||0),totale:total,frequenza:freq,dataScelta:dataScelta,primaLezione:start,scadenza:expiry,dovuto:importo,pagato:pagatoNuovo,eliminate:deleted});
+   alert(`Pacchetto rinnovato correttamente.\n\nPrima lezione: ${fmt(start)}\nLezioni create: ${created.length}\nScadenza: ${fmt(expiry)}`);
+  }catch(e){console.error(e);alert(e.message||String(e));}
  }
  async function recalcCounterOnly(){
   const id=$("clienteId")?.value;if(!id)return alert("Apri prima il cliente.");
