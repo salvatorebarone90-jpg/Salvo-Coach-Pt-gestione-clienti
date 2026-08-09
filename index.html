@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>SB Personal Coach Gestionale 12.0.2.4 LTS</title>
+<title>SB Personal Coach Gestionale 12.0.2.5 DEV</title>
 <link rel="manifest" href="manifest.json">
 <style>
 :root{--dark:#101827;--blue:#17233a;--gold:#d5ad52;--bg:#f4f6f8;--card:#fff;--muted:#667085;--ok:#13915f;--bad:#c0392b;--warn:#c47d00}
@@ -59,7 +59,7 @@ hr{border:0;border-top:1px solid #e5e7eb;margin:12px 0}
   <div class="header-inner">
     <img src="logo.jpeg" class="logo" onerror="this.style.display='none'">
     <div>
-      <h1>SB Personal Coach Gestionale 12.0.2.4 LTS</h1>
+      <h1>SB Personal Coach Gestionale 12.0.2.5 DEV</h1>
       <div class="subtitle">Rinnovo flessibile su base stabile · 08/08/2026</div>
     </div>
   </div>
@@ -573,6 +573,7 @@ function clientCard(c){
      <button type="button" class="btn light" onclick="sbAddLesson('${c.id}')">+ Lezione</button>
      <button type="button" class="btn light" onclick="sbReturnLesson('${c.id}')">Restituisci</button>
      <button type="button" class="btn gold" onclick="rinnova('${c.id}')">Rinnova</button>
+     ${c.renewalCycleId?`<button type="button" class="btn red" onclick="annullaUltimoRinnovo12025('${c.id}')">↩️ Annulla ultimo rinnovo</button>`:""}
      <button type="button" class="btn dark" onclick="editCliente('${c.id}')">Modifica</button>
      <button type="button" class="btn light" onclick="inattivo('${c.id}')">${inactive?"Riattiva":"Inattivo"}</button>
      <button type="button" class="btn light" onclick="sbInviteClient('${c.id}')">Invia accesso cliente</button>
@@ -610,6 +611,89 @@ document.addEventListener("click",e=>{
   btn.style.opacity="1";
  }
 });
+
+async function annullaUltimoRinnovo12025(clienteId){
+ const c=clienti.find(x=>x.id===clienteId);
+ if(!c)return alert("Cliente non trovato.");
+
+ const cycleId=String(c.renewalCycleId||"");
+ if(!cycleId){
+  return alert("Non c'è un rinnovo recente annullabile per questo cliente.");
+ }
+
+ const last=rinnovi.find(r=>
+  r.clienteId===clienteId &&
+  String(r.renewalCycleId||"")===cycleId
+ );
+ if(!last || !last.previousSnapshot){
+  return alert("Dati di sicurezza del rinnovo non trovati. Operazione bloccata.");
+ }
+
+ const cycleEvents=eventi.filter(e=>
+  e.clienteId===clienteId &&
+  String(e.renewalCycleId||"")===cycleId
+ );
+
+ const managed=cycleEvents.filter(e=>
+  e.processed===true ||
+  e.scalata===true ||
+  historical(e.stato)
+ );
+
+ if(managed.length){
+  return alert(
+   "Questo rinnovo non può più essere annullato automaticamente perché almeno una lezione del nuovo pacchetto è già stata gestita.\n\n"+
+   "Lo storico resterà invariato."
+  );
+ }
+
+ const snap=last.previousSnapshot;
+
+ const ok=confirm(
+  `Annullare l'ultimo rinnovo di ${nome(c)}?\n\n`+
+  `Pacchetto nuovo: ${Number(last.pacchetto||0)} lezioni\n`+
+  `Lezioni future da eliminare: ${cycleEvents.length}\n`+
+  `Importo del nuovo pacchetto: ${euro(last.importo||0)}\n`+
+  `Pagato sul nuovo pacchetto: ${euro(last.pagato||0)}\n\n`+
+  `Verranno ripristinati esclusivamente i dati del pacchetto precedente.\n`+
+  `Storico lezioni e movimenti economici precedenti non verranno toccati.`
+ );
+ if(!ok)return;
+
+ try{
+  for(const ev of cycleEvents){
+   await deleteDoc(docPath("eventi",ev.id));
+  }
+
+  await setDoc(docPath("clienti",clienteId),{
+   lezioniTotali:Number(snap.lezioniTotali||0),
+   frequenza:Number(snap.frequenza||0),
+   lezioniFatte:Number(snap.lezioniFatte||0),
+   lezioniResidue:Number(snap.lezioniResidue||0),
+   inizio:snap.inizio||"",
+   scadenza:snap.scadenza||"",
+   dovuto:Number(snap.dovuto||0),
+   pagato:Number(snap.pagato||0),
+   pagamentoRinnovoDaSaldare:!!snap.pagamentoRinnovoDaSaldare,
+   renewalCycleId:"",
+   updatedAt:serverTimestamp()
+  },{merge:true});
+
+  await deleteDoc(docPath("rinnovi",last.id));
+
+  alert(
+   "Ultimo rinnovo annullato correttamente.\n\n"+
+   `Lezioni del nuovo pacchetto eliminate: ${cycleEvents.length}\n`+
+   "Dati del pacchetto precedente ripristinati.\n"+
+   "Storico precedente invariato."
+  );
+ }catch(e){
+  console.error(e);
+  alert("Errore durante l'annullamento. Riprova senza eseguire altre operazioni.");
+ }
+}
+window.annullaUltimoRinnovo12025=annullaUltimoRinnovo12025;
+
 window.eliminaRinnovo=async id=>{if(confirm("Eliminare rinnovo?"))await deleteDoc(docPath("rinnovi",id))}
 function renderRinnovi(){$("listaRinnovi").innerHTML=rinnovi.map(r=>`<div class="check" style="position:relative;padding-right:60px"><button class="btn red" style="position:absolute;right:8px;top:8px;width:auto" onclick="eliminaRinnovo('${r.id}')">✕</button><h3>${r.cliente||"Cliente"}</h3><p class="meta">${r.pacchetto||""} lezioni · ${fmt(r.data)} · ${euro(r.importo)}</p></div>`).join("")||'<div class="empty">Nessun rinnovo.</div>'}
 function renderContabilita(){const now=new Date();if(!$("contMese").value)$("contMese").value=now.getFullYear()+"-"+String(now.getMonth()+1).padStart(2,"0");const mese=$("contMese").value;const mov=[...rinnovi.map(r=>({tipo:"rinnovo",data:r.data,mese:String(r.data||"").slice(0,7),nome:r.cliente,importo:Number(r.importo||0)})),...pagamenti.map(p=>({tipo:"pagamento",data:p.data,mese:p.mese||String(p.data||"").slice(0,7),nome:p.clienteNome,importo:Number(p.importo||0)}))];const movM=mov.filter(m=>m.mese===mese);const att=clienti.filter(c=>(c.stato||"attivo")!=="inattivo");$("contIncassato").textContent=euro(movM.reduce((s,m)=>s+m.importo,0));$("contDaIncassare").textContent=euro(att.reduce((s,c)=>s+residuoEuro(c),0));$("contValorePacchetti").textContent=euro(att.reduce((s,c)=>s+valore(c),0));$("contTotaleStorico").textContent=euro(mov.reduce((s,m)=>s+m.importo,0));$("contClientiResiduo").innerHTML=att.filter(c=>residuoEuro(c)>0).map(c=>`<div class="check"><h3>${nome(c)}</h3><p class="meta">Pagato ${euro(pagato(c))} · Dovuto ${euro(valore(c))}</p><span class="badge bad">Residuo ${euro(residuoEuro(c))}</span></div>`).join("")||'<div class="empty">Nessun residuo.</div>';$("contPacchettiAttivi").innerHTML=att.map(c=>`<div class="check"><h3>${nome(c)}</h3><p class="meta">${residue(c)} residue su ${c.lezioniTotali||0}</p><span class="badge ok">${euro(valore(c))}</span></div>`).join("")||'<div class="empty">Nessun pacchetto.</div>';$("contMovimenti").innerHTML=movM.map(m=>`<div class="check"><h3>${m.nome||"Cliente"}</h3><p class="meta">${fmt(m.data)} · ${m.tipo}</p><span class="badge ok">${euro(m.importo)}</span></div>`).join("")||'<div class="empty">Nessun movimento nel mese.</div>'}
@@ -2063,7 +2147,10 @@ const LTS120 = (()=>{
    await addDoc(path("eventi"),{
     clienteId:id,clienteNome:nome(c),data:item.data,ora:item.ora,
     durata:Number(c.durata||60),stato:"Prenotata",processed:false,
-    storico:false,scalata:false,createdAt:serverTimestamp()
+    storico:false,scalata:false,
+    renewalCycleId:String(c.renewalCycleId||""),
+    packageStart:String(c.packageStart||c.inizio||""),
+    createdAt:serverTimestamp()
    });
   }
   return created;
@@ -2082,7 +2169,7 @@ const LTS120 = (()=>{
   if(!confirm(`Aggiornare solo il calendario futuro?\n\nLezioni residue da programmare: ${remaining}.\nStorico, contatore, saldo e rinnovo non verranno modificati.`))return;
   try{
    const deleted=await deleteFuturePending(id,from);
-   const cForCalendar={...c,durata:Number($("durata")?.value||c.durata||60)};
+   const cForCalendar={...c,durata:Number($("durata")?.value||c.durata||60),renewalCycleId:String(c.renewalCycleId||""),packageStart:String(c.inizio||"")};
    const created=await createFutureLessons(id,cForCalendar,sc,remaining,from);
    const expiry=created.length?created[created.length-1].data:(c.scadenza||from);
    await setDoc(docPath("clienti",id),{
@@ -2154,17 +2241,29 @@ const LTS120 = (()=>{
   }
 
   const start=firstUseful(sc,dataScelta);
+  const renewalCycleId="R"+Date.now().toString(36)+Math.random().toString(36).slice(2,10);
+  const previousSnapshot={
+   lezioniTotali:Number(c.lezioniTotali||0),
+   frequenza:Number(c.frequenza||0),
+   lezioniFatte:Number(c.lezioniFatte||0),
+   lezioniResidue:Number(c.lezioniResidue||0),
+   inizio:c.inizio||"",
+   scadenza:c.scadenza||"",
+   dovuto:Number(c.dovuto||0),
+   pagato:Number(c.pagato||0),
+   pagamentoRinnovoDaSaldare:!!c.pagamentoRinnovoDaSaldare
+  };
 
   if(!confirm(`Confermare il rinnovo?\n\nCliente: ${nome(c)}\nVecchio pacchetto: ${Number(c.lezioniTotali||0)} lezioni\nNuovo pacchetto: ${total} lezioni\nFrequenza: ${freq} sedute/settimana\nData inizio scelta: ${fmt(dataScelta)}\nPrima lezione utile: ${fmt(start)}\nDovuto: ${euro(importo)}\nGià pagato: ${euro(pagatoNuovo)}\n\nStorico e movimenti precedenti non verranno modificati.`))return;
   try{
    const deleted=await deleteFuturePending(id,dataScelta);
-   const cNuovo={...c,lezioniTotali:total,frequenza:freq,dovuto:importo,pagato:pagatoNuovo};
+   const cNuovo={...c,lezioniTotali:total,frequenza:freq,dovuto:importo,pagato:pagatoNuovo,renewalCycleId,packageStart:dataScelta};
    const created=await createFutureLessons(id,cNuovo,sc,total,start);
    const expiry=created.length?created[created.length-1].data:start;
-   await addDoc(path("rinnovi"),{cliente:nome(c),clienteId:id,pacchetto:total,frequenza:freq,data:dataScelta,primaLezione:start,importo:importo,pagato:pagatoNuovo,createdAt:serverTimestamp()});
+   await addDoc(path("rinnovi"),{cliente:nome(c),clienteId:id,pacchetto:total,frequenza:freq,data:dataScelta,primaLezione:start,importo:importo,pagato:pagatoNuovo,renewalCycleId,previousSnapshot,annullabile:true,createdAt:serverTimestamp()});
    await setDoc(docPath("clienti",id),{
     stato:"attivo",lezioniTotali:total,frequenza:freq,lezioniFatte:0,lezioniResidue:total,inizio:dataScelta,scadenza:expiry,
-    dovuto:importo,pagato:pagatoNuovo,pagamentoRinnovoDaSaldare:pagatoNuovo<importo,updatedAt:serverTimestamp()
+    dovuto:importo,pagato:pagatoNuovo,pagamentoRinnovoDaSaldare:pagatoNuovo<importo,renewalCycleId,updatedAt:serverTimestamp()
    },{merge:true});
    log("pacchetto_rinnovato_flessibile",{clienteId:id,cliente:nome(c),precedente:Number(c.lezioniTotali||0),totale:total,frequenza:freq,dataScelta:dataScelta,primaLezione:start,scadenza:expiry,dovuto:importo,pagato:pagatoNuovo,eliminate:deleted});
    alert(`Pacchetto rinnovato correttamente.\n\nPrima lezione: ${fmt(start)}\nLezioni create: ${created.length}\nScadenza: ${fmt(expiry)}`);
