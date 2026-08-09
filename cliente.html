@@ -31,6 +31,14 @@ main{padding:16px;max-width:930px;margin:auto}
 .lesson{display:grid;grid-template-columns:1fr;gap:8px;border:1px solid #eef2f7;border-radius:16px;padding:14px;margin:10px 0;background:#fff}
 .footer-reg{font-size:13px;color:#667085;margin-top:14px}
 @media(min-width:760px){header h1{font-size:34px}.card{padding:24px}.lesson{grid-template-columns:1fr auto;align-items:center}}
+
+.login-shell{max-width:520px;margin:22px auto}
+.login-card{background:#fff;border-radius:20px;padding:22px;box-shadow:0 10px 30px rgba(16,24,39,.10)}
+.login-card h2{margin:0 0 8px}.login-card label{display:block;font-weight:800;margin:12px 0 6px}
+.login-card input{width:100%;padding:13px 14px;border:1px solid #cfd7e3;border-radius:12px;font-size:16px}
+.login-actions{display:grid;gap:10px;margin-top:16px}.login-link{background:none;border:0;color:#17233a;text-decoration:underline;font-weight:800;cursor:pointer}
+.login-msg{margin-top:12px;font-size:14px;line-height:1.4}.login-msg.ok{color:#166534}.login-msg.bad{color:#991b1b}
+
 </style>
 </head>
 <body>
@@ -40,6 +48,23 @@ main{padding:16px;max-width:930px;margin:auto}
   <p>Lezioni · Check · Calendario · Regolamento</p>
 </header>
 <main>
+  <section id="loginShell" class="login-shell">
+    <div class="login-card">
+      <h2>🔐 Accesso Area Cliente</h2>
+      <p class="meta">Accedi con l'email registrata e la tua password.</p>
+      <label for="loginEmail">Email</label>
+      <input id="loginEmail" type="email" autocomplete="email" placeholder="nome@email.it">
+      <label for="loginPassword">Password</label>
+      <input id="loginPassword" type="password" autocomplete="current-password" placeholder="Password">
+      <div class="login-actions">
+        <button id="loginBtn" class="btn gold full" type="button">Accedi</button>
+        <button id="registerBtn" class="btn light full" type="button">Primo accesso / Crea password</button>
+        <button id="resetBtn" class="login-link" type="button">Password dimenticata?</button>
+      </div>
+      <p id="loginMsg" class="login-msg"></p>
+    </div>
+  </section>
+  <div id="portalShell" class="hidden">
   <section id="regolamentoSection" class="card">
     <h2>📋 Regolamento</h2>
     <p class="meta">Per proseguire è necessario leggere e accettare il regolamento del percorso.</p>
@@ -73,10 +98,11 @@ main{padding:16px;max-width:930px;margin:auto}
     <div id="bachecaClienteCard" class="card hidden"><h2 id="bachecaClienteTitolo">📣 Comunicazione del coach</h2><p id="bachecaClienteMessaggio"></p><p id="bachecaClientePeriodo" class="meta"></p></div>
     <div class="card"><h2>📅 Tutte le lezioni</h2><div id="lezioni"></div></div>
   </section>
+  </div>
 </main>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut, deleteUser } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, getDoc,setDoc, updateDoc, collection, getDocs, collectionGroup, query, where, serverTimestamp, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
 const app=initializeApp(firebaseConfig), db=getFirestore(app), auth=getAuth(app);
@@ -85,15 +111,28 @@ const legacyId=params.get("id"), legacyUid=params.get("uid");
 let id=null;
 let currentClient=null,currentClientRef=null,ownerUid=null,allEvents=[],allRequests=[];
 
-async function authenticateClientPortal(){
- const credential=await signInAnonymously(auth);
+
+function loginMessage(msg,type=""){
+ const el=document.getElementById("loginMsg");
+ el.textContent=msg||"";
+ el.className="login-msg"+(type?" "+type:"");
+}
+function normalizeEmail(v){return String(v||"").trim().toLowerCase()}
+function showPortal(){
+ document.getElementById("loginShell").classList.add("hidden");
+ document.getElementById("portalShell").classList.remove("hidden");
+}
+function showLogin(){
+ document.getElementById("portalShell").classList.add("hidden");
+ document.getElementById("loginShell").classList.remove("hidden");
+}
+async function resolveInvite(){
  if(token){
   const inviteRef=doc(db,"clientInvites",token);
   const inviteSnap=await getDoc(inviteRef);
   if(!inviteSnap.exists() || inviteSnap.data().active!==true) throw new Error("Link cliente non valido o disattivato.");
   const invite=inviteSnap.data();
-  ownerUid=invite.ownerUid;id=invite.clientId;
-  await setDoc(doc(db,"clientAccess",credential.user.uid),{token,ownerUid,clientId:id,updatedAt:serverTimestamp()},{merge:true});
+  ownerUid=invite.ownerUid; id=invite.clientId;
   return;
  }
  if(!legacyId)throw new Error("Link cliente non valido o incompleto.");
@@ -101,8 +140,83 @@ async function authenticateClientPortal(){
  if(legacyUid){ownerUid=legacyUid;return}
  const qs=await getDocs(query(collectionGroup(db,"clienti"),where("__name__","==",id)));
  if(qs.empty)throw new Error("Vecchio link non riconosciuto. Richiedi al coach un nuovo accesso.");
- const ds=qs.docs[0];ownerUid=ds.ref.parent.parent.id;
+ const ds=qs.docs[0]; ownerUid=ds.ref.parent.parent.id;
 }
+async function verifyLoggedUser(user){
+ await resolveInvite();
+ const clientRef=doc(db,"users",ownerUid,"clienti",id);
+ const clientSnap=await getDoc(clientRef);
+ if(!clientSnap.exists())throw new Error("Cliente non trovato.");
+ const c=clientSnap.data();
+ const registeredEmail=normalizeEmail(c.email||c.emailCliente||"");
+ if(registeredEmail && normalizeEmail(user.email)!==registeredEmail){
+  throw new Error("Questa email non corrisponde a quella registrata dal coach.");
+ }
+ await setDoc(doc(db,"clientAccess",user.uid),{
+  token:token||"",ownerUid,clientId:id,email:normalizeEmail(user.email),updatedAt:serverTimestamp()
+ },{merge:true});
+ return c;
+}
+async function doLogin(){
+ const email=normalizeEmail(document.getElementById("loginEmail").value);
+ const password=document.getElementById("loginPassword").value;
+ if(!email||!password)return loginMessage("Inserisci email e password.","bad");
+ loginMessage("Accesso in corso...");
+ try{
+  const cred=await signInWithEmailAndPassword(auth,email,password);
+  await verifyLoggedUser(cred.user);
+  showPortal(); await load();
+ }catch(e){
+  await signOut(auth).catch(()=>{});
+  showLogin();
+  loginMessage("Accesso non riuscito. Controlla email e password.","bad");
+ }
+}
+async function doRegister(){
+ const email=normalizeEmail(document.getElementById("loginEmail").value);
+ const password=document.getElementById("loginPassword").value;
+ if(!email)return loginMessage("Inserisci l'email registrata dal coach.","bad");
+ if(password.length<6)return loginMessage("La password deve contenere almeno 6 caratteri.","bad");
+ loginMessage("Creazione accesso in corso...");
+ let cred=null;
+ try{
+  // Prima risolviamo il link e controlliamo l'email salvata nella scheda cliente.
+  await resolveInvite();
+  const clientSnap=await getDoc(doc(db,"users",ownerUid,"clienti",id));
+  if(!clientSnap.exists())throw new Error("Cliente non trovato.");
+  const c=clientSnap.data();
+  const registeredEmail=normalizeEmail(c.email||c.emailCliente||"");
+  if(!registeredEmail)throw new Error("Nella scheda cliente non è presente un'email. Chiedi al coach di inserirla.");
+  if(email!==registeredEmail)throw new Error("Usa la stessa email registrata dal coach.");
+
+  cred=await createUserWithEmailAndPassword(auth,email,password);
+  await verifyLoggedUser(cred.user);
+  showPortal(); await load();
+ }catch(e){
+  if(cred?.user) await deleteUser(cred.user).catch(()=>{});
+  await signOut(auth).catch(()=>{});
+  showLogin();
+  const msg=String(e?.code||"").includes("email-already-in-use")
+   ?"Esiste già un account con questa email. Usa Accedi oppure Password dimenticata."
+   :(e.message||"Impossibile creare l'accesso.");
+  loginMessage(msg,"bad");
+ }
+}
+async function doReset(){
+ const email=normalizeEmail(document.getElementById("loginEmail").value);
+ if(!email)return loginMessage("Inserisci prima la tua email.","bad");
+ try{
+  await sendPasswordResetEmail(auth,email);
+  loginMessage("Email di recupero inviata. Controlla anche la cartella Spam.","ok");
+ }catch(e){
+  loginMessage("Non è stato possibile inviare il recupero password. Controlla l'email inserita.","bad");
+ }
+}
+document.getElementById("loginBtn").addEventListener("click",doLogin);
+document.getElementById("registerBtn").addEventListener("click",doRegister);
+document.getElementById("resetBtn").addEventListener("click",doReset);
+document.getElementById("loginPassword").addEventListener("keydown",e=>{if(e.key==="Enter")doLogin()});
+
 const REG_VERSION="11.8.0.1";
 function fmt(d){if(!d)return"-";const [y,m,day]=String(d).slice(0,10).split("-");return day&&m&&y?`${day}/${m}/${y}`:d}
 function fmtShort(d){if(!d)return"-";const [,m,day]=String(d).slice(0,10).split("-");return day&&m?`${day}/${m}`:d}
@@ -172,12 +286,25 @@ async function load(){
 }
 
 async function startClientPortal(){
+ showLogin();
  try{
-  await authenticateClientPortal();
-  await load();
+  await resolveInvite();
  }catch(e){
-  alert("Errore accesso Area Cliente: "+e.message);
+  loginMessage(e.message||"Link cliente non valido.","bad");
+  return;
  }
+ onAuthStateChanged(auth,async user=>{
+  if(!user){showLogin();return}
+  try{
+   await verifyLoggedUser(user);
+   showPortal();
+   await load();
+  }catch(e){
+   await signOut(auth).catch(()=>{});
+   showLogin();
+   loginMessage(e.message||"Accesso non autorizzato.","bad");
+  }
+ });
 }
 startClientPortal();
 
