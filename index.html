@@ -611,8 +611,10 @@ function renderCoachNotifications(){
     <h2 style="margin-bottom:6px">🔔 ${pending.length===1?"1 richiesta di recupero da gestire":pending.length+" richieste di recupero da gestire"}</h2>
     ${preview}
     ${pending.length>3?`<p class="meta">+ altre ${pending.length-3} richieste</p>`:""}
-    <button type="button" class="btn gold full" onclick="showTab('recuperi')">Apri Recuperi</button>
+    <button type="button" id="openRecuperiDashboard" class="btn gold full">Apri Recuperi</button>
   </div>`;
+ const openBtn=$("openRecuperiDashboard");
+ if(openBtn)openBtn.onclick=()=>showTab("recuperi");
 }
 
 function renderDashboard(){const att=clienti.filter(c=>(c.stato||"attivo")!=="inattivo");$("kClienti").textContent=att.length;$("kOggi").textContent=eventi.filter(e=>e.data===todayISO()).length;$("kDaConf").textContent=lezioniDaConfermare().length;$("kResidui").textContent=euro(att.reduce((s,c)=>s+residuoEuro(c),0));renderSmart();renderCoachNotifications()}
