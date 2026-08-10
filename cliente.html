@@ -98,6 +98,11 @@ main{padding:16px;max-width:930px;margin:auto}
     <div id="bachecaClienteCard" class="card hidden"><h2 id="bachecaClienteTitolo">📣 Comunicazione del coach</h2><p id="bachecaClienteMessaggio"></p><p id="bachecaClientePeriodo" class="meta"></p></div>
     <div class="card"><h2>📅 Tutte le lezioni</h2><div id="lezioni"></div></div>
   </section>
+
+    <div class="card" style="text-align:center">
+      <button id="logoutBtn" class="btn light full" type="button">🚪 Esci dall'account</button>
+      <p class="meta">Usa questo pulsante se stai utilizzando un dispositivo condiviso.</p>
+    </div>
   </div>
 </main>
 <script type="module">
@@ -122,7 +127,14 @@ function showPortal(){
  document.getElementById("loginShell").classList.add("hidden");
  document.getElementById("portalShell").classList.remove("hidden");
 }
+function clearClientRuntime(){
+ currentClient=null;
+ currentClientRef=null;
+ allEvents=[];
+ allRequests=[];
+}
 function showLogin(){
+ clearClientRuntime();
  document.getElementById("portalShell").classList.add("hidden");
  document.getElementById("loginShell").classList.remove("hidden");
 }
@@ -206,8 +218,11 @@ async function doReset(){
  const email=normalizeEmail(document.getElementById("loginEmail").value);
  if(!email)return loginMessage("Inserisci prima la tua email.","bad");
  try{
+  await signOut(auth).catch(()=>{});
+  showLogin();
   await sendPasswordResetEmail(auth,email);
-  loginMessage("Email di recupero inviata. Controlla anche la cartella Spam.","ok");
+  sessionStorage.setItem("sbPasswordResetPending","1");
+  loginMessage("Email di recupero inviata. Dopo aver cambiato la password, torna qui e accedi con la nuova password. Controlla anche la cartella Spam.","ok");
  }catch(e){
   loginMessage("Non è stato possibile inviare il recupero password. Controlla l'email inserita.","bad");
  }
@@ -215,6 +230,13 @@ async function doReset(){
 document.getElementById("loginBtn").addEventListener("click",doLogin);
 document.getElementById("registerBtn").addEventListener("click",doRegister);
 document.getElementById("resetBtn").addEventListener("click",doReset);
+document.getElementById("logoutBtn").addEventListener("click",async()=>{
+ if(!confirm("Vuoi uscire dall'Area Cliente?"))return;
+ await signOut(auth).catch(()=>{});
+ showLogin();
+ document.getElementById("loginPassword").value="";
+ loginMessage("Logout effettuato correttamente.","ok");
+});
 document.getElementById("loginPassword").addEventListener("keydown",e=>{if(e.key==="Enter")doLogin()});
 
 const REG_VERSION="11.8.0.1";
@@ -243,7 +265,7 @@ function canRequestRecovery(e){const diff=eventStart(e).getTime()-Date.now();ret
 function unlockArea(){document.getElementById("clienteContent").classList.remove("locked-content");document.getElementById("regAlert").classList.add("hidden");document.getElementById("acceptBox").classList.add("hidden");document.getElementById("acceptBtn").classList.add("hidden")}
 function lockArea(){document.getElementById("clienteContent").classList.add("locked-content");document.getElementById("regAlert").classList.remove("hidden");document.getElementById("acceptBox").classList.remove("hidden");document.getElementById("acceptBtn").classList.remove("hidden")}
 function updateRegolamentoUI(){if(!currentClient)return;const el=document.getElementById("regAcceptedInfo");if(currentClient.regolamentoAccettato){unlockArea();el.textContent="✅ Regolamento accettato il "+(currentClient.regolamentoAccettatoAtLabel||"-")+" · versione "+(currentClient.regolamentoVersione||REG_VERSION);el.classList.remove("hidden")}else{lockArea();el.classList.add("hidden")}}
-window.accettaRegolamento=async()=>{if(!document.getElementById("regCheck").checked){alert("Devi spuntare la casella di accettazione.");return}if(!currentClientRef){alert("Cliente non trovato.");return}const label=nowLabel();await updateDoc(currentClientRef,{regolamentoAccettato:true,regolamentoAccettatoAtLabel:label,regolamentoAccettatoAt:new Date().toISOString(),regolamentoAccettatoTimestamp:serverTimestamp(),regolamentoVersione:REG_VERSION});currentClient.regolamentoAccettato=true;currentClient.regolamentoAccettatoAtLabel=label;currentClient.regolamentoVersione=REG_VERSION;renderClientArea();updateRegolamentoUI()}
+window.accettaRegolamento=async()=>{if(!document.getElementById("regCheck").checked){alert("Devi spuntare la casella di accettazione.");return}if(!currentClientRef||!currentClient){alert("Area cliente non ancora caricata. Effettua nuovamente l'accesso.");showLogin();return}const label=nowLabel();await updateDoc(currentClientRef,{regolamentoAccettato:true,regolamentoAccettatoAtLabel:label,regolamentoAccettatoAt:new Date().toISOString(),regolamentoAccettatoTimestamp:serverTimestamp(),regolamentoVersione:REG_VERSION});currentClient.regolamentoAccettato=true;currentClient.regolamentoAccettatoAtLabel=label;currentClient.regolamentoVersione=REG_VERSION;renderClientArea();updateRegolamentoUI()}
 function renderClientArea(){const c=currentClient;document.getElementById("welcome").textContent="Benvenuto "+(c.nome||nome(c))+" 👋";document.getElementById("heroSub").textContent=(c.servizio||"")+" · Orario fisso";document.getElementById("heroBadges").innerHTML=`<span class="badge ok">${activeLabel(c)}</span><span class="badge ok">${residue(c)} residue su ${total(c)}</span><span class="badge ${balance(c)>0?"bad":"ok"}">${payLabel(c)}</span><span class="badge ok">📋 ${c.regolamentoAccettato?"Regolamento accettato":"Regolamento non accettato"}</span>`;const wa=document.getElementById("waClienteBtn");if(wa)wa.href=coachWhatsappLink();document.getElementById("kResidue").textContent=residue(c);const next=allEvents.filter(e=>String(e.data||"")>=new Date().toISOString().slice(0,10)&&!["Effettuata","Assente","Annullata","Recuperata"].includes(e.stato||"")).sort((a,b)=>String(a.data||"").localeCompare(String(b.data||""))||String(a.ora||"").localeCompare(String(b.ora||"")))[0];document.getElementById("kNext").textContent=next?fmtShort(next.data):"-";document.getElementById("kScadenza").textContent=fmt(c.scadenza);document.getElementById("kCert").textContent=c.certificato||c.certificatoScadenza||"-";document.getElementById("lezioni").innerHTML=allEvents.length?allEvents.map(e=>renderLezioneCliente(e)).join(""):"<p class='meta'>Nessuna lezione trovata.</p>"}
 function renderLezioneCliente(e){const req=allRequests.find(r=>r.eventoId===e.id);const can=canRequestRecovery(e);let action="";if(req){action=`<p class="meta">🔄 Recupero richiesto · Stato: <b>${req.stato||"Richiesta"}</b>${req.motivoRifiuto?`<br>Motivo: ${req.motivoRifiuto}`:""}</p>`}else if(can){action=`<button class="btn gold" onclick="richiediRecupero('${e.id}')">🔄 Richiedi recupero</button>`}else{action=`<button class="btn light disabled">🔒 Recupero non disponibile</button><p class="meta">Richiesta consentita solo prima delle 24 ore.</p>`}return `<div class="lesson"><div><h3>${fmt(e.data)} ore ${e.ora||"-"}</h3><p class="meta">Stato: ${e.stato||"Prenotata"}</p><span class="badge ${statoClass(e.stato||"Prenotata")}">${e.stato||"Prenotata"}</span></div><div>${action}</div></div>`}
 window.richiediRecupero=async(eventoId)=>{if(!currentClient||!currentClientRef||!ownerUid)return alert("Cliente non caricato.");const ev=allEvents.find(e=>e.id===eventoId);if(!ev)return alert("Lezione non trovata.");if(!canRequestRecovery(ev))return alert("Richiesta recupero non disponibile: mancano meno di 24 ore o la lezione è già stata gestita.");if(!confirm("Inviare richiesta di recupero al coach?"))return;const label=nowLabel();await addDoc(collection(db,"users",ownerUid,"recuperi"),{clienteId:id,clienteNome:nome(currentClient),eventoId:ev.id,data:ev.data,ora:ev.ora||"",stato:"Richiesta",createdAt:new Date().toISOString(),createdAtLabel:label,updatedAt:serverTimestamp()});alert("Richiesta di recupero inviata al coach.");await load()}
@@ -307,6 +329,22 @@ async function startClientPortal(){
  });
 }
 startClientPortal();
+
+window.addEventListener("pageshow",event=>{
+ if(event.persisted){
+  location.reload();
+ }
+});
+document.addEventListener("visibilitychange",async()=>{
+ if(document.visibilityState!=="visible")return;
+ if(sessionStorage.getItem("sbPasswordResetPending")==="1"){
+  sessionStorage.removeItem("sbPasswordResetPending");
+  await signOut(auth).catch(()=>{});
+  showLogin();
+  document.getElementById("loginPassword").value="";
+  loginMessage("Password aggiornata? Accedi con la nuova password.","ok");
+ }
+});
 
 /* 11.8.0 - WhatsApp Coach dinamico */
 let coachContacts1180={whatsapp:"3793701208"};
