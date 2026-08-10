@@ -95,6 +95,7 @@ hr{border:0;border-top:1px solid #e5e7eb;margin:12px 0}
     <h2>👋 Smart Coach</h2>
     <div id="smartCoachBox"></div>
   </div>
+  <div id="coachNotificationsBox"></div>
   <div class="grid">
     <div class="kpi"><strong id="kClienti">0</strong><span>Clienti attivi</span></div>
     <div class="kpi"><strong id="kOggi">0</strong><span>Lezioni oggi</span></div>
@@ -386,7 +387,7 @@ function subscribe(){
  onSnapshot(path("eventi"),s=>{eventi=s.docs.map(d=>({id:d.id,...d.data()}));render()});
  onSnapshot(path("rinnovi"),s=>{rinnovi=s.docs.map(d=>({id:d.id,...d.data()}));render()});
  onSnapshot(path("pagamenti"),s=>{pagamenti=s.docs.map(d=>({id:d.id,...d.data()}));render()});
- onSnapshot(path("recuperi"),s=>{recuperi=s.docs.map(d=>({id:d.id,...d.data()}));render()});
+ onSnapshot(path("recuperi"),s=>{recuperi=s.docs.map(d=>({id:d.id,...d.data()}));render();renderCoachNotifications()});
  onSnapshot(doc(db,"users",user.uid,"comunicazioni","bachecaAttiva"),snap=>{bachecaData=snap.exists()?snap.data():{};renderBachecaCoach();});
 }
 
@@ -583,7 +584,38 @@ function clientCard(c){
 }
 function renderClienti(){const list=clienti.slice().sort((a,b)=>nome(a).localeCompare(nome(b)));$("listaClienti").innerHTML=list.map(clientCard).join("")||'<div class="empty">Nessun cliente.</div>'}
 function renderSmart(){const list=lezioniDaConfermare();$("smartCoachBox").innerHTML=list.length?`<div class="check"><h3>⏳ Lezioni da confermare oggi</h3>${list.map(ev=>`<div class="check"><b>${ev.clienteNome||""}</b><p class="meta">${fmt(ev.data)} ore ${ev.ora}</p><button class="btn green" onclick="confermaEffettuata('${ev.id}',this)">Effettuata</button><button class="btn red" onclick="confermaAssente('${ev.id}',this)">Assente</button></div>`).join("")}<button class="btn gold full" onclick="confermaTutteEffettuate()">Conferma tutte</button></div>`:'<p class="meta">Nessuna lezione di oggi da confermare.</p>'}
-function renderDashboard(){const att=clienti.filter(c=>(c.stato||"attivo")!=="inattivo");$("kClienti").textContent=att.length;$("kOggi").textContent=eventi.filter(e=>e.data===todayISO()).length;$("kDaConf").textContent=lezioniDaConfermare().length;$("kResidui").textContent=euro(att.reduce((s,c)=>s+residuoEuro(c),0));renderSmart()}
+
+function renderCoachNotifications(){
+ const box=$("coachNotificationsBox");
+ if(!box)return;
+
+ const pending=(recuperi||[])
+  .filter(r=>(r.stato||"Richiesta")==="Richiesta")
+  .slice()
+  .sort((a,b)=>String(b.createdAt||"").localeCompare(String(a.createdAt||"")));
+
+ if(!pending.length){
+  box.innerHTML="";
+  return;
+ }
+
+ const preview=pending.slice(0,3).map(r=>`
+   <div style="padding:10px 0;border-top:1px solid #e5e7eb">
+     <b>${r.clienteNome||"Cliente"}</b>
+     <div class="meta">Recupero richiesto per ${fmt(r.data)} ore ${r.ora||"-"}</div>
+   </div>
+ `).join("");
+
+ box.innerHTML=`
+  <div class="card" style="border:2px solid #d5ad52;background:#fffaf0">
+    <h2 style="margin-bottom:6px">🔔 ${pending.length===1?"1 richiesta di recupero da gestire":pending.length+" richieste di recupero da gestire"}</h2>
+    ${preview}
+    ${pending.length>3?`<p class="meta">+ altre ${pending.length-3} richieste</p>`:""}
+    <button type="button" class="btn gold full" onclick="showTab('recuperi')">Apri Recuperi</button>
+  </div>`;
+}
+
+function renderDashboard(){const att=clienti.filter(c=>(c.stato||"attivo")!=="inattivo");$("kClienti").textContent=att.length;$("kOggi").textContent=eventi.filter(e=>e.data===todayISO()).length;$("kDaConf").textContent=lezioniDaConfermare().length;$("kResidui").textContent=euro(att.reduce((s,c)=>s+residuoEuro(c),0));renderSmart();renderCoachNotifications()}
 function renderCalendario(){if(!$("calDal").value)$("calDal").value=todayISO();if(!$("calAl").value){const d=new Date();d.setDate(d.getDate()+14);$("calAl").value=d.toISOString().slice(0,10)}const dal=$("calDal").value,al=$("calAl").value;const list=eventi.filter(e=>e.data>=dal&&e.data<=al).sort((a,b)=>a.data.localeCompare(b.data)||String(a.ora).localeCompare(String(b.ora)));$("listaCalendario").innerHTML=list.map(e=>`<div class="card"><h3>${e.clienteNome}</h3><p class="meta">${fmt(e.data)} ore ${e.ora} · ${e.stato||"Prenotata"}</p></div>`).join("")||'<div class="empty">Nessuna lezione.</div>'}
 function renderRegistroSelect(){const cur=$("registroCliente").value;$("registroCliente").innerHTML='<option value="">Seleziona cliente</option>'+clienti.map(c=>`<option value="${c.id}">${nome(c)}</option>`).join("");if(cur)$("registroCliente").value=cur}
 window.renderRegistro=()=>{renderRegistroSelect();const id=$("registroCliente").value,c=clienti.find(x=>x.id===id);if(!c){$("registroLista").innerHTML='<div class="empty">Seleziona un cliente.</div>';return}const evs=eventi.filter(e=>e.clienteId===id).sort((a,b)=>a.data.localeCompare(b.data)||String(a.ora).localeCompare(String(b.ora)));$("regTotali").textContent=c.lezioniTotali||0;$("regFatte").textContent=fatte(id);$("regResidue").textContent=residue(c);$("regPeriodo").textContent=`${fmt(c.inizio)} → ${fmt(c.scadenza)}`;$("registroLista").innerHTML=evs.map(e=>`<div class="check"><h3>${fmt(e.data)} ore ${e.ora}</h3><p class="meta">Stato: ${e.stato||"Prenotata"}</p><span class="badge ${consumes(e.stato)?"ok":historical(e.stato)?"bad":"warn"}">${e.stato||"Prenotata"}</span></div>`).join("")||'<div class="empty">Nessuna lezione.</div>'}
