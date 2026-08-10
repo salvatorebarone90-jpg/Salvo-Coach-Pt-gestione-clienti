@@ -96,6 +96,11 @@ hr{border:0;border-top:1px solid #e5e7eb;margin:12px 0}
     <div id="smartCoachBox"></div>
   </div>
   <div id="coachNotificationsBox"></div>
+  <div class="card" id="pushCoachCard">
+    <h2>🔔 Notifiche push Coach</h2>
+    <p class="meta" id="pushCoachStatus">Notifiche non configurate su questo dispositivo.</p>
+    <button type="button" class="btn gold full" id="pushCoachEnable">Attiva notifiche push</button>
+  </div>
   <div class="grid">
     <div class="kpi"><strong id="kClienti">0</strong><span>Clienti attivi</span></div>
     <div class="kpi"><strong id="kOggi">0</strong><span>Lezioni oggi</span></div>
@@ -288,6 +293,7 @@ hr{border:0;border-top:1px solid #e5e7eb;margin:12px 0}
 </main>
 
 <script type="module">
+import { getMessaging, getToken, isSupported } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-messaging.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, collection, doc, addDoc, setDoc, deleteDoc, getDoc, getDocs, onSnapshot, query, where, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
@@ -2333,6 +2339,51 @@ window.aggiornaCalendarioFuturo=LTS120.updateCalendarOnly;
 window.rinnova=LTS120.renewPackageOnly;
 window.ricalcolaContatoreCliente=LTS120.recalcCounterOnly;
 window.salvaDatiCliente=LTS120.saveProfileOnly;
+
+
+
+// === MODULO PUSH COACH - ISOLATO ===
+const SB_VAPID_KEY="BO82pf6a3SlQnOWtPGrGlD-Ra6BJf1N3hk_sAH2DekpLp9zj28Vg9wjDFDqGF_I3GtHtc_XIBsqZZnUMbhoLRIA";
+async function sbEnableCoachPush(){
+ const status=$("pushCoachStatus");
+ const btn=$("pushCoachEnable");
+ try{
+  if(!("Notification" in window))throw new Error("Questo browser non supporta le notifiche.");
+  if(!("serviceWorker" in navigator))throw new Error("Service Worker non supportato.");
+  const supported=await isSupported();
+  if(!supported)throw new Error("Firebase Messaging non è supportato su questo dispositivo/browser.");
+
+  const permission=await Notification.requestPermission();
+  if(permission!=="granted")throw new Error("Permesso notifiche non concesso.");
+
+  const registration=await navigator.serviceWorker.register("./firebase-messaging-sw.js",{scope:"./"});
+  await navigator.serviceWorker.ready;
+
+  const messaging=getMessaging(app);
+  const token=await getToken(messaging,{
+   vapidKey:SB_VAPID_KEY,
+   serviceWorkerRegistration:registration
+  });
+  if(!token)throw new Error("Token push non disponibile.");
+
+  await setDoc(doc(db,"pushCoachTokens",user.uid),{
+   token,
+   ownerUid:user.uid,
+   enabled:true,
+   platform:navigator.userAgent,
+   updatedAt:serverTimestamp()
+  },{merge:true});
+
+  status.textContent="✅ Notifiche push attive su questo dispositivo.";
+  btn.textContent="Notifiche push attive";
+  btn.disabled=true;
+ }catch(e){
+  console.error("Push setup:",e);
+  status.textContent="⚠️ "+(e?.message||String(e));
+ }
+}
+$("pushCoachEnable")?.addEventListener("click",sbEnableCoachPush);
+// === FINE MODULO PUSH COACH ===
 
 </script>
 
