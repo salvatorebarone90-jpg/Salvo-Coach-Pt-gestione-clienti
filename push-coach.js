@@ -2,7 +2,7 @@ import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebase
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-const config = {"apiKey": "AIzaSyD2KH46cUna2Fy8j_VbjHS3jBLFWUR_94s", "authDomain": "sb-personal-coach-gestionale.firebaseapp.com", "projectId": "sb-personal-coach-gestionale", "storageBucket": "sb-personal-coach-gestionale.firebasestorage.app", "messagingSenderId": "42241133439", "appId": "1:42241133439:web:033ccdc8ad72f99781e84a"};
+const config = {"apiKey": "AIzaSyB8mfqeM8CHjU03agJSExCudvDPpuSvw6Q", "authDomain": "sb-personal-coach-dev.firebaseapp.com", "projectId": "sb-personal-coach-dev", "storageBucket": "sb-personal-coach-dev.firebasestorage.app", "messagingSenderId": "778054518663", "appId": "1:778054518663:web:9db7dcbd429ae464b87522"};
 const VAPID_KEY = "BO82pf6a3SlQnOWtPGrGlD-Ra6BJf1N3hk_sAH2DekpLp9zj28Vg9wjDFDqGF_I3GtHtc_XIBsqZZnUMbhoLRIA";
 
 const statusEl = document.getElementById("pushCoachStatus");
