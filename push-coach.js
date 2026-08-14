@@ -1,10 +1,17 @@
-import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
-import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
+import {
+  initializeApp,
+  getApps,
+  getApp
+} from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
+
+import {
+  getAuth,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
 
 import {
   getFirestore,
   doc,
-  getDoc,
   setDoc,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
@@ -31,32 +38,78 @@ const VAPID_KEY =
   "BOxOk2OGYA83KVKEogQTRVjXhV7_q_AVt3UuM6i5b3kvSIr_PJ_elv-muBvjbiltWyFCWcKMJ3XnX8xYqC9kfFE";
 
 
-const statusEl = document.getElementById("pushCoachStatus");
-const btn = document.getElementById("pushCoachEnable");
+/*
+ * UID del Coach proprietario dei dati.
+ * È lo stesso UID sotto cui trovi:
+ *
+ * users / 2Oiruc1vW6e0Mo432j6oLSo2sAV2 / recuperi
+ */
+const COACH_OWNER_UID =
+  "2Oiruc1vW6e0Mo432j6oLSo2sAV2";
+
+
+const statusEl =
+  document.getElementById("pushCoachStatus");
+
+const btn =
+  document.getElementById("pushCoachEnable");
 
 
 function setStatus(message) {
-  if (statusEl) statusEl.textContent = message;
+  if (statusEl) {
+    statusEl.textContent = message;
+  }
+}
+
+
+function setWorkingUI(message) {
+
+  setStatus(message);
+
+  if (btn) {
+    btn.textContent = "Configurazione notifiche...";
+    btn.disabled = true;
+  }
+
 }
 
 
 function setActiveUI() {
-  setStatus("✅ Notifiche push attive su questo dispositivo.");
+
+  setStatus(
+    "✅ Notifiche push attive su questo dispositivo."
+  );
 
   if (btn) {
     btn.textContent = "Notifiche push attive";
     btn.disabled = true;
   }
+
+}
+
+
+function setRetryUI(message) {
+
+  setStatus("⚠️ " + message);
+
+  if (btn) {
+    btn.textContent = "Attiva notifiche push";
+    btn.disabled = false;
+  }
+
 }
 
 
 if (!btn) {
 
-  console.warn("Push Coach: pulsante non trovato.");
+  console.warn(
+    "Push Coach: pulsante non trovato."
+  );
 
 } else {
 
   let currentUser = null;
+  let registrationInProgress = false;
 
   try {
 
@@ -65,185 +118,121 @@ if (!btn) {
         ? getApp()
         : initializeApp(firebaseConfig);
 
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+    const auth =
+      getAuth(app);
+
+    const db =
+      getFirestore(app);
 
 
-    async function saveRegistration(user, installationId) {
+    async function saveRegistration(
+      user,
+      installationId
+    ) {
 
+      if (!installationId) {
+        throw new Error(
+          "Firebase non ha restituito un FID."
+        );
+      }
+
+
+      /*
+       * IMPORTANTE:
+       * salviamo il dispositivo esattamente
+       * nel documento cercato dal workflow GitHub.
+       */
       await setDoc(
-        doc(db, "pushCoachTokens", user.uid),
+        doc(
+          db,
+          "pushCoachTokens",
+          COACH_OWNER_UID
+        ),
         {
           fid: installationId,
           installationId: installationId,
-          ownerUid: user.uid,
+
+          ownerUid: COACH_OWNER_UID,
+
+          authUid: user.uid,
+
           enabled: true,
-          device: navigator.userAgent,
-          updatedAt: serverTimestamp()
+
+          device:
+            navigator.userAgent,
+
+          projectId:
+            firebaseConfig.projectId,
+
+          updatedAt:
+            serverTimestamp()
         },
         {
           merge: true
         }
       );
 
+
+      console.log(
+        "✅ Dispositivo Coach salvato:",
+        COACH_OWNER_UID,
+        installationId
+      );
+
+
       setActiveUI();
     }
 
 
-    async function syncExistingRegistration(user) {
+    async function registerCoachDevice(
+      user,
+      showProgress = true
+    ) {
+
+      if (registrationInProgress) {
+        return;
+      }
+
+      registrationInProgress = true;
+
 
       try {
 
-        const savedRegistration =
-          await getDoc(
-            doc(db, "pushCoachTokens", user.uid)
+        if (showProgress) {
+          setWorkingUI(
+            "⏳ Registrazione dispositivo con Firebase..."
           );
+        }
 
 
-        if (
-          savedRegistration.exists() &&
-          savedRegistration.data()?.enabled === true &&
-          Notification.permission === "granted"
-        ) {
+        if (!("Notification" in window)) {
+          throw new Error(
+            "Le notifiche non sono supportate su questo dispositivo."
+          );
+        }
 
-          setActiveUI();
 
+        if (!("serviceWorker" in navigator)) {
+          throw new Error(
+            "Service Worker non supportato."
+          );
+        }
+
+
+        const supported =
+          await isSupported();
+
+
+        if (!supported) {
+          throw new Error(
+            "Firebase Messaging non è supportato su questo dispositivo."
+          );
         }
 
 
         if (
-          Notification.permission === "granted" &&
-          "serviceWorker" in navigator &&
-          await isSupported()
+          Notification.permission !== "granted"
         ) {
-
-          const swRegistration =
-            await navigator.serviceWorker.register(
-              "./firebase-messaging-sw.js",
-              {
-                scope: "./"
-              }
-            );
-
-
-          await navigator.serviceWorker.ready;
-
-
-          const messaging =
-            getMessaging(app);
-
-
-          onRegistered(
-            messaging,
-            async (installationId) => {
-
-              if (!installationId) return;
-
-              try {
-
-                await saveRegistration(
-                  user,
-                  installationId
-                );
-
-              } catch (error) {
-
-                console.error(
-                  "Push Coach sync:",
-                  error
-                );
-
-              }
-
-            }
-          );
-
-
-          await register(
-            messaging,
-            {
-              vapidKey: VAPID_KEY,
-              serviceWorkerRegistration:
-                swRegistration
-            }
-          );
-
-        }
-
-      } catch (error) {
-
-        console.error(
-          "Controllo registrazione push:",
-          error
-        );
-
-      }
-
-    }
-
-
-    onAuthStateChanged(
-      auth,
-      async (user) => {
-
-        currentUser =
-          user || null;
-
-
-        if (currentUser) {
-
-          await syncExistingRegistration(
-            currentUser
-          );
-
-        }
-
-      }
-    );
-
-
-    btn.addEventListener(
-      "click",
-      async () => {
-
-        try {
-
-          setStatus(
-            "⏳ Avvio configurazione notifiche..."
-          );
-
-
-          if (!currentUser) {
-            throw new Error(
-              "Utente coach non ancora disponibile. Attendi qualche secondo e riprova."
-            );
-          }
-
-
-          if (!("Notification" in window)) {
-            throw new Error(
-              "Le notifiche non sono supportate su questo dispositivo."
-            );
-          }
-
-
-          if (!("serviceWorker" in navigator)) {
-            throw new Error(
-              "Service Worker non supportato."
-            );
-          }
-
-
-          const supported =
-            await isSupported();
-
-
-          if (!supported) {
-            throw new Error(
-              "Firebase Messaging non è supportato su questo dispositivo."
-            );
-          }
-
 
           const permission =
             await Notification.requestPermission();
@@ -255,44 +244,58 @@ if (!btn) {
             );
           }
 
+        }
 
-          setStatus(
-            "⏳ Registrazione dispositivo con Firebase..."
+
+        const swRegistration =
+          await navigator.serviceWorker.register(
+            "./firebase-messaging-sw.js",
+            {
+              scope: "./",
+              updateViaCache: "none"
+            }
           );
 
 
-          const swRegistration =
-            await navigator.serviceWorker.register(
-              "./firebase-messaging-sw.js",
-              {
-                scope: "./"
-              }
-            );
+        try {
+          await swRegistration.update();
+        } catch (_) {
+          // Non blocca la registrazione.
+        }
 
 
-          await navigator.serviceWorker.ready;
+        await navigator.serviceWorker.ready;
 
 
-          const messaging =
-            getMessaging(app);
+        const messaging =
+          getMessaging(app);
 
 
+        let receivedFID = false;
+
+
+        const unsubscribe =
           onRegistered(
             messaging,
             async (installationId) => {
 
-              if (!installationId) return;
+              if (!installationId) {
+                return;
+              }
+
+
+              receivedFID = true;
 
 
               try {
 
-                setStatus(
-                  "⏳ Registrazione completata. Salvataggio..."
+                setWorkingUI(
+                  "⏳ FID ricevuto. Salvataggio dispositivo..."
                 );
 
 
                 await saveRegistration(
-                  currentUser,
+                  user,
                   installationId
                 );
 
@@ -300,18 +303,24 @@ if (!btn) {
               } catch (error) {
 
                 console.error(
-                  "Errore salvataggio FID:",
+                  "Errore salvataggio dispositivo Coach:",
                   error
                 );
 
 
-                setStatus(
-                  "⚠️ Dispositivo registrato, ma errore durante il salvataggio: " +
+                setRetryUI(
+                  "FID ricevuto ma non salvato: " +
                   (
                     error?.message ||
                     String(error)
                   )
                 );
+
+              } finally {
+
+                try {
+                  unsubscribe();
+                } catch (_) {}
 
               }
 
@@ -319,33 +328,158 @@ if (!btn) {
           );
 
 
-          await register(
-            messaging,
-            {
-              vapidKey: VAPID_KEY,
-              serviceWorkerRegistration:
-                swRegistration
+        /*
+         * register() forza una registrazione FCM.
+         * Il FID arriverà attraverso onRegistered().
+         */
+        await register(
+          messaging,
+          {
+            vapidKey:
+              VAPID_KEY,
+
+            serviceWorkerRegistration:
+              swRegistration
+          }
+        );
+
+
+        /*
+         * Se entro 12 secondi onRegistered non restituisce
+         * il FID, riattiviamo il pulsante invece di
+         * mostrare falsamente "notifiche attive".
+         */
+        setTimeout(
+          () => {
+
+            if (!receivedFID) {
+
+              try {
+                unsubscribe();
+              } catch (_) {}
+
+
+              setRetryUI(
+                "Registrazione Firebase non completata. Premi nuovamente per riprovare."
+              );
+
             }
+
+          },
+          12000
+        );
+
+
+      } catch (error) {
+
+        console.error(
+          "Push Coach:",
+          error
+        );
+
+
+        setRetryUI(
+          error?.message ||
+          String(error)
+        );
+
+      } finally {
+
+        registrationInProgress = false;
+
+      }
+
+    }
+
+
+    /*
+     * Quando Firebase Auth identifica il Coach:
+     *
+     * - NON dichiariamo subito che le push sono attive;
+     * - se iOS ha già dato il permesso, forziamo una
+     *   nuova sincronizzazione FCM;
+     * - il pulsante diventa "attivo" solo dopo
+     *   l'effettivo salvataggio del nuovo FID.
+     */
+    onAuthStateChanged(
+      auth,
+      async (user) => {
+
+        currentUser =
+          user || null;
+
+
+        if (!currentUser) {
+
+          setRetryUI(
+            "Accedi come Coach per configurare le notifiche."
           );
 
+          return;
+        }
 
-        } catch (error) {
 
-          console.error(
-            "Push Coach:",
-            error
-          );
+        console.log(
+          "Coach Auth UID:",
+          currentUser.uid
+        );
 
+        console.log(
+          "Coach Owner UID:",
+          COACH_OWNER_UID
+        );
+
+
+        if (
+          Notification.permission === "granted"
+        ) {
 
           setStatus(
-            "⚠️ " +
-            (
-              error?.message ||
-              String(error)
-            )
+            "⏳ Verifica registrazione notifiche..."
           );
 
+
+          await registerCoachDevice(
+            currentUser,
+            false
+          );
+
+        } else {
+
+          setStatus(
+            "Notifiche non configurate su questo dispositivo."
+          );
+
+          btn.textContent =
+            "Attiva notifiche push";
+
+          btn.disabled =
+            false;
+
         }
+
+      }
+    );
+
+
+    btn.addEventListener(
+      "click",
+      async () => {
+
+        if (!currentUser) {
+
+          setRetryUI(
+            "Utente Coach non ancora disponibile. Attendi qualche secondo e riprova."
+          );
+
+          return;
+        }
+
+
+        await registerCoachDevice(
+          currentUser,
+          true
+        );
 
       }
     );
@@ -359,8 +493,8 @@ if (!btn) {
     );
 
 
-    setStatus(
-      "⚠️ Errore inizializzazione modulo notifiche: " +
+    setRetryUI(
+      "Errore inizializzazione modulo notifiche: " +
       (
         error?.message ||
         String(error)
