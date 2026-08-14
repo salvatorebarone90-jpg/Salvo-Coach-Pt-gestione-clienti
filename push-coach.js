@@ -20,7 +20,9 @@ import {
   getMessaging,
   isSupported,
   onRegistered,
-  register
+  onUnregistered,
+  register,
+  unregister
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-messaging.js";
 
 import {
@@ -100,6 +102,15 @@ function setActiveUI() {
 }
 
 
+function sleep(ms) {
+
+  return new Promise(
+    resolve => setTimeout(resolve, ms)
+  );
+
+}
+
+
 if (!btn) {
 
   console.warn(
@@ -120,11 +131,6 @@ if (!btn) {
         : initializeApp(firebaseConfig);
 
 
-    /*
-     * Verifica importante:
-     * il Firebase App già inizializzato deve
-     * appartenere allo stesso progetto.
-     */
     if (
       app.options?.projectId !==
       firebaseConfig.projectId
@@ -132,7 +138,10 @@ if (!btn) {
 
       throw new Error(
         "Il gestionale sta utilizzando un progetto Firebase diverso: " +
-        String(app.options?.projectId || "sconosciuto")
+        String(
+          app.options?.projectId ||
+          "sconosciuto"
+        )
       );
 
     }
@@ -147,7 +156,13 @@ if (!btn) {
     const installations =
       getInstallations(app);
 
+    const messaging =
+      getMessaging(app);
 
+
+    /*
+     * SALVATAGGIO DEL NUOVO FID
+     */
     async function saveRegistration(
       user,
       installationId
@@ -170,6 +185,7 @@ if (!btn) {
         "✅ Nuovo FID:",
         cleanFID
       );
+
 
       console.log(
         "✅ Lunghezza nuovo FID:",
@@ -223,7 +239,7 @@ if (!btn) {
 
 
       console.log(
-        "✅ Registrazione Coach salvata in Firestore."
+        "✅ Nuovo FID salvato in Firestore."
       );
 
 
@@ -232,6 +248,53 @@ if (!btn) {
     }
 
 
+    /*
+     * DISABILITA TEMPORANEAMENTE IL VECCHIO RECORD
+     */
+    async function markRegistrationDisabled() {
+
+      try {
+
+        await setDoc(
+          doc(
+            db,
+            "pushCoachTokens",
+            COACH_OWNER_UID
+          ),
+          {
+
+            enabled:
+              false,
+
+            updatedAt:
+              serverTimestamp()
+
+          },
+          {
+            merge: true
+          }
+        );
+
+
+        console.log(
+          "✅ Vecchia registrazione segnata come disattivata."
+        );
+
+      } catch (error) {
+
+        console.warn(
+          "Impossibile disattivare temporaneamente il vecchio record:",
+          error
+        );
+
+      }
+
+    }
+
+
+    /*
+     * RIGENERAZIONE COMPLETA
+     */
     async function createFreshRegistration(user) {
 
       if (registrationInProgress) {
@@ -239,13 +302,18 @@ if (!btn) {
       }
 
 
-      registrationInProgress = true;
+      registrationInProgress =
+        true;
+
+
+      let unsubscribeRegistered = null;
+      let unsubscribeUnregistered = null;
 
 
       try {
 
         setWorkingUI(
-          "⏳ Rigenerazione completa della registrazione Firebase..."
+          "⏳ Avvio rigenerazione completa notifiche..."
         );
 
 
@@ -281,14 +349,18 @@ if (!btn) {
 
 
         if (
-          Notification.permission !== "granted"
+          Notification.permission !==
+          "granted"
         ) {
 
           const permission =
             await Notification.requestPermission();
 
 
-          if (permission !== "granted") {
+          if (
+            permission !==
+            "granted"
+          ) {
 
             throw new Error(
               "Permesso notifiche non concesso."
@@ -300,40 +372,53 @@ if (!btn) {
 
 
         /*
-         * 1.
-         * Eliminiamo completamente la Firebase Installation
-         * precedente. Firebase creerà quindi un FID nuovo.
+         * 1 — Disabilitiamo temporaneamente
+         * il vecchio record Firestore.
+         */
+        await markRegistrationDisabled();
+
+
+        /*
+         * 2 — Ascoltiamo l'evento di unregister.
+         */
+        unsubscribeUnregistered =
+          onUnregistered(
+            messaging,
+            (oldInstallationId) => {
+
+              console.log(
+                "🗑️ FCM ha rimosso il vecchio FID:",
+                oldInstallationId
+              );
+
+            }
+          );
+
+
+        /*
+         * 3 — Rimuoviamo PRIMA
+         * la registrazione FCM.
          */
         setWorkingUI(
-          "⏳ Eliminazione vecchia registrazione Firebase..."
+          "⏳ Rimozione vecchia registrazione FCM..."
         );
 
 
         try {
 
-          const oldFID =
-            await getId(installations);
-
-
-          console.log(
-            "🗑️ Vecchio FID:",
-            oldFID
-          );
-
-
-          await deleteInstallations(
-            installations
+          await unregister(
+            messaging
           );
 
 
           console.log(
-            "✅ Vecchia Firebase Installation eliminata."
+            "✅ Vecchia registrazione FCM eliminata."
           );
 
         } catch (error) {
 
           console.warn(
-            "Eliminazione vecchia installation:",
+            "⚠️ Nessuna vecchia registrazione FCM da eliminare oppure già rimossa:",
             error
           );
 
@@ -341,21 +426,82 @@ if (!btn) {
 
 
         /*
-         * Piccola attesa per permettere alla cancellazione
-         * di propagarsi prima della nuova registrazione.
+         * Lasciamo completare la rimozione.
          */
-        await new Promise(
-          resolve =>
-            setTimeout(resolve, 1500)
-        );
+        await sleep(1500);
 
 
         /*
-         * 2.
-         * Aggiorniamo / registriamo il Service Worker.
+         * 4 — Recuperiamo il vecchio
+         * Firebase Installation ID
+         * solo per diagnostica.
+         */
+        let oldFID = null;
+
+
+        try {
+
+          oldFID =
+            await getId(
+              installations
+            );
+
+
+          console.log(
+            "🗑️ Firebase Installation precedente:",
+            oldFID
+          );
+
+        } catch (error) {
+
+          console.warn(
+            "Impossibile leggere il vecchio FID:",
+            error
+          );
+
+        }
+
+
+        /*
+         * 5 — Eliminiamo Firebase Installation.
+         * Questo forza Firebase a crearne
+         * una completamente nuova.
          */
         setWorkingUI(
-          "⏳ Registrazione Service Worker..."
+          "⏳ Eliminazione vecchia Firebase Installation..."
+        );
+
+
+        try {
+
+          await deleteInstallations(
+            installations
+          );
+
+
+          console.log(
+            "✅ Firebase Installation eliminata."
+          );
+
+        } catch (error) {
+
+          console.warn(
+            "⚠️ Firebase Installation già eliminata o non disponibile:",
+            error
+          );
+
+        }
+
+
+        await sleep(2000);
+
+
+        /*
+         * 6 — Registriamo / aggiorniamo
+         * il Service Worker.
+         */
+        setWorkingUI(
+          "⏳ Aggiornamento Service Worker..."
         );
 
 
@@ -373,30 +519,38 @@ if (!btn) {
 
           await swRegistration.update();
 
-        } catch (_) {}
+        } catch (error) {
+
+          console.warn(
+            "Aggiornamento Service Worker:",
+            error
+          );
+
+        }
 
 
         await navigator.serviceWorker.ready;
 
 
         /*
-         * 3.
-         * Firebase Messaging.
+         * 7 — Prepariamo l'ascolto del
+         * NUOVO FID PRIMA di register().
          */
-        const messaging =
-          getMessaging(app);
-
-
         let receivedFID =
           false;
 
 
-        const unsubscribe =
+        unsubscribeRegistered =
           onRegistered(
             messaging,
             async (installationId) => {
 
               if (!installationId) {
+                return;
+              }
+
+
+              if (receivedFID) {
                 return;
               }
 
@@ -407,70 +561,128 @@ if (!btn) {
 
               try {
 
+                const cleanFID =
+                  String(
+                    installationId
+                  ).trim();
+
+
                 setWorkingUI(
-                  "⏳ Nuovo FID ricevuto. Salvataggio..."
+                  "⏳ Nuovo FID ricevuto. Verifica..."
+                );
+
+
+                console.log(
+                  "📱 Nuovo FID da onRegistered:",
+                  cleanFID
+                );
+
+
+                console.log(
+                  "📱 Lunghezza nuovo FID:",
+                  cleanFID.length
                 );
 
 
                 /*
-                 * Controlliamo anche che Firebase Installations
-                 * restituisca lo stesso identificativo.
+                 * Controllo che non sia uguale
+                 * al vecchio FID.
                  */
-                const currentInstallationId =
-                  await getId(installations);
-
-
-                console.log(
-                  "📱 onRegistered FID:",
-                  installationId
-                );
-
-
-                console.log(
-                  "📱 Installations.getId():",
-                  currentInstallationId
-                );
-
-
                 if (
-                  String(installationId) !==
-                  String(currentInstallationId)
+                  oldFID &&
+                  cleanFID ===
+                  String(oldFID).trim()
                 ) {
 
                   console.warn(
-                    "⚠️ I due FID non coincidono."
+                    "⚠️ Firebase ha restituito lo stesso FID precedente."
+                  );
+
+                } else {
+
+                  console.log(
+                    "✅ Il nuovo FID è diverso dal precedente."
                   );
 
                 }
 
 
+                /*
+                 * Controlliamo anche Firebase Installations.
+                 */
+                try {
+
+                  const currentInstallationId =
+                    await getId(
+                      installations
+                    );
+
+
+                  console.log(
+                    "📱 Installations.getId():",
+                    currentInstallationId
+                  );
+
+
+                  if (
+                    cleanFID !==
+                    String(
+                      currentInstallationId
+                    ).trim()
+                  ) {
+
+                    console.warn(
+                      "⚠️ onRegistered e Installations.getId() non coincidono."
+                    );
+
+                  } else {
+
+                    console.log(
+                      "✅ onRegistered e Firebase Installations coincidono."
+                    );
+
+                  }
+
+                } catch (error) {
+
+                  console.warn(
+                    "Controllo nuovo Installation ID:",
+                    error
+                  );
+
+                }
+
+
+                /*
+                 * 8 — Solo adesso salviamo
+                 * il nuovo FID in Firestore.
+                 */
+                setWorkingUI(
+                  "⏳ Salvataggio nuova registrazione..."
+                );
+
+
                 await saveRegistration(
                   user,
-                  installationId
+                  cleanFID
                 );
 
 
               } catch (error) {
 
                 console.error(
-                  "Errore salvataggio nuovo FID:",
+                  "Errore durante il salvataggio del nuovo FID:",
                   error
                 );
 
 
                 setReadyUI(
-                  "⚠️ Registrazione ricevuta ma non salvata: " +
+                  "⚠️ Nuova registrazione ricevuta ma non salvata: " +
                   (
                     error?.message ||
                     String(error)
                   )
                 );
-
-              } finally {
-
-                try {
-                  unsubscribe();
-                } catch (_) {}
 
               }
 
@@ -479,11 +691,10 @@ if (!btn) {
 
 
         /*
-         * 4.
-         * Nuova registrazione FCM.
+         * 9 — Nuova registrazione FCM.
          */
         setWorkingUI(
-          "⏳ Nuova registrazione Firebase Cloud Messaging..."
+          "⏳ Registrazione Firebase Cloud Messaging..."
         );
 
 
@@ -501,29 +712,36 @@ if (!btn) {
         );
 
 
-        /*
-         * Se onRegistered non arriva entro 15 secondi,
-         * non mostriamo falsamente "attivo".
-         */
-        setTimeout(
-          () => {
-
-            if (!receivedFID) {
-
-              try {
-                unsubscribe();
-              } catch (_) {}
-
-
-              setReadyUI(
-                "⚠️ Firebase non ha restituito il nuovo FID. Premi nuovamente per riprovare."
-              );
-
-            }
-
-          },
-          15000
+        console.log(
+          "✅ register() completato."
         );
+
+
+        /*
+         * Attendiamo onRegistered().
+         */
+        for (
+          let i = 0;
+          i < 20;
+          i++
+        ) {
+
+          if (receivedFID) {
+            break;
+          }
+
+          await sleep(500);
+
+        }
+
+
+        if (!receivedFID) {
+
+          throw new Error(
+            "Firebase ha completato register(), ma non ha restituito il nuovo FID tramite onRegistered()."
+          );
+
+        }
 
 
       } catch (error) {
@@ -542,16 +760,46 @@ if (!btn) {
           )
         );
 
+
       } finally {
 
         registrationInProgress =
           false;
+
+
+        try {
+
+          if (
+            unsubscribeRegistered
+          ) {
+
+            unsubscribeRegistered();
+
+          }
+
+        } catch (_) {}
+
+
+        try {
+
+          if (
+            unsubscribeUnregistered
+          ) {
+
+            unsubscribeUnregistered();
+
+          }
+
+        } catch (_) {}
 
       }
 
     }
 
 
+    /*
+     * FIREBASE AUTH
+     */
     onAuthStateChanged(
       auth,
       async (user) => {
@@ -577,18 +825,20 @@ if (!btn) {
 
 
         console.log(
+          "Coach Owner UID:",
+          COACH_OWNER_UID
+        );
+
+
+        console.log(
           "Firebase project:",
           app.options?.projectId
         );
 
 
         /*
-         * NON eseguiamo più automaticamente
-         * la vecchia registrazione.
-         *
-         * Vogliamo che questa volta sia l'utente
-         * a premere il pulsante e generare
-         * volontariamente una Installation nuova.
+         * Non rigeneriamo automaticamente.
+         * Serve un click volontario.
          */
         setReadyUI(
           "Registrazione da rigenerare. Premi il pulsante una volta."
@@ -598,6 +848,9 @@ if (!btn) {
     );
 
 
+    /*
+     * PULSANTE
+     */
     btn.addEventListener(
       "click",
       async () => {
