@@ -23,6 +23,12 @@ import {
   register
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-messaging.js";
 
+import {
+  getInstallations,
+  deleteInstallations,
+  getId
+} from "https://www.gstatic.com/firebasejs/12.16.0/firebase-installations.js";
+
 
 const firebaseConfig = {
   apiKey: "AIzaSyD2KH46cUna2Fy8j_VbjHS3jBLFWUR_94s",
@@ -38,12 +44,6 @@ const VAPID_KEY =
   "BOxOk2OGYA83KVKEogQTRVjXhV7_q_AVt3UuM6i5b3kvSIr_PJ_elv-muBvjbiltWyFCWcKMJ3XnX8xYqC9kfFE";
 
 
-/*
- * UID del Coach proprietario dei dati.
- * È lo stesso UID sotto cui trovi:
- *
- * users / 2Oiruc1vW6e0Mo432j6oLSo2sAV2 / recuperi
- */
 const COACH_OWNER_UID =
   "2Oiruc1vW6e0Mo432j6oLSo2sAV2";
 
@@ -74,26 +74,26 @@ function setWorkingUI(message) {
 }
 
 
-function setActiveUI() {
+function setReadyUI(message) {
 
-  setStatus(
-    "✅ Notifiche push attive su questo dispositivo."
-  );
+  setStatus(message);
 
   if (btn) {
-    btn.textContent = "Notifiche push attive";
-    btn.disabled = true;
+    btn.textContent = "Rigenera registrazione push";
+    btn.disabled = false;
   }
 
 }
 
 
-function setRetryUI(message) {
+function setActiveUI() {
 
-  setStatus("⚠️ " + message);
+  setStatus(
+    "✅ Notifiche push registrate su questo dispositivo."
+  );
 
   if (btn) {
-    btn.textContent = "Attiva notifiche push";
+    btn.textContent = "Rigenera registrazione push";
     btn.disabled = false;
   }
 
@@ -111,6 +111,7 @@ if (!btn) {
   let currentUser = null;
   let registrationInProgress = false;
 
+
   try {
 
     const app =
@@ -118,11 +119,33 @@ if (!btn) {
         ? getApp()
         : initializeApp(firebaseConfig);
 
+
+    /*
+     * Verifica importante:
+     * il Firebase App già inizializzato deve
+     * appartenere allo stesso progetto.
+     */
+    if (
+      app.options?.projectId !==
+      firebaseConfig.projectId
+    ) {
+
+      throw new Error(
+        "Il gestionale sta utilizzando un progetto Firebase diverso: " +
+        String(app.options?.projectId || "sconosciuto")
+      );
+
+    }
+
+
     const auth =
       getAuth(app);
 
     const db =
       getFirestore(app);
+
+    const installations =
+      getInstallations(app);
 
 
     async function saveRegistration(
@@ -131,17 +154,29 @@ if (!btn) {
     ) {
 
       if (!installationId) {
+
         throw new Error(
           "Firebase non ha restituito un FID."
         );
+
       }
 
 
-      /*
-       * IMPORTANTE:
-       * salviamo il dispositivo esattamente
-       * nel documento cercato dal workflow GitHub.
-       */
+      const cleanFID =
+        String(installationId).trim();
+
+
+      console.log(
+        "✅ Nuovo FID:",
+        cleanFID
+      );
+
+      console.log(
+        "✅ Lunghezza nuovo FID:",
+        cleanFID.length
+      );
+
+
       await setDoc(
         doc(
           db,
@@ -149,23 +184,37 @@ if (!btn) {
           COACH_OWNER_UID
         ),
         {
-          fid: installationId,
-          installationId: installationId,
 
-          ownerUid: COACH_OWNER_UID,
+          fid:
+            cleanFID,
 
-          authUid: user.uid,
+          installationId:
+            cleanFID,
 
-          enabled: true,
+          ownerUid:
+            COACH_OWNER_UID,
 
-          device:
-            navigator.userAgent,
+          authUid:
+            user.uid,
+
+          enabled:
+            true,
 
           projectId:
             firebaseConfig.projectId,
 
+          messagingSenderId:
+            firebaseConfig.messagingSenderId,
+
+          device:
+            navigator.userAgent,
+
+          regeneratedAt:
+            serverTimestamp(),
+
           updatedAt:
             serverTimestamp()
+
         },
         {
           merge: true
@@ -174,48 +223,47 @@ if (!btn) {
 
 
       console.log(
-        "✅ Dispositivo Coach salvato:",
-        COACH_OWNER_UID,
-        installationId
+        "✅ Registrazione Coach salvata in Firestore."
       );
 
 
       setActiveUI();
+
     }
 
 
-    async function registerCoachDevice(
-      user,
-      showProgress = true
-    ) {
+    async function createFreshRegistration(user) {
 
       if (registrationInProgress) {
         return;
       }
+
 
       registrationInProgress = true;
 
 
       try {
 
-        if (showProgress) {
-          setWorkingUI(
-            "⏳ Registrazione dispositivo con Firebase..."
-          );
-        }
+        setWorkingUI(
+          "⏳ Rigenerazione completa della registrazione Firebase..."
+        );
 
 
         if (!("Notification" in window)) {
+
           throw new Error(
             "Le notifiche non sono supportate su questo dispositivo."
           );
+
         }
 
 
         if (!("serviceWorker" in navigator)) {
+
           throw new Error(
             "Service Worker non supportato."
           );
+
         }
 
 
@@ -224,9 +272,11 @@ if (!btn) {
 
 
         if (!supported) {
+
           throw new Error(
             "Firebase Messaging non è supportato su questo dispositivo."
           );
+
         }
 
 
@@ -239,12 +289,74 @@ if (!btn) {
 
 
           if (permission !== "granted") {
+
             throw new Error(
               "Permesso notifiche non concesso."
             );
+
           }
 
         }
+
+
+        /*
+         * 1.
+         * Eliminiamo completamente la Firebase Installation
+         * precedente. Firebase creerà quindi un FID nuovo.
+         */
+        setWorkingUI(
+          "⏳ Eliminazione vecchia registrazione Firebase..."
+        );
+
+
+        try {
+
+          const oldFID =
+            await getId(installations);
+
+
+          console.log(
+            "🗑️ Vecchio FID:",
+            oldFID
+          );
+
+
+          await deleteInstallations(
+            installations
+          );
+
+
+          console.log(
+            "✅ Vecchia Firebase Installation eliminata."
+          );
+
+        } catch (error) {
+
+          console.warn(
+            "Eliminazione vecchia installation:",
+            error
+          );
+
+        }
+
+
+        /*
+         * Piccola attesa per permettere alla cancellazione
+         * di propagarsi prima della nuova registrazione.
+         */
+        await new Promise(
+          resolve =>
+            setTimeout(resolve, 1500)
+        );
+
+
+        /*
+         * 2.
+         * Aggiorniamo / registriamo il Service Worker.
+         */
+        setWorkingUI(
+          "⏳ Registrazione Service Worker..."
+        );
 
 
         const swRegistration =
@@ -258,20 +370,25 @@ if (!btn) {
 
 
         try {
+
           await swRegistration.update();
-        } catch (_) {
-          // Non blocca la registrazione.
-        }
+
+        } catch (_) {}
 
 
         await navigator.serviceWorker.ready;
 
 
+        /*
+         * 3.
+         * Firebase Messaging.
+         */
         const messaging =
           getMessaging(app);
 
 
-        let receivedFID = false;
+        let receivedFID =
+          false;
 
 
         const unsubscribe =
@@ -284,14 +401,47 @@ if (!btn) {
               }
 
 
-              receivedFID = true;
+              receivedFID =
+                true;
 
 
               try {
 
                 setWorkingUI(
-                  "⏳ FID ricevuto. Salvataggio dispositivo..."
+                  "⏳ Nuovo FID ricevuto. Salvataggio..."
                 );
+
+
+                /*
+                 * Controlliamo anche che Firebase Installations
+                 * restituisca lo stesso identificativo.
+                 */
+                const currentInstallationId =
+                  await getId(installations);
+
+
+                console.log(
+                  "📱 onRegistered FID:",
+                  installationId
+                );
+
+
+                console.log(
+                  "📱 Installations.getId():",
+                  currentInstallationId
+                );
+
+
+                if (
+                  String(installationId) !==
+                  String(currentInstallationId)
+                ) {
+
+                  console.warn(
+                    "⚠️ I due FID non coincidono."
+                  );
+
+                }
 
 
                 await saveRegistration(
@@ -303,13 +453,13 @@ if (!btn) {
               } catch (error) {
 
                 console.error(
-                  "Errore salvataggio dispositivo Coach:",
+                  "Errore salvataggio nuovo FID:",
                   error
                 );
 
 
-                setRetryUI(
-                  "FID ricevuto ma non salvato: " +
+                setReadyUI(
+                  "⚠️ Registrazione ricevuta ma non salvata: " +
                   (
                     error?.message ||
                     String(error)
@@ -329,25 +479,31 @@ if (!btn) {
 
 
         /*
-         * register() forza una registrazione FCM.
-         * Il FID arriverà attraverso onRegistered().
+         * 4.
+         * Nuova registrazione FCM.
          */
+        setWorkingUI(
+          "⏳ Nuova registrazione Firebase Cloud Messaging..."
+        );
+
+
         await register(
           messaging,
           {
+
             vapidKey:
               VAPID_KEY,
 
             serviceWorkerRegistration:
               swRegistration
+
           }
         );
 
 
         /*
-         * Se entro 12 secondi onRegistered non restituisce
-         * il FID, riattiviamo il pulsante invece di
-         * mostrare falsamente "notifiche attive".
+         * Se onRegistered non arriva entro 15 secondi,
+         * non mostriamo falsamente "attivo".
          */
         setTimeout(
           () => {
@@ -359,14 +515,14 @@ if (!btn) {
               } catch (_) {}
 
 
-              setRetryUI(
-                "Registrazione Firebase non completata. Premi nuovamente per riprovare."
+              setReadyUI(
+                "⚠️ Firebase non ha restituito il nuovo FID. Premi nuovamente per riprovare."
               );
 
             }
 
           },
-          12000
+          15000
         );
 
 
@@ -378,29 +534,24 @@ if (!btn) {
         );
 
 
-        setRetryUI(
-          error?.message ||
-          String(error)
+        setReadyUI(
+          "⚠️ " +
+          (
+            error?.message ||
+            String(error)
+          )
         );
 
       } finally {
 
-        registrationInProgress = false;
+        registrationInProgress =
+          false;
 
       }
 
     }
 
 
-    /*
-     * Quando Firebase Auth identifica il Coach:
-     *
-     * - NON dichiariamo subito che le push sono attive;
-     * - se iOS ha già dato il permesso, forziamo una
-     *   nuova sincronizzazione FCM;
-     * - il pulsante diventa "attivo" solo dopo
-     *   l'effettivo salvataggio del nuovo FID.
-     */
     onAuthStateChanged(
       auth,
       async (user) => {
@@ -411,8 +562,8 @@ if (!btn) {
 
         if (!currentUser) {
 
-          setRetryUI(
-            "Accedi come Coach per configurare le notifiche."
+          setReadyUI(
+            "⚠️ Accedi come Coach per configurare le notifiche."
           );
 
           return;
@@ -424,39 +575,24 @@ if (!btn) {
           currentUser.uid
         );
 
+
         console.log(
-          "Coach Owner UID:",
-          COACH_OWNER_UID
+          "Firebase project:",
+          app.options?.projectId
         );
 
 
-        if (
-          Notification.permission === "granted"
-        ) {
-
-          setStatus(
-            "⏳ Verifica registrazione notifiche..."
-          );
-
-
-          await registerCoachDevice(
-            currentUser,
-            false
-          );
-
-        } else {
-
-          setStatus(
-            "Notifiche non configurate su questo dispositivo."
-          );
-
-          btn.textContent =
-            "Attiva notifiche push";
-
-          btn.disabled =
-            false;
-
-        }
+        /*
+         * NON eseguiamo più automaticamente
+         * la vecchia registrazione.
+         *
+         * Vogliamo che questa volta sia l'utente
+         * a premere il pulsante e generare
+         * volontariamente una Installation nuova.
+         */
+        setReadyUI(
+          "Registrazione da rigenerare. Premi il pulsante una volta."
+        );
 
       }
     );
@@ -468,17 +604,16 @@ if (!btn) {
 
         if (!currentUser) {
 
-          setRetryUI(
-            "Utente Coach non ancora disponibile. Attendi qualche secondo e riprova."
+          setReadyUI(
+            "⚠️ Utente Coach non ancora disponibile. Attendi qualche secondo."
           );
 
           return;
         }
 
 
-        await registerCoachDevice(
-          currentUser,
-          true
+        await createFreshRegistration(
+          currentUser
         );
 
       }
@@ -493,8 +628,8 @@ if (!btn) {
     );
 
 
-    setRetryUI(
-      "Errore inizializzazione modulo notifiche: " +
+    setReadyUI(
+      "⚠️ Errore inizializzazione notifiche: " +
       (
         error?.message ||
         String(error)
