@@ -312,9 +312,9 @@ async function main() {
      */
     const message = {
 
-      fid,
+  token: fid,
 
-      data: {
+  data: {
 
         title:
           '🔄 Nuova richiesta di recupero',
