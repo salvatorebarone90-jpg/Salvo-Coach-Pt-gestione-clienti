@@ -8,15 +8,11 @@ const {
   getMessaging
 } = require('firebase-admin/messaging');
 
-
 function loadServiceAccount() {
-  const raw =
-    process.env.FIREBASE_SERVICE_ACCOUNT_MAIN;
+  const raw = process.env.FIREBASE_SERVICE_ACCOUNT_MAIN;
 
   if (!raw) {
-    throw new Error(
-      'Manca il secret FIREBASE_SERVICE_ACCOUNT_MAIN.'
-    );
+    throw new Error('Manca il secret FIREBASE_SERVICE_ACCOUNT_MAIN.');
   }
 
   try {
@@ -28,461 +24,196 @@ function loadServiceAccount() {
   }
 }
 
+const serviceAccount = loadServiceAccount();
 
-const serviceAccount =
-  loadServiceAccount();
-
-
-if (
-  serviceAccount.project_id !==
-  'sb-personal-coach-gestionale'
-) {
+if (serviceAccount.project_id !== 'sb-personal-coach-gestionale') {
   throw new Error(
-    `Secret del progetto sbagliato: ` +
-    `${serviceAccount.project_id}. ` +
+    `Secret del progetto sbagliato: ${serviceAccount.project_id}. ` +
     `Atteso sb-personal-coach-gestionale.`
   );
 }
 
-
 initializeApp({
-  credential:
-    cert(serviceAccount),
-
-  projectId:
-    serviceAccount.project_id
+  credential: cert(serviceAccount),
+  projectId: serviceAccount.project_id
 });
 
-
-const db =
-  getFirestore();
-
-const messaging =
-  getMessaging();
-
+const db = getFirestore();
+const messaging = getMessaging();
 
 function fmtDate(iso) {
-
-  if (!iso) {
-    return '-';
-  }
+  if (!iso) return '-';
 
   const [y, m, d] =
-    String(iso)
-      .slice(0, 10)
-      .split('-');
+    String(iso).slice(0, 10).split('-');
 
   return y && m && d
     ? `${d}/${m}/${y}`
     : String(iso);
 }
 
-
-function safeFid(value) {
-
-  return String(
-    value || ''
-  ).trim();
-
+function clean(value) {
+  return String(value || '').trim();
 }
 
-
 async function main() {
-
-  console.log(
-    '🔥 Progetto Firebase:',
-    serviceAccount.project_id
-  );
-
-
-  console.log(
-    '🔎 Controllo richieste di recupero...'
-  );
-
+  console.log('🔥 Progetto Firebase:', serviceAccount.project_id);
+  console.log('🔎 Controllo richieste di recupero...');
 
   const snapshot =
     await db
       .collectionGroup('recuperi')
-      .where(
-        'stato',
-        '==',
-        'Richiesta'
-      )
+      .where('stato', '==', 'Richiesta')
       .get();
 
-
-  console.log(
-    `📋 Richieste trovate: ${snapshot.size}`
-  );
-
+  console.log(`📋 Richieste trovate: ${snapshot.size}`);
 
   let sent = 0;
   let skipped = 0;
   let failed = 0;
 
+  for (const recuperoDoc of snapshot.docs) {
+    const data = recuperoDoc.data() || {};
 
-  for (
-    const recuperoDoc
-    of snapshot.docs
-  ) {
-
-    const data =
-      recuperoDoc.data() || {};
-
-
-    /*
-     * Se la push è già stata
-     * inviata correttamente,
-     * non la reinviamo.
-     */
-    if (
-      data.pushCoachSentAt ||
-      data.pushCoachSent === true
-    ) {
-
+    if (data.pushCoachSentAt || data.pushCoachSent === true) {
       skipped++;
-
-      console.log(
-        '⏭️ Già inviata:',
-        recuperoDoc.ref.path
-      );
-
+      console.log('⏭️ Già inviata:', recuperoDoc.ref.path);
       continue;
     }
 
-
-    /*
-     * Struttura prevista:
-     *
-     * users/{ownerUid}/recuperi/{id}
-     */
-    const ownerRef =
-      recuperoDoc.ref.parent.parent;
-
-
-    const ownerUid =
-      ownerRef
-        ? ownerRef.id
-        : null;
-
+    const ownerRef = recuperoDoc.ref.parent.parent;
+    const ownerUid = ownerRef ? ownerRef.id : null;
 
     if (!ownerUid) {
-
-      console.warn(
-        '⚠️ Owner UID non ricavabile:',
-        recuperoDoc.ref.path
-      );
-
+      console.warn('⚠️ Owner UID non ricavabile:', recuperoDoc.ref.path);
       skipped++;
       continue;
     }
 
-
-    /*
-     * Recupera il dispositivo
-     * Coach registrato.
-     */
     const pushDoc =
-      await db
-        .doc(
-          `pushCoachTokens/${ownerUid}`
-        )
-        .get();
-
+      await db.doc(`pushCoachTokens/${ownerUid}`).get();
 
     if (!pushDoc.exists) {
-
       console.warn(
-        `⚠️ Nessun dispositivo Coach ` +
-        `registrato per ${ownerUid}`
+        `⚠️ Nessun dispositivo Coach registrato per ${ownerUid}`
       );
-
       skipped++;
       continue;
     }
 
+    const push = pushDoc.data() || {};
+    const token = clean(push.token);
 
-    const push =
-      pushDoc.data() || {};
+    console.log('📱 Documento dispositivo:', pushDoc.ref.path);
+    console.log('📱 Push enabled:', push.enabled === true);
+    console.log('📱 Modalità registrazione:', push.registrationMode || '-');
+    console.log('📱 Lunghezza token FCM:', token.length);
 
-
-    const fid =
-      safeFid(
-        push.fid ||
-        push.installationId
-      );
-
-
-    console.log(
-      '📱 Documento dispositivo:',
-      pushDoc.ref.path
-    );
-
-
-    console.log(
-      '📱 Push enabled:',
-      push.enabled === true
-    );
-
-
-    console.log(
-      '📱 Lunghezza FID:',
-      fid.length
-    );
-
-
-    /*
-     * Non stampiamo il FID completo
-     * nei log per sicurezza.
-     */
-    if (fid) {
-
+    if (token) {
       console.log(
-        '📱 FID preview:',
-        `${fid.slice(0, 6)}...${fid.slice(-6)}`
+        '📱 Token preview:',
+        `${token.slice(0, 8)}...${token.slice(-8)}`
       );
-
     }
 
-
-    if (
-      push.enabled !== true
-    ) {
-
-      console.warn(
-        `⚠️ Push disattivata per ${ownerUid}`
-      );
-
+    if (push.enabled !== true) {
+      console.warn(`⚠️ Push disattivata per ${ownerUid}`);
       skipped++;
       continue;
     }
 
-
-    if (!fid) {
-
+    if (!token) {
       console.warn(
-        `⚠️ FID mancante per ${ownerUid}`
+        `⚠️ Token FCM mancante per ${ownerUid}. ` +
+        `Apri il gestionale Coach sul dispositivo per registrarlo.`
       );
-
       skipped++;
       continue;
     }
 
-
-    /*
-     * Un FID Firebase è una stringa
-     * compatta. Se troviamo spazi,
-     * ritorni a capo o valori palesemente
-     * strani, evitiamo di chiamare FCM.
-     */
-    if (
-      /\s/.test(fid)
-    ) {
-
+    if (/\s/.test(token)) {
       console.error(
-        '❌ FID non valido: contiene spazi ' +
-        'o caratteri di nuova riga.'
+        '❌ Token FCM non valido: contiene spazi o ritorni a capo.'
       );
-
       failed++;
       continue;
     }
 
-
     const clienteNome =
-      String(
-        data.clienteNome ||
-        'Un cliente'
-      );
-
+      String(data.clienteNome || 'Un cliente');
 
     const body =
       `${clienteNome} ha richiesto il recupero ` +
       `della lezione del ${fmtDate(data.data)} ` +
       `alle ${data.ora || '-'}.`;
 
-
     const url =
       'https://salvatorebarone90-jpg.github.io/' +
       'Salvo-Coach-Pt-gestione-clienti/';
 
-
-    /*
-     * I valori di "data" devono essere stringhe.
-     */
     const message = {
-
-  token: fid,
-
-  data: {
-
-        title:
-          '🔄 Nuova richiesta di recupero',
-
-        body:
-          String(body),
-
-        url:
-          String(url),
-
-        tipo:
-          'recupero',
-
-        recuperoId:
-          String(recuperoDoc.id),
-
-        ownerUid:
-          String(ownerUid)
-
+      token,
+      data: {
+        title: '🔄 Nuova richiesta di recupero',
+        body: String(body),
+        url: String(url),
+        tipo: 'recupero',
+        recuperoId: String(recuperoDoc.id),
+        ownerUid: String(ownerUid)
       }
-
     };
 
-
     try {
+      console.log('🚀 Invio push:', recuperoDoc.ref.path);
 
-      console.log(
-        '🚀 Invio push:',
-        recuperoDoc.ref.path
-      );
-
-
-      const messageId =
-        await messaging.send(
-          message
-        );
-
+      const messageId = await messaging.send(message);
 
       await recuperoDoc.ref.set(
         {
-
-          pushCoachSent:
-            true,
-
-          pushCoachSentAt:
-            FieldValue.serverTimestamp(),
-
-          pushCoachMessageId:
-            messageId
-
+          pushCoachSent: true,
+          pushCoachSentAt: FieldValue.serverTimestamp(),
+          pushCoachMessageId: messageId
         },
-        {
-          merge: true
-        }
+        { merge: true }
       );
 
-
-      console.log(
-        '✅ Push inviata:',
-        recuperoDoc.ref.path
-      );
-
-
-      console.log(
-        '📨 Message ID:',
-        messageId
-      );
-
-
+      console.log('✅ Push inviata:', recuperoDoc.ref.path);
+      console.log('📨 Message ID:', messageId);
       sent++;
 
     } catch (error) {
-
       failed++;
 
-
-      console.error(
-        '❌ Errore invio push:',
-        recuperoDoc.ref.path
-      );
-
-
+      console.error('❌ Errore invio push:', recuperoDoc.ref.path);
       console.error(
         '❌ Firebase code:',
-        error?.code ||
-        'nessun codice'
+        error?.code || 'nessun codice'
       );
-
-
       console.error(
         '❌ Firebase message:',
-        error?.message ||
-        String(error)
+        error?.message || String(error)
       );
 
-
-      /*
-       * Questo ci permette di capire
-       * immediatamente se Firebase
-       * rifiuta proprio il FID.
-       */
       if (
-        error?.code ===
-        'messaging/invalid-argument'
+        error?.code === 'messaging/registration-token-not-registered' ||
+        error?.code === 'messaging/invalid-registration-token'
       ) {
-
         console.error(
-          '🛑 Firebase ha rifiutato il target FID. ' +
-          'Il dispositivo dovrà essere registrato nuovamente.'
+          '🛑 Il token FCM non è più valido. ' +
+          'Riapri il gestionale Coach per aggiornarlo.'
         );
-
       }
-
-
-      if (
-        error?.code ===
-        'messaging/installation-id-not-registered'
-      ) {
-
-        console.error(
-          '🛑 Questo FID non risulta più registrato ' +
-          'su Firebase Cloud Messaging.'
-        );
-
-      }
-
     }
-
   }
 
-
-  console.log(
-    '🏁 Fine controllo.'
-  );
-
-
-  console.log(
-    `✅ Inviate: ${sent}`
-  );
-
-
-  console.log(
-    `⏭️ Saltate: ${skipped}`
-  );
-
-
-  console.log(
-    `❌ Fallite: ${failed}`
-  );
-
-
-  console.log(
-    `📋 Richieste lette: ${snapshot.size}`
-  );
-
+  console.log('🏁 Fine controllo.');
+  console.log(`✅ Inviate: ${sent}`);
+  console.log(`⏭️ Saltate: ${skipped}`);
+  console.log(`❌ Fallite: ${failed}`);
+  console.log(`📋 Richieste lette: ${snapshot.size}`);
 }
 
-
-main()
-  .catch(
-    (error) => {
-
-      console.error(
-        '❌ ERRORE GENERALE:',
-        error
-      );
-
-      process.exit(1);
-
-    }
-  );
+main().catch((error) => {
+  console.error('❌ ERRORE GENERALE:', error);
+  process.exit(1);
+});
