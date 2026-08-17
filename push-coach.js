@@ -19,7 +19,6 @@ import {
 import {
   getMessaging,
   getToken,
-  deleteToken,
   isSupported
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-messaging.js";
 
@@ -174,9 +173,7 @@ if (!btn) {
 
         const swRegistration = await ensureServiceWorker();
 
-        setWorkingUI("⏳ Rigenerazione token FCM...");
-
-        await deleteToken(messaging);
+        setWorkingUI("⏳ Recupero token FCM del dispositivo...");
 
         const token =
           await getToken(
