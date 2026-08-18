@@ -76,6 +76,7 @@ hr{border:0;border-top:1px solid #e5e7eb;margin:12px 0}
     <button data-tab="backup">Backup</button>
       <button data-tab="contattiCoach">Contatti Coach</button>
       <button data-tab="bacheca">Bacheca</button>
+    <button type="button" id="logoutCoachBtn" onclick="logoutCoach()">🚪 Esci</button>
   </nav>
 </header>
 
@@ -373,11 +374,20 @@ function showTab(tab){
  if(tab==="calendario")renderCalendario();
  if(tab==="bacheca")renderBachecaCoach();
 }
-document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+document.querySelectorAll("nav button[data-tab]").forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
 
 window.login=async()=>{
  try{await signInWithEmailAndPassword(auth,$("loginEmail").value,$("loginPassword").value)}
  catch(e){$("loginStatus").textContent=e.message}
+};
+
+window.logoutCoach=async()=>{
+  if(!confirm("Vuoi uscire dall'account Coach?")) return;
+  try{
+    await signOut(auth);
+  }catch(e){
+    alert("Errore durante il logout: "+e.message);
+  }
 };
 
 onAuthStateChanged(auth,u=>{
