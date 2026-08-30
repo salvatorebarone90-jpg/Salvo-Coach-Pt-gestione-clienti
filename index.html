@@ -358,7 +358,7 @@ function ultimaDataProgrammata(c,startDate){
 }
 function eventStart(ev){const [y,m,d]=String(ev.data||"").split("-").map(Number);let h=9,mi=0;if(ev.ora){const p=String(ev.ora).split(":").map(Number);h=p[0]||0;mi=p[1]||0}return new Date(y,m-1,d,h,mi,0)}
 function eventEnd(ev){return new Date(eventStart(ev).getTime()+Number(ev.durata||60)*60000)}
-function historical(st){return ["Effettuata","Assente","Recuperata","Annullata","Annullata dal cliente"].includes(st||"")}
+function historical(st){return ["Effettuata","Assente","Recuperata","Annullata","Annullata dal cliente","Annullata dal coach"].includes(st||"")}
 function consumes(st){return ["Effettuata","Assente","Recuperata"].includes(st||"")}
 function fatte(id){return eventi.filter(e=>e.clienteId===id&&consumes(e.stato)).length}
 function residue(c){return Math.max(0,Number(c.lezioniTotali||0)-fatte(c.id))}
