@@ -1451,11 +1451,17 @@ async function processLesson1177(id, stato){
  if(!ev) return alert("Lezione non trovata.");
 
  if(ev.processed===true || ev.scalata===true){
+   const finalStato=historical(ev.stato) ? ev.stato : stato;
    await setDoc(docPath("eventi",id),{
-     stato: ev.stato || stato,
+     stato:finalStato,
      processed:true,
+     storico:true,
      updatedAt:serverTimestamp()
    },{merge:true});
+
+   ev.stato=finalStato;
+   ev.processed=true;
+   ev.storico=true;
    return;
  }
 
@@ -1475,6 +1481,11 @@ async function processLesson1177(id, stato){
    updatedAt:serverTimestamp()
  },{merge:true});
 
+ ev.stato=stato;
+ ev.scalata=shouldConsume;
+ ev.processed=true;
+ ev.storico=true;
+
  if(shouldConsume){
    await setDoc(docPath("clienti",ev.clienteId),{
      lezioniResidue:newResidue,
@@ -1486,7 +1497,15 @@ async function processLesson1177(id, stato){
 window.processLesson1177=processLesson1177;
 
 window.confermaEffettuata=async function(id,btn){
- await runLessonAction(btn,()=>processLesson1177(id,"Effettuata"));
+ const ev=eventi.find(e=>e.id===id);
+ const isRecupero=!!ev && (
+   ev.tipo==="recupero" ||
+   String(ev.stato||"").toLowerCase().startsWith("recupero")
+ );
+ await runLessonAction(
+   btn,
+   ()=>processLesson1177(id,isRecupero ? "Recuperata" : "Effettuata")
+ );
 };
 window.confermaAssente=async function(id,btn){
  await runLessonAction(btn,()=>processLesson1177(id,"Assente"));
@@ -1604,7 +1623,6 @@ function isPastOrToday11781(dateStr){
 }
 function isUnprocessed11781(ev){
   if(!ev) return false;
-  if(ev.processed===true || ev.scalata===true) return false;
   if(historical(ev.stato)) return false;
   return true;
 }
@@ -1627,7 +1645,7 @@ window.lezioniDaConfermare=function(){
 function renderSmartCoach11781(){
  const box=$("smartCoachBox");
  if(!box)return;
- const list=lezioniDaConfermare();
+ const list=window.lezioniDaConfermare();
  box.innerHTML=list.length?`<div class="check">
    <h3>⏳ Lezioni da confermare</h3>
    ${list.map(ev=>{
