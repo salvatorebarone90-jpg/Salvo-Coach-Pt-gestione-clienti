@@ -1645,7 +1645,7 @@ window.lezioniDaConfermare=function(){
 function renderSmartCoach11781(){
  const box=$("smartCoachBox");
  if(!box)return;
- const list=lezioniDaConfermare();
+ const list=window.lezioniDaConfermare();
  box.innerHTML=list.length?`<div class="check">
    <h3>⏳ Lezioni da confermare</h3>
    ${list.map(ev=>{
