@@ -108,7 +108,7 @@ main{padding:16px;max-width:930px;margin:auto}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, sendPasswordResetEmail, signOut, deleteUser } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import { getFirestore, doc, getDoc,setDoc, updateDoc, collection, getDocs, collectionGroup, query, where, serverTimestamp, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, getDoc,setDoc, updateDoc, collection, getDocs, collectionGroup, query, where, serverTimestamp, addDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { firebaseConfig } from "./firebase-config.js";
 const app=initializeApp(firebaseConfig), db=getFirestore(app), auth=getAuth(app);
 const params=new URLSearchParams(location.search), token=params.get("token");
@@ -155,20 +155,44 @@ async function resolveInvite(){
  const ds=qs.docs[0]; ownerUid=ds.ref.parent.parent.id;
 }
 async function verifyLoggedUser(user){
- await resolveInvite();
- const clientRef=doc(db,"users",ownerUid,"clienti",id);
- const clientSnap=await getDoc(clientRef);
- if(!clientSnap.exists())throw new Error("Cliente non trovato.");
- const c=clientSnap.data();
- const registeredEmail=normalizeEmail(c.email||c.emailCliente||"");
- if(registeredEmail && normalizeEmail(user.email)!==registeredEmail){
-  throw new Error("Questa email non corrisponde a quella registrata dal coach.");
- }
- await setDoc(doc(db,"clientAccess",user.uid),{
-  token:token||"",ownerUid,clientId:id,email:normalizeEmail(user.email),updatedAt:serverTimestamp()
- },{merge:true});
- return c;
+  await resolveInvite();
+
+  const accessRef=doc(db,"clientAccess",user.uid);
+  const clientRef=doc(db,"users",ownerUid,"clienti",id);
+
+  await setDoc(accessRef,{
+    token:token||"",
+    ownerUid,
+    clientId:id,
+    email:normalizeEmail(user.email),
+    updatedAt:serverTimestamp()
+  },{merge:true});
+
+  try{
+    const clientSnap=await getDoc(clientRef);
+    if(!clientSnap.exists())throw new Error("Cliente non trovato.");
+
+    const c=clientSnap.data();
+    const registeredEmail=normalizeEmail(c.email||c.emailCliente||"");
+
+    if(registeredEmail && normalizeEmail(user.email)!==registeredEmail){
+      throw new Error("Questa email non corrisponde a quella registrata dal coach.");
+    }
+
+    await setDoc(clientRef,{
+      statoRegistrazioneCliente:"registrato",
+      registrazioneClienteAt:serverTimestamp(),
+      emailRegistrazioneCliente:normalizeEmail(user.email),
+      updatedAt:serverTimestamp()
+    },{merge:true});
+
+    return c;
+  }catch(e){
+    await deleteDoc(accessRef).catch(()=>{});
+    throw e;
+  }
 }
+
 async function doLogin(){
  const email=normalizeEmail(document.getElementById("loginEmail").value);
  const password=document.getElementById("loginPassword").value;
@@ -185,35 +209,33 @@ async function doLogin(){
  }
 }
 async function doRegister(){
- const email=normalizeEmail(document.getElementById("loginEmail").value);
- const password=document.getElementById("loginPassword").value;
- if(!email)return loginMessage("Inserisci l'email registrata dal coach.","bad");
- if(password.length<6)return loginMessage("La password deve contenere almeno 6 caratteri.","bad");
- loginMessage("Creazione accesso in corso...");
- let cred=null;
- try{
-  // Prima risolviamo il link e controlliamo l'email salvata nella scheda cliente.
-  await resolveInvite();
-  const clientSnap=await getDoc(doc(db,"users",ownerUid,"clienti",id));
-  if(!clientSnap.exists())throw new Error("Cliente non trovato.");
-  const c=clientSnap.data();
-  const registeredEmail=normalizeEmail(c.email||c.emailCliente||"");
-  if(!registeredEmail)throw new Error("Nella scheda cliente non è presente un'email. Chiedi al coach di inserirla.");
-  if(email!==registeredEmail)throw new Error("Usa la stessa email registrata dal coach.");
+  const email=normalizeEmail(document.getElementById("loginEmail").value);
+  const password=document.getElementById("loginPassword").value;
 
-  cred=await createUserWithEmailAndPassword(auth,email,password);
-  await verifyLoggedUser(cred.user);
-  showPortal(); await load();
- }catch(e){
-  if(cred?.user) await deleteUser(cred.user).catch(()=>{});
-  await signOut(auth).catch(()=>{});
-  showLogin();
-  const msg=String(e?.code||"").includes("email-already-in-use")
-   ?"Esiste già un account con questa email. Usa Accedi oppure Password dimenticata."
-   :(e.message||"Impossibile creare l'accesso.");
-  loginMessage(msg,"bad");
- }
+  if(!email)return loginMessage("Inserisci l'email registrata dal coach.","bad");
+  if(password.length<6)return loginMessage("La password deve contenere almeno 6 caratteri.","bad");
+
+  loginMessage("Creazione accesso in corso...");
+  let cred=null;
+
+  try{
+    cred=await createUserWithEmailAndPassword(auth,email,password);
+    await verifyLoggedUser(cred.user);
+    showPortal();
+    await load();
+  }catch(e){
+    if(cred?.user)await deleteUser(cred.user).catch(()=>{});
+    await signOut(auth).catch(()=>{});
+    showLogin();
+
+    const msg=String(e?.code||"").includes("email-already-in-use")
+      ?"Esiste già un account con questa email. Usa Accedi oppure Password dimenticata."
+      :(e.message||"Impossibile creare l'accesso.");
+
+    loginMessage(msg,"bad");
+  }
 }
+
 async function doReset(){
  const email=normalizeEmail(document.getElementById("loginEmail").value);
  if(!email)return loginMessage("Inserisci prima la tua email.","bad");
