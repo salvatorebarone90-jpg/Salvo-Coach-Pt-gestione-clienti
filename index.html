@@ -425,7 +425,10 @@ async function generaEventi(clienteId,c,startDate){
  while(created<max && created<200){
    if(hourByDay.has(d.getDay())){
      const hour=hourByDay.get(d.getDay());
-     await addDoc(path("eventi"),{clienteId,clienteNome:nome(c),data:localISO(d),ora:hour,durata:Number(c.durata||60),stato:"Prenotata",storico:false,scalata:false,createdAt:serverTimestamp()});
+     await addDoc(path("eventi"),{clienteId,clienteNome:nome(c),data:localISO(d),ora:hour,durata:Number(c.durata||60),stato:"Prenotata",storico:false,scalata:false,
+        renewalCycleId:String(c.renewalCycleId||""),
+        packageStart:String(c.packageStart||c.inizio||""),
+        createdAt:serverTimestamp()});
      created++;
    }
    d.setDate(d.getDate()+1);
@@ -434,7 +437,12 @@ async function generaEventi(clienteId,c,startDate){
 window.creaCliente=async()=>{
  const c=formData();
  if(!c.nome)return alert("Inserisci nome");
- c.lezioniFatte=0;c.lezioniResidue=Number(c.lezioniTotali||0);c.stato="attivo";c.createdAt=serverTimestamp();
+ c.lezioniFatte=0;
+ c.lezioniResidue=Number(c.lezioniTotali||0);
+ c.stato="attivo";
+ c.renewalCycleId="P"+Date.now().toString(36)+Math.random().toString(36).slice(2,10);
+ c.packageStart=c.inizio||todayISO();
+ c.createdAt=serverTimestamp();
  const ref=await addDoc(path("clienti"),c);
  await generaEventi(ref.id,{...c,id:ref.id},c.inizio);
  pulisciForm();
@@ -635,7 +643,12 @@ function renderCoachNotifications(){
 function renderDashboard(){const att=clienti.filter(c=>(c.stato||"attivo")!=="inattivo");$("kClienti").textContent=att.length;$("kOggi").textContent=eventi.filter(e=>e.data===todayISO()).length;$("kDaConf").textContent=lezioniDaConfermare().length;$("kResidui").textContent=euro(att.reduce((s,c)=>s+residuoEuro(c),0));renderSmart();renderCoachNotifications()}
 function renderCalendario(){if(!$("calDal").value)$("calDal").value=todayISO();if(!$("calAl").value){const d=new Date();d.setDate(d.getDate()+14);$("calAl").value=d.toISOString().slice(0,10)}const dal=$("calDal").value,al=$("calAl").value;const list=eventi.filter(e=>e.data>=dal&&e.data<=al).sort((a,b)=>a.data.localeCompare(b.data)||String(a.ora).localeCompare(String(b.ora)));$("listaCalendario").innerHTML=list.map(e=>`<div class="card"><h3>${e.clienteNome}</h3><p class="meta">${fmt(e.data)} ore ${e.ora} · ${e.stato||"Prenotata"}</p></div>`).join("")||'<div class="empty">Nessuna lezione.</div>'}
 function renderRegistroSelect(){const cur=$("registroCliente").value;$("registroCliente").innerHTML='<option value="">Seleziona cliente</option>'+clienti.map(c=>`<option value="${c.id}">${nome(c)}</option>`).join("");if(cur)$("registroCliente").value=cur}
-window.renderRegistro=()=>{renderRegistroSelect();const id=$("registroCliente").value,c=clienti.find(x=>x.id===id);if(!c){$("registroLista").innerHTML='<div class="empty">Seleziona un cliente.</div>';return}const evs=eventi.filter(e=>e.clienteId===id).sort((a,b)=>a.data.localeCompare(b.data)||String(a.ora).localeCompare(String(b.ora)));$("regTotali").textContent=c.lezioniTotali||0;$("regFatte").textContent=fatte(id);$("regResidue").textContent=residue(c);$("regPeriodo").textContent=`${fmt(c.inizio)} → ${fmt(c.scadenza)}`;$("registroLista").innerHTML=evs.map(e=>`<div class="check"><h3>${fmt(e.data)} ore ${e.ora}</h3><p class="meta">Stato: ${e.stato||"Prenotata"}</p><span class="badge ${consumes(e.stato)?"ok":historical(e.stato)?"bad":"warn"}">${e.stato||"Prenotata"}</span></div>`).join("")||'<div class="empty">Nessuna lezione.</div>'}
+window.renderRegistro=()=>{renderRegistroSelect();const id=$("registroCliente").value,c=clienti.find(x=>x.id===id);if(!c){$("registroLista").innerHTML='<div class="empty">Seleziona un cliente.</div>';return}const evs=eventi.filter(e=>e.clienteId===id).sort((a,b)=>a.data.localeCompare(b.data)||String(a.ora).localeCompare(String(b.ora)));$("regTotali").textContent=c.lezioniTotali||0;$("regFatte").textContent=fatte(id);$("regResidue").textContent=residue(c);$("regPeriodo").textContent=`${fmt(c.inizio)} → ${fmt(c.scadenza)}`;$("registroLista").innerHTML=evs.map(e=>`<div class="check"><h3>${fmt(e.data)} ore ${e.ora}</h3><p class="meta">Stato: ${e.stato||"Prenotata"}</p><span class="badge ${consumes(e.stato)?"ok":historical(e.stato)?"bad":"warn"}">${e.stato||"Prenotata"}</span>
+      ${e.tipo==="recupero" && e.recuperoManuale===true
+        ? `<div class="actions" style="margin-top:10px">
+             <button class="btn red" onclick="eliminaEventoRecuperoManuale1179('${e.id}')">Elimina recupero</button>
+           </div>`
+        : ""}</div>`).join("")||'<div class="empty">Nessuna lezione.</div>'}
 function renderContattare(){
  const list=clienti.filter(c=>(c.stato||"attivo")!=="inattivo"&&residuoEuro(c)>0);
  $("listaContattare").innerHTML=list.map(c=>`<div class="check"><h3>${nome(c)}</h3><p class="meta">Residuo ${euro(residuoEuro(c))}</p><button type="button" class="btn whatsapp full js-wa-pagamento" data-client-id="${c.id}">&#128242; Invia promemoria pagamento</button></div>`).join("")||'<div class="empty">Nessun cliente da contattare.</div>';
@@ -791,6 +804,7 @@ function renderRecuperi(){
      <h3>${r.clienteNome||"Cliente"}</h3>
      <p class="meta">Lezione: ${fmt(r.data)} ore ${r.ora||"-"}<br>Richiesta: ${r.createdAtLabel||"-"}<br>Stato: <b>${r.stato||"Richiesta"}</b>${r.motivoRifiuto?`<br>Motivo: ${r.motivoRifiuto}`:""}</p>
      ${pending?`<button class="btn green" onclick="accettaRecupero('${r.id}')">Accetta</button><button class="btn red" onclick="rifiutaRecupero('${r.id}')">Rifiuta</button>`:""}
+   ${manuale?`<button class="btn red" style="margin-top:10px" onclick="eliminaRecuperoManuale1179('${r.id}')">Elimina recupero</button>`:""}
    </div>`;
  }).join(""):'<div class="empty">Nessuna richiesta di recupero.</div>';
 }
@@ -1110,17 +1124,70 @@ window.lezioniDaConfermare = function(){
  });
 };
 
+function aggiornaRecPacchetti1179(){
+ const clienteId=$("recCliente")?.value||"";
+ const sel=$("recPacchetto1179");
+ if(!sel)return;
+
+ if(!clienteId){
+   sel.innerHTML='<option value="">Seleziona prima il cliente</option>';
+   return;
+ }
+
+ const c=clienti.find(x=>x.id===clienteId);
+ if(!c){
+   sel.innerHTML='<option value="">Cliente non trovato</option>';
+   return;
+ }
+
+ const packs=pacchettiCliente1179(clienteId);
+ const currentId=String(c.renewalCycleId||"").trim();
+
+ if(currentId && !packs.some(p=>p.id===currentId)){
+   packs.unshift({
+     id:currentId,
+     start:String(c.packageStart||c.inizio||""),
+     count:0
+   });
+ }
+
+ sel.innerHTML=packs.length
+   ? packs.map((p,i)=>{
+       const attuale=p.id===currentId;
+       return `<option value="${p.id}">${attuale?"Pacchetto attuale":"Pacchetto precedente"} · ${p.start?fmt(p.start):"data non disponibile"}</option>`;
+     }).join("")
+   : '<option value="legacy">Storico senza pacchetto</option>';
+
+ if(currentId && [...sel.options].some(o=>o.value===currentId)){
+   sel.value=currentId;
+ }
+}
+window.aggiornaRecPacchetti1179=aggiornaRecPacchetti1179;
+
 async function creaRecuperoManuale1173(){
  const clienteId = $("recCliente")?.value || "";
  const data = $("recData")?.value || "";
  const ora = $("recOra")?.value || "";
  const durata = Number($("recDurata")?.value || 60);
  const note = $("recNote")?.value || "";
+ const pacchettoScelto = $("recPacchetto1179")?.value || "";
  if(!clienteId || !data || !ora) return alert("Seleziona cliente, data e ora.");
  const c = clienti.find(x=>x.id===clienteId);
  if(!c) return alert("Cliente non trovato.");
 
- await addDoc(path("eventi"),{
+ const pack = pacchettoScelto && pacchettoScelto!=="legacy"
+   ? pacchettiCliente1179(clienteId).find(p=>p.id===pacchettoScelto)
+   : null;
+
+ const recuperoCycleId = pacchettoScelto==="legacy"
+   ? ""
+   : String(pacchettoScelto || c.renewalCycleId || "");
+
+ const recuperoPackageStart = pacchettoScelto==="legacy"
+   ? ""
+   : String(pack?.start || c.packageStart || c.inizio || "");
+
+ const eventoRecuperoRef=await addDoc(path("eventi"),{
    clienteId,
    clienteNome:nome(c),
    data,
@@ -1129,6 +1196,8 @@ async function creaRecuperoManuale1173(){
    stato:"Recupero programmato",
    tipo:"recupero",
    recuperoManuale:true,
+   renewalCycleId:recuperoCycleId,
+   packageStart:recuperoPackageStart,
    note,
    createdAt:serverTimestamp()
  });
@@ -1146,6 +1215,9 @@ async function creaRecuperoManuale1173(){
    note,
    stato:"Recupero programmato manualmente",
    manuale:true,
+   eventoId:eventoRecuperoRef.id,
+   renewalCycleId:recuperoCycleId,
+   packageStart:recuperoPackageStart,
    createdAt:new Date().toISOString(),
    createdAtLabel:new Date().toLocaleDateString("it-IT")+" ore "+new Date().toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"}),
    updatedAt:serverTimestamp()
@@ -1158,6 +1230,50 @@ async function creaRecuperoManuale1173(){
 }
 window.creaRecuperoManuale1173=creaRecuperoManuale1173;
 
+window.eliminaRecuperoManuale1179=async function(id){
+ const r=recuperi.find(x=>x.id===id);
+ if(!r)return alert("Recupero non trovato.");
+
+ if(!r.manuale){
+   return alert("Puoi eliminare direttamente solo i recuperi manuali.");
+ }
+
+ if(!confirm(
+   "Eliminare questo recupero?\n\n"+
+   "Verrà rimosso anche dal Registro Cliente.\n"+
+   "Il contatore delle lezioni NON verrà modificato."
+ ))return;
+
+ try{
+   let eventIds=[];
+
+   if(r.eventoId){
+     eventIds=[r.eventoId];
+   }else{
+     eventIds=eventi
+       .filter(e=>
+         e.clienteId===r.clienteId &&
+         e.tipo==="recupero" &&
+         e.recuperoManuale===true &&
+         String(e.data||"")===String(r.data||"") &&
+         String(e.ora||"")===String(r.ora||"")
+       )
+       .map(e=>e.id);
+   }
+
+   for(const eventId of eventIds){
+     await deleteDoc(docPath("eventi",eventId));
+   }
+
+   await deleteDoc(docPath("recuperi",id));
+
+   alert("Recupero eliminato. Il contatore non è stato modificato.");
+ }catch(e){
+   console.error(e);
+   alert("Errore durante l'eliminazione del recupero: "+(e.message||e));
+ }
+};
+
 function renderRecuperi1173(){
  const box=$("listaRecuperi");
  if(!box) return;
@@ -1166,7 +1282,8 @@ function renderRecuperi1173(){
    <h3>➕ Nuovo recupero manuale</h3>
    <p class="meta">Crea una nuova data di recupero senza modificare il contatore. Se la data supera la scadenza pacchetto, la scadenza viene aggiornata.</p>
    <div class="row">
-     <div><label>Cliente</label><select id="recCliente"><option value="">Seleziona cliente</option>${clientOptions}</select></div>
+     <div><label>Cliente</label><select id="recCliente" onchange="aggiornaRecPacchetti1179()"><option value="">Seleziona cliente</option>${clientOptions}</select></div>
+    <div><label>Pacchetto di appartenenza</label><select id="recPacchetto1179"><option value="">Seleziona prima il cliente</option></select></div>
      <div><label>Data recupero</label><input id="recData" type="date"></div>
    </div>
    <div class="row">
@@ -1677,6 +1794,109 @@ function eventoGestibileRegistro1179(ev){
  return String(ev.data||"")<=todayISO() && nonGestito;
 }
 
+function pacchettiCliente1179(clienteId){
+ const map=new Map();
+
+ eventi.filter(e=>e.clienteId===clienteId).forEach(e=>{
+   const cycle=String(e.renewalCycleId||"").trim();
+   if(!cycle)return;
+
+   if(!map.has(cycle)){
+     map.set(cycle,{
+       id:cycle,
+       start:String(e.packageStart||e.data||""),
+       count:0
+     });
+   }
+
+   const p=map.get(cycle);
+   if(e.tipo!=="recupero") p.count++;
+   if(!p.start || String(e.packageStart||e.data||"")<p.start){
+     p.start=String(e.packageStart||e.data||"");
+   }
+ });
+
+ return [...map.values()].sort((a,b)=>String(b.start||"").localeCompare(String(a.start||"")));
+}
+
+function aggiornaFiltroPacchetto1179(clienteId){
+ let wrap=$("registroPacchettoWrap1179");
+
+ if(!wrap){
+   wrap=document.createElement("div");
+   wrap.id="registroPacchettoWrap1179";
+   wrap.className="card";
+   wrap.style.marginBottom="16px";
+   wrap.innerHTML=`
+     <label><b>Pacchetto</b></label>
+     <select id="registroPacchetto1179" onchange="renderRegistro()"></select>
+   `;
+
+   const lista=$("registroLista");
+   const card=lista?.closest(".card");
+   if(card) card.parentNode.insertBefore(wrap,card);
+ }
+
+ const sel=$("registroPacchetto1179");
+ if(!sel)return;
+
+ const current=sel.value;
+ const packs=pacchettiCliente1179(clienteId);
+
+ sel.innerHTML=
+   `<option value="">Tutti i pacchetti</option>`+
+   packs.map((p,i)=>
+     `<option value="${p.id}">${i===0?"Pacchetto attuale":"Pacchetto precedente"} · ${p.start?fmt(p.start):"data non disponibile"} · ${p.count} lezioni</option>`
+   ).join("")+
+   `<option value="legacy">Storico senza pacchetto</option>`;
+
+ if([...sel.options].some(o=>o.value===current)){
+   sel.value=current;
+ }else{
+   sel.value=packs[0]?.id||"";
+ }
+}
+
+window.eliminaEventoRecuperoManuale1179=async function(eventId){
+ const ev=eventi.find(e=>e.id===eventId);
+ if(!ev)return alert("Recupero non trovato.");
+
+ if(ev.tipo!=="recupero" || ev.recuperoManuale!==true){
+   return alert("Questa funzione vale solo per i recuperi manuali.");
+ }
+
+ if(!confirm(
+   "Eliminare questo recupero?\n\n"+
+   "Il recupero verrà rimosso dal Registro Cliente.\n"+
+   "Il contatore delle lezioni NON verrà modificato."
+ ))return;
+
+ try{
+   if(typeof recuperi!=="undefined"){
+     const collegati=recuperi.filter(r=>
+       r.eventoId===eventId ||
+       (
+         r.manuale===true &&
+         r.clienteId===ev.clienteId &&
+         String(r.data||"")===String(ev.data||"") &&
+         String(r.ora||"")===String(ev.ora||"")
+       )
+     );
+
+     for(const r of collegati){
+       await deleteDoc(docPath("recuperi",r.id));
+     }
+   }
+
+   await deleteDoc(docPath("eventi",eventId));
+
+   alert("Recupero eliminato. Il contatore non è stato modificato.");
+ }catch(e){
+   console.error(e);
+   alert("Errore durante l'eliminazione: "+(e.message||e));
+ }
+};
+
 window.renderRegistro=function(){
  renderRegistroSelect();
  const id=$("registroCliente").value;
@@ -1687,14 +1907,50 @@ window.renderRegistro=function(){
    return;
  }
 
+ aggiornaFiltroPacchetto1179(id);
+ const filtroPacchetto=$("registroPacchetto1179")?.value||"";
+
  const evs=eventi
-   .filter(e=>e.clienteId===id)
+   .filter(e=>{
+     if(e.clienteId!==id)return false;
+     if(!filtroPacchetto)return true;
+     if(filtroPacchetto==="legacy")return !String(e.renewalCycleId||"").trim();
+     return String(e.renewalCycleId||"")===filtroPacchetto;
+   })
    .sort((a,b)=>String(a.data||"").localeCompare(String(b.data||""))||String(a.ora||"").localeCompare(String(b.ora||"")));
 
- $("regTotali").textContent=c.lezioniTotali||0;
- $("regFatte").textContent=fatte(id);
- $("regResidue").textContent=residue(c);
- $("regPeriodo").textContent=`${fmt(c.inizio)} → ${fmt(c.scadenza)}`;
+ const regularEvents=evs.filter(e=>e.tipo!=="recupero");
+ const consumatePacchetto=evs.filter(e=>consumes(e.stato)).length;
+
+ let totalePacchetto=regularEvents.length;
+ let residuePacchetto=Math.max(0,totalePacchetto-consumatePacchetto);
+ let periodoInizio="";
+ let periodoFine="";
+
+ if(filtroPacchetto && filtroPacchetto!=="legacy"){
+   const pack=pacchettiCliente1179(id).find(p=>p.id===filtroPacchetto);
+   periodoInizio=pack?.start||regularEvents[0]?.data||"";
+
+   const isCurrent=String(c.renewalCycleId||"")===filtroPacchetto;
+   if(isCurrent){
+     totalePacchetto=Number(c.lezioniTotali||totalePacchetto);
+     residuePacchetto=Math.max(0,totalePacchetto-consumatePacchetto);
+     periodoFine=c.scadenza||regularEvents[regularEvents.length-1]?.data||"";
+   }else{
+     periodoFine=regularEvents[regularEvents.length-1]?.data||periodoInizio;
+   }
+ }else{
+   const date=evs.map(e=>String(e.data||"")).filter(Boolean).sort();
+   periodoInizio=date[0]||"";
+   periodoFine=date[date.length-1]||"";
+ }
+
+ $("regTotali").textContent=totalePacchetto;
+ $("regFatte").textContent=consumatePacchetto;
+ $("regResidue").textContent=residuePacchetto;
+ $("regPeriodo").textContent=periodoInizio
+   ? `${fmt(periodoInizio)} → ${fmt(periodoFine||periodoInizio)}`
+   : "—";
 
  $("registroLista").innerHTML=evs.map(e=>{
    const gestibile=eventoGestibileRegistro1179(e);
@@ -1702,6 +1958,11 @@ window.renderRegistro=function(){
      <h3>${fmt(e.data)} ore ${e.ora||"-"}</h3>
      <p class="meta">Stato: ${e.stato||"Prenotata"}</p>
      <span class="badge ${consumes(e.stato)?"ok":historical(e.stato)?"bad":"warn"}">${e.stato||"Prenotata"}</span>
+      ${e.tipo==="recupero" && e.recuperoManuale===true
+        ? `<div class="actions" style="margin-top:10px">
+             <button class="btn red" onclick="eliminaEventoRecuperoManuale1179('${e.id}')">Elimina recupero</button>
+           </div>`
+        : ""}
      ${gestibile?`<div class="actions" style="margin-top:10px">
        <button class="btn green" onclick="confermaEffettuata('${e.id}',this)">Effettuata</button>
        <button class="btn red" onclick="confermaAssente('${e.id}',this)">Assente</button>
