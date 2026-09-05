@@ -600,7 +600,12 @@ function clientCard(c){
      ${c.renewalCycleId?`<button type="button" class="btn red" onclick="annullaUltimoRinnovo12025('${c.id}')">↩️ Annulla ultimo rinnovo</button>`:""}
      <button type="button" class="btn dark" onclick="editCliente('${c.id}')">Modifica</button>
      <button type="button" class="btn light" onclick="inattivo('${c.id}')">${inactive?"Riattiva":"Inattivo"}</button>
-     <button type="button" class="btn light" onclick="sbInviteClient('${c.id}')">Invia accesso cliente</button>
+     ${String(c.statoRegistrazioneCliente||"")==="registrato"
+        ? `<span class="badge ok" title="Cliente registrato">🟢 Registrato</span>`
+        : String(c.statoRegistrazioneCliente||"")==="in_attesa"
+          ? `<span class="badge warn" title="Registrazione in attesa">🟡 In attesa</span>`
+          : ""}
+      <button type="button" class="btn light" onclick="sbInviteClient('${c.id}')">Invia accesso cliente</button>
      <button type="button" class="btn red" onclick="eliminaCliente('${c.id}')">Elimina cliente</button>
    </div>
  </div>`;
@@ -1010,7 +1015,15 @@ window.sbInviteClient = async function(id){
    updatedAt:serverTimestamp()
  },{merge:true});
 
- const link = sbClientLink(id,token);
+ if(String(c.statoRegistrazioneCliente||"")!=="registrato"){
+    await setDoc(docPath("clienti",id),{
+      statoRegistrazioneCliente:"in_attesa",
+      invitoClienteInviatoAt:serverTimestamp(),
+      updatedAt:serverTimestamp()
+    },{merge:true});
+  }
+
+  const link = sbClientLink(id,token);
  const phone = String(c.telefono||"").replace(/\D/g,"");
  const text = encodeURIComponent(`Ciao ${c.nome||""}, ecco il link per accedere alla tua Area Cliente Premium:\n${link}`);
  if(phone){

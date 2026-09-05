@@ -167,7 +167,13 @@ async function verifyLoggedUser(user){
  await setDoc(doc(db,"clientAccess",user.uid),{
   token:token||"",ownerUid,clientId:id,email:normalizeEmail(user.email),updatedAt:serverTimestamp()
  },{merge:true});
- return c;
+ await setDoc(clientRef,{
+    statoRegistrazioneCliente:"registrato",
+    registrazioneClienteAt:serverTimestamp(),
+    emailRegistrazioneCliente:normalizeEmail(user.email),
+    updatedAt:serverTimestamp()
+  },{merge:true});
+  return c;
 }
 async function doLogin(){
  const email=normalizeEmail(document.getElementById("loginEmail").value);
