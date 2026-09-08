@@ -805,6 +805,7 @@ function renderRecuperi(){
  const list=recuperi.slice().sort((a,b)=>String(b.createdAt||"").localeCompare(String(a.createdAt||"")));
  box.innerHTML=list.length?list.map(r=>{
    const pending=(r.stato||"Richiesta")==="Richiesta";
+    const manuale=!!r.manuale;
    return `<div class="check">
      <h3>${r.clienteNome||"Cliente"}</h3>
      <p class="meta">Lezione: ${fmt(r.data)} ore ${r.ora||"-"}<br>Richiesta: ${r.createdAtLabel||"-"}<br>Stato: <b>${r.stato||"Richiesta"}</b>${r.motivoRifiuto?`<br>Motivo: ${r.motivoRifiuto}`:""}</p>
