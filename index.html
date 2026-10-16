@@ -155,6 +155,42 @@ hr{border:0;border-top:1px solid #e5e7eb;margin:12px 0}
       <div><label>Dovuto €</label><input id="dovuto" type="number" step="0.01"></div>
       <div><label>Pagato €</label><input id="pagato" type="number" step="0.01"></div>
     </div>
+
+    <div id="gestioneSaldoPacchetti" class="card hidden" style="margin:18px 0;padding:18px">
+      <h3>💳 Pagamento per pacchetto</h3>
+
+      <label>Pacchetto da aggiornare</label>
+      <select id="saldoPacchettoSelect" onchange="aggiornaSaldoPacchettoUI()"></select>
+
+      <div class="row" style="margin-top:12px">
+        <div>
+          <label>Dovuto pacchetto</label>
+          <input id="saldoPacchettoDovuto" type="number" readonly>
+        </div>
+
+        <div>
+          <label>Già pagato</label>
+          <input id="saldoPacchettoPagato" type="number" readonly>
+        </div>
+      </div>
+
+      <div class="row">
+        <div>
+          <label>Residuo</label>
+          <input id="saldoPacchettoResiduo" type="number" readonly>
+        </div>
+
+        <div>
+          <label>Pagamento ricevuto ora €</label>
+          <input id="saldoPacchettoNuovoPagamento" type="number" min="0" step="0.01" placeholder="Es. 350">
+        </div>
+      </div>
+
+      <button class="btn green full" onclick="registraPagamentoPacchetto()">
+        💰 Registra pagamento sul pacchetto
+      </button>
+    </div>
+
     <label>Note</label><textarea id="note"></textarea>
     <div id="newActions">
       <button class="btn gold full" onclick="creaCliente()">Crea cliente + genera calendario</button>
@@ -442,6 +478,13 @@ window.creaCliente=async()=>{
  c.stato="attivo";
  c.renewalCycleId="P"+Date.now().toString(36)+Math.random().toString(36).slice(2,10);
  c.packageStart=c.inizio||todayISO();
+ c.saldiPacchetti=[{
+   id:c.renewalCycleId,
+   start:c.packageStart,
+   end:c.scadenza||"",
+   dovuto:Number(c.dovuto||0),
+   pagato:Number(c.pagato||0)
+ }];
  c.createdAt=serverTimestamp();
  const ref=await addDoc(path("clienti"),c);
  await generaEventi(ref.id,{...c,id:ref.id},c.inizio);
@@ -452,8 +495,211 @@ window.pulisciForm=()=>{["clienteId","nome","cognome","telefono","emailCliente",
 window.editCliente=id=>{
  const c=clienti.find(x=>x.id===id); if(!c)return;
  $("clienteId").value=id;["nome","cognome","telefono","emailCliente","servizio","lezioniTotali","frequenza","durata","giorni","orari","inizio","scadenza","dovuto","pagato","note"].forEach(k=>{if($(k))$(k).value=c[k]??""});
- setEditMode(true);aggiornaAnteprimaOrari();showTab("clienti");window.scrollTo({top:0,behavior:"smooth"});
+ setEditMode(true);
+ caricaGestioneSaldoPacchetti(c);
+ aggiornaAnteprimaOrari();
+ showTab("clienti");
+ window.scrollTo({top:0,behavior:"smooth"});
 }
+
+function saldiPacchettiCoach(c){
+ const salvati=Array.isArray(c?.saldiPacchetti)
+  ? c.saldiPacchetti.map(x=>({
+      ...x,
+      dovuto:Number(x.dovuto||0),
+      pagato:Number(x.pagato||0)
+    }))
+  : [];
+
+ if(salvati.length)return salvati;
+
+ // Fallback automatico per clienti legacy
+ const rr=rinnovi
+  .filter(r=>r.clienteId===c.id)
+  .slice()
+  .sort((a,b)=>String(a.createdAt?.seconds||a.createdAt||"").localeCompare(String(b.createdAt?.seconds||b.createdAt||"")));
+
+ const out=[];
+
+ if(rr.length && rr[0].previousSnapshot){
+  const ps=rr[0].previousSnapshot;
+  out.push({
+   id:"LEGACY-"+rr[0].id+"-PREV",
+   start:String(ps.inizio||""),
+   end:String(ps.scadenza||""),
+   dovuto:Number(ps.dovuto||0),
+   pagato:Number(ps.pagato||0)
+  });
+ }
+
+ rr.forEach(r=>{
+  const rid=String(r.renewalCycleId||r.id||"");
+  if(!rid)return;
+
+  if(!out.some(x=>String(x.id||"")===rid)){
+   out.push({
+    id:rid,
+    start:String(r.data||r.primaLezione||""),
+    end:"",
+    dovuto:Number(r.importo||0),
+    pagato:Number(r.pagato||0)
+   });
+  }
+ });
+
+ const currentId=String(c.renewalCycleId||"").trim();
+
+ if(currentId && !out.some(x=>String(x.id||"")===currentId)){
+  out.push({
+   id:currentId,
+   start:String(c.packageStart||c.inizio||""),
+   end:String(c.scadenza||""),
+   dovuto:Number(c.dovuto||0),
+   pagato:Number(c.pagato||0)
+  });
+ }
+
+ return out;
+}
+
+function residuoPacchettoCoach(p){
+ return Math.max(0,Number(p?.dovuto||0)-Number(p?.pagato||0));
+}
+
+function residuoTotaleCoach(c){
+ const lista=saldiPacchettiCoach(c);
+
+ if(!lista.length){
+  return residuoEuro(c);
+ }
+
+ return lista.reduce(
+  (tot,p)=>tot+residuoPacchettoCoach(p),
+  0
+ );
+}
+
+function caricaGestioneSaldoPacchetti(c){
+ const box=$("gestioneSaldoPacchetti");
+ const sel=$("saldoPacchettoSelect");
+
+ if(!box || !sel)return;
+
+ const lista=saldiPacchettiCoach(c);
+
+ if(!lista.length){
+  box.classList.add("hidden");
+  sel.innerHTML="";
+  return;
+ }
+
+ box.classList.remove("hidden");
+
+ const currentId=String(c.renewalCycleId||"");
+
+ sel.innerHTML=lista
+  .slice()
+  .reverse()
+  .map(p=>{
+    const isCurrent=String(p.id||"")===currentId;
+    const start=p.start||"";
+    const end=p.end||"";
+    const residuo=residuoPacchettoCoach(p);
+
+    return `<option value="${String(p.id||"")}">
+      ${isCurrent?"Pacchetto attuale":"Pacchetto precedente"} ·
+      ${start?fmt(start):"-"}${end?" → "+fmt(end):""} ·
+      residuo ${euro(residuo)}
+    </option>`;
+  }).join("");
+
+ aggiornaSaldoPacchettoUI();
+}
+
+window.aggiornaSaldoPacchettoUI=function(){
+ const id=$("clienteId")?.value;
+ const c=clienti.find(x=>x.id===id);
+ if(!c)return;
+
+ const selectedId=$("saldoPacchettoSelect")?.value;
+ const p=saldiPacchettiCoach(c).find(x=>String(x.id||"")===String(selectedId||""));
+
+ if(!p)return;
+
+ $("saldoPacchettoDovuto").value=Number(p.dovuto||0);
+ $("saldoPacchettoPagato").value=Number(p.pagato||0);
+ $("saldoPacchettoResiduo").value=residuoPacchettoCoach(p);
+ $("saldoPacchettoNuovoPagamento").value="";
+};
+
+window.registraPagamentoPacchetto=async function(){
+ const id=$("clienteId")?.value;
+ const c=clienti.find(x=>x.id===id);
+
+ if(!c)return alert("Cliente non trovato.");
+
+ const selectedId=$("saldoPacchettoSelect")?.value;
+ if(!selectedId)return alert("Seleziona il pacchetto.");
+
+ const importo=Number(String($("saldoPacchettoNuovoPagamento")?.value||"").replace(",","."));
+
+ if(!Number.isFinite(importo) || importo<=0){
+  return alert("Inserisci un pagamento valido.");
+ }
+
+ const lista=saldiPacchettiCoach(c);
+ const idx=lista.findIndex(x=>String(x.id||"")===String(selectedId));
+
+ if(idx<0)return alert("Pacchetto non trovato.");
+
+ const p=lista[idx];
+ const residuo=residuoPacchettoCoach(p);
+
+ if(importo>residuo){
+  return alert(`Il pagamento supera il residuo del pacchetto (${euro(residuo)}).`);
+ }
+
+ const nuovoPagato=Number(p.pagato||0)+importo;
+
+ lista[idx]={
+  ...p,
+  pagato:nuovoPagato
+ };
+
+ const currentId=String(c.renewalCycleId||"");
+ const isCurrent=String(selectedId)===currentId;
+
+ const update={
+  saldiPacchetti:lista,
+  updatedAt:serverTimestamp()
+ };
+
+ if(isCurrent){
+  update.pagato=nuovoPagato;
+  update.dovuto=Number(p.dovuto||0);
+  update.pagamentoRinnovoDaSaldare=nuovoPagato<Number(p.dovuto||0);
+ }
+
+ await setDoc(docPath("clienti",id),update,{merge:true});
+
+ await addDoc(path("pagamenti"),{
+  clienteId:id,
+  clienteNome:nome(c),
+  renewalCycleId:selectedId,
+  importo,
+  data:todayISO(),
+  mese:todayISO().slice(0,7),
+  createdAt:serverTimestamp()
+ });
+
+ alert(
+  `Pagamento registrato.\n\n`+
+  `Importo: ${euro(importo)}\n`+
+  `Residuo precedente: ${euro(residuo)}\n`+
+  `Nuovo residuo: ${euro(residuo-importo)}`
+ );
+};
+
 window.salvaDatiCliente=async()=>{const id=$("clienteId").value;if(!id)return;await setDoc(docPath("clienti",id),formData(),{merge:true});alert("Dati cliente salvati.")}
 window.salvaSaldoCliente=async()=>{const id=$("clienteId").value;if(!id)return;const dovuto=Number($("dovuto").value||0),pagato=Number($("pagato").value||0);await setDoc(docPath("clienti",id),{dovuto,pagato,pagamentoRinnovoDaSaldare:pagato<dovuto,updatedAt:serverTimestamp()},{merge:true});alert("Saldo aggiornato.")}
 window.ricalcolaContatoreCliente=async()=>{const id=$("clienteId").value;if(!id)return;const c=clienti.find(x=>x.id===id);await setDoc(docPath("clienti",id),{lezioniFatte:fatte(id),lezioniResidue:residue(c),updatedAt:serverTimestamp()},{merge:true});alert("Contatore ricalcolato.")}
@@ -582,7 +828,7 @@ window.whatsappClienteById=function(clienteId,tipo="generico"){
 
 function clientCard(c){
  const inactive=(c.stato||"attivo")==="inattivo";
- const res=residuoEuro(c);
+ const res=residuoTotaleCoach(c);
  const r=Number(c.lezioniResidue ?? residue(c) ?? 0);
  return `<div class="card client-card" data-client-id="${c.id}">
    <h2>${nome(c)}</h2>
@@ -645,7 +891,7 @@ function renderCoachNotifications(){
  if(openBtn)openBtn.onclick=()=>showTab("recuperi");
 }
 
-function renderDashboard(){const att=clienti.filter(c=>(c.stato||"attivo")!=="inattivo");$("kClienti").textContent=att.length;$("kOggi").textContent=eventi.filter(e=>e.data===todayISO()).length;$("kDaConf").textContent=lezioniDaConfermare().length;$("kResidui").textContent=euro(att.reduce((s,c)=>s+residuoEuro(c),0));renderSmart();renderCoachNotifications()}
+function renderDashboard(){const att=clienti.filter(c=>(c.stato||"attivo")!=="inattivo");$("kClienti").textContent=att.length;$("kOggi").textContent=eventi.filter(e=>e.data===todayISO()).length;$("kDaConf").textContent=lezioniDaConfermare().length;$("kResidui").textContent=euro(att.reduce((s,c)=>s+residuoTotaleCoach(c),0));renderSmart();renderCoachNotifications()}
 function renderCalendario(){if(!$("calDal").value)$("calDal").value=todayISO();if(!$("calAl").value){const d=new Date();d.setDate(d.getDate()+14);$("calAl").value=d.toISOString().slice(0,10)}const dal=$("calDal").value,al=$("calAl").value;const list=eventi.filter(e=>e.data>=dal&&e.data<=al).sort((a,b)=>a.data.localeCompare(b.data)||String(a.ora).localeCompare(String(b.ora)));$("listaCalendario").innerHTML=list.map(e=>`<div class="card"><h3>${e.clienteNome}</h3><p class="meta">${fmt(e.data)} ore ${e.ora} · ${e.stato||"Prenotata"}</p></div>`).join("")||'<div class="empty">Nessuna lezione.</div>'}
 function renderRegistroSelect(){const cur=$("registroCliente").value;$("registroCliente").innerHTML='<option value="">Seleziona cliente</option>'+clienti.map(c=>`<option value="${c.id}">${nome(c)}</option>`).join("");if(cur)$("registroCliente").value=cur}
 window.renderRegistro=()=>{renderRegistroSelect();const id=$("registroCliente").value,c=clienti.find(x=>x.id===id);if(!c){$("registroLista").innerHTML='<div class="empty">Seleziona un cliente.</div>';return}const evs=eventi.filter(e=>e.clienteId===id).sort((a,b)=>a.data.localeCompare(b.data)||String(a.ora).localeCompare(String(b.ora)));$("regTotali").textContent=c.lezioniTotali||0;$("regFatte").textContent=fatte(id);$("regResidue").textContent=residue(c);$("regPeriodo").textContent=`${fmt(c.inizio)} → ${fmt(c.scadenza)}`;$("registroLista").innerHTML=evs.map(e=>`<div class="check"><h3>${fmt(e.data)} ore ${e.ora}</h3><p class="meta">Stato: ${e.stato||"Prenotata"}</p><span class="badge ${consumes(e.stato)?"ok":historical(e.stato)?"bad":"warn"}">${e.stato||"Prenotata"}</span>
@@ -655,8 +901,8 @@ window.renderRegistro=()=>{renderRegistroSelect();const id=$("registroCliente").
            </div>`
         : ""}</div>`).join("")||'<div class="empty">Nessuna lezione.</div>'}
 function renderContattare(){
- const list=clienti.filter(c=>(c.stato||"attivo")!=="inattivo"&&residuoEuro(c)>0);
- $("listaContattare").innerHTML=list.map(c=>`<div class="check"><h3>${nome(c)}</h3><p class="meta">Residuo ${euro(residuoEuro(c))}</p><button type="button" class="btn whatsapp full js-wa-pagamento" data-client-id="${c.id}">&#128242; Invia promemoria pagamento</button></div>`).join("")||'<div class="empty">Nessun cliente da contattare.</div>';
+ const list=clienti.filter(c=>(c.stato||"attivo")!=="inattivo"&&residuoTotaleCoach(c)>0);
+ $("listaContattare").innerHTML=list.map(c=>`<div class="check"><h3>${nome(c)}</h3><p class="meta">Residuo ${euro(residuoTotaleCoach(c))}</p><button type="button" class="btn whatsapp full js-wa-pagamento" data-client-id="${c.id}">&#128242; Invia promemoria pagamento</button></div>`).join("")||'<div class="empty">Nessun cliente da contattare.</div>';
 }
 document.addEventListener("click",e=>{
  const btn=e.target.closest(".js-wa-cliente");
@@ -716,6 +962,23 @@ async function annullaUltimoRinnovo12025(clienteId){
 
  const snap=last.previousSnapshot;
 
+ // Nuova gestione economica:
+ // rimuove il pacchetto che stiamo annullando
+ const saldiPrima=saldiPacchettiCoach(c);
+
+ const saldiDopo=saldiPrima.filter(
+  p=>String(p.id||"")!==cycleId
+ );
+
+ // L'ultimo pacchetto rimasto torna ad essere quello attuale
+ const pacchettoPrecedente=saldiDopo.length
+  ? saldiDopo[saldiDopo.length-1]
+  : null;
+
+ const previousCycleId=pacchettoPrecedente
+  ? String(pacchettoPrecedente.id||"")
+  : "";
+
  const ok=confirm(
   `Annullare l'ultimo rinnovo di ${nome(c)}?\n\n`+
   `Pacchetto nuovo: ${Number(last.pacchetto||0)} lezioni\n`+
@@ -742,7 +1005,16 @@ async function annullaUltimoRinnovo12025(clienteId){
    dovuto:Number(snap.dovuto||0),
    pagato:Number(snap.pagato||0),
    pagamentoRinnovoDaSaldare:!!snap.pagamentoRinnovoDaSaldare,
-   renewalCycleId:"",
+
+   saldiPacchetti:saldiDopo,
+
+   renewalCycleId:previousCycleId,
+
+   packageStart:
+    pacchettoPrecedente?.start ||
+    snap.inizio ||
+    "",
+
    updatedAt:serverTimestamp()
   },{merge:true});
 
@@ -850,7 +1122,11 @@ window.editCliente=id=>{
  const c=clienti.find(x=>x.id===id); if(!c)return;
  $("clienteId").value=id;
  ["nome","cognome","telefono","emailCliente","servizio","lezioniTotali","frequenza","durata","inizio","scadenza","dovuto","pagato","note"].forEach(k=>{if($(k))$(k).value=c[k]??""});
- setScheduleFields112(c); setEditMode(true); showTab("clienti"); window.scrollTo({top:0,behavior:"smooth"});
+ setScheduleFields112(c);
+ setEditMode(true);
+ caricaGestioneSaldoPacchetti(c);
+ showTab("clienti");
+ window.scrollTo({top:0,behavior:"smooth"});
 };
 window.lezione=async id=>{const c=clienti.find(x=>x.id===id);if(!c)return alert("Cliente non trovato");if(!confirm("Scalare 1 lezione manualmente?"))return;await setDoc(docPath("clienti",id),{lezioniFatte:Number(c.lezioniFatte||0)+1,lezioniResidue:Math.max(0,Number(c.lezioniResidue||residue(c))-1),updatedAt:serverTimestamp()},{merge:true});};
 window.restituisci=async id=>{const c=clienti.find(x=>x.id===id);if(!c)return alert("Cliente non trovato");if(!confirm("Restituire 1 lezione?"))return;await setDoc(docPath("clienti",id),{lezioniFatte:Math.max(0,Number(c.lezioniFatte||0)-1),lezioniResidue:Number(c.lezioniResidue||residue(c))+1,updatedAt:serverTimestamp()},{merge:true});};
@@ -2524,6 +2800,97 @@ const LTS120 = (()=>{
    alert(`Calendario aggiornato.\n\nLezioni eliminate: ${deleted}\nLezioni create: ${created.length}\nScadenza: ${fmt(expiry)}\n\nContatore e pacchetto invariati.`);
   }catch(e){console.error(e);alert(e.message||String(e));}
  }
+
+ function ricostruisciSaldiPacchetti(c){
+  if(Array.isArray(c.saldiPacchetti) && c.saldiPacchetti.length){
+   return c.saldiPacchetti.map(x=>({...x}));
+  }
+
+  const rr=rinnovi
+   .filter(r=>r.clienteId===c.id)
+   .slice()
+   .sort((a,b)=>String(a.createdAt?.seconds||a.createdAt||"").localeCompare(String(b.createdAt?.seconds||b.createdAt||"")));
+
+  const out=[];
+
+  if(rr.length && rr[0].previousSnapshot){
+   const ps=rr[0].previousSnapshot;
+   out.push({
+    id:"LEGACY-"+rr[0].id+"-PREV",
+    start:String(ps.inizio||""),
+    end:String(ps.scadenza||""),
+    dovuto:Number(ps.dovuto||0),
+    pagato:Number(ps.pagato||0)
+   });
+  }
+
+  rr.forEach(r=>{
+   const rid=String(r.renewalCycleId||r.id||"");
+   if(!rid)return;
+
+   if(!out.some(x=>String(x.id||"")===rid)){
+    out.push({
+     id:rid,
+     start:String(r.data||r.primaLezione||""),
+     end:"",
+     dovuto:Number(r.importo||0),
+     pagato:Number(r.pagato||0)
+    });
+   }
+  });
+
+  const currentId=String(c.renewalCycleId||"").trim();
+  if(currentId && !out.some(x=>String(x.id||"")===currentId)){
+   out.push({
+    id:currentId,
+    start:String(c.packageStart||c.inizio||""),
+    end:String(c.scadenza||""),
+    dovuto:Number(c.dovuto||0),
+    pagato:Number(c.pagato||0)
+   });
+  }
+
+  if(!out.length){
+   out.push({
+    id:currentId||("LEGACY-"+c.id),
+    start:String(c.packageStart||c.inizio||""),
+    end:String(c.scadenza||""),
+    dovuto:Number(c.dovuto||0),
+    pagato:Number(c.pagato||0)
+   });
+  }
+
+  return out;
+ }
+
+ window.migraSaldiPacchettiLegacy=async function(clienteId){
+  const targets=clienteId
+   ? clienti.filter(c=>c.id===clienteId)
+   : clienti.slice();
+
+  if(!targets.length){
+   return alert("Nessun cliente trovato.");
+  }
+
+  if(!confirm(`Ricostruire lo storico saldi per ${targets.length} cliente/i?\n\nOperazione DEV di test.`))return;
+
+  let ok=0;
+
+  for(const c of targets){
+   const saldiPacchetti=ricostruisciSaldiPacchetti(c);
+
+   await setDoc(
+    docPath("clienti",c.id),
+    {saldiPacchetti,updatedAt:serverTimestamp()},
+    {merge:true}
+   );
+
+   ok++;
+  }
+
+  alert(`Migrazione completata: ${ok} cliente/i.`);
+ };
+
  async function renewPackageOnly(id){
   const c=clienti.find(x=>x.id===id);if(!c)return;
   const sc=(Array.isArray(c.giorni)?c.giorni:String(c.giorni||"").split(/[,;\n]+/)).map((d,i)=>{
@@ -2602,10 +2969,39 @@ const LTS120 = (()=>{
    const cNuovo={...c,lezioniTotali:total,frequenza:freq,dovuto:importo,pagato:pagatoNuovo,renewalCycleId,packageStart:dataScelta};
    const created=await createFutureLessons(id,cNuovo,sc,total,start);
    const expiry=created.length?created[created.length-1].data:start;
+
+   let saldiPacchetti=Array.isArray(c.saldiPacchetti)
+     ? c.saldiPacchetti.map(x=>({...x}))
+     : [];
+
+   const vecchioCycleId=String(c.renewalCycleId||"").trim()||("LEGACY-"+id);
+
+   if(!saldiPacchetti.some(x=>String(x.id||"")===vecchioCycleId)){
+     saldiPacchetti.push({
+       id:vecchioCycleId,
+       start:String(c.packageStart||c.inizio||""),
+       end:String(c.scadenza||""),
+       dovuto:Number(c.dovuto||0),
+       pagato:Number(c.pagato||0)
+     });
+   }
+
+   saldiPacchetti.push({
+     id:renewalCycleId,
+     start:dataScelta,
+     end:expiry,
+     dovuto:importo,
+     pagato:pagatoNuovo
+   });
+
    await addDoc(path("rinnovi"),{cliente:nome(c),clienteId:id,pacchetto:total,frequenza:freq,data:dataScelta,primaLezione:start,importo:importo,pagato:pagatoNuovo,renewalCycleId,previousSnapshot,annullabile:true,createdAt:serverTimestamp()});
+
    await setDoc(docPath("clienti",id),{
     stato:"attivo",lezioniTotali:total,frequenza:freq,lezioniFatte:0,lezioniResidue:total,inizio:dataScelta,scadenza:expiry,
-    dovuto:importo,pagato:pagatoNuovo,pagamentoRinnovoDaSaldare:pagatoNuovo<importo,renewalCycleId,updatedAt:serverTimestamp()
+    dovuto:importo,pagato:pagatoNuovo,pagamentoRinnovoDaSaldare:pagatoNuovo<importo,
+    renewalCycleId,
+    saldiPacchetti,
+    updatedAt:serverTimestamp()
    },{merge:true});
    log("pacchetto_rinnovato_flessibile",{clienteId:id,cliente:nome(c),precedente:Number(c.lezioniTotali||0),totale:total,frequenza:freq,dataScelta:dataScelta,primaLezione:start,scadenza:expiry,dovuto:importo,pagato:pagatoNuovo,eliminate:deleted});
    alert(`Pacchetto rinnovato correttamente.\n\nPrima lezione: ${fmt(start)}\nLezioni create: ${created.length}\nScadenza: ${fmt(expiry)}`);

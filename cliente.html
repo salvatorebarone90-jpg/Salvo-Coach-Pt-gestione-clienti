@@ -89,6 +89,7 @@ main{padding:16px;max-width:930px;margin:auto}
     <a id="waClienteBtn" class="btn whatsapp-client" target="_blank">💬 WhatsApp Coach</a>
 
     <div id="okBox" class="alert" style="background:#dcfce7;color:#166534">🟢 Tutto regolare: pacchetto e scadenze sotto controllo.</div>
+    <div id="saldoPacchettiBox" class="card hidden"></div>
     <div class="grid">
       <div class="kpi"><strong id="kResidue">0</strong><span>Lezioni residue</span></div>
       <div class="kpi"><strong id="kNext">-</strong><span>Prossima lezione</span></div>
@@ -274,8 +275,28 @@ function total(c){return Number(c.lezioniTotali||0)}
 function value(c){return Number(c.dovuto||0)}
 function paid(c){return Number(c.pagato||0)}
 function balance(c){return Math.max(0,value(c)-paid(c))}
+
+function saldiCliente(c){
+ const lista=Array.isArray(c?.saldiPacchetti)?c.saldiPacchetti:[];
+ return lista.map(x=>({
+   ...x,
+   dovuto:Number(x.dovuto||0),
+   pagato:Number(x.pagato||0)
+ }));
+}
+
+function residuoSaldoPacchetto(x){
+ return Math.max(0,Number(x?.dovuto||0)-Number(x?.pagato||0));
+}
+
+function totalBalance(c){
+ const lista=saldiCliente(c);
+ if(!lista.length)return balance(c);
+ return lista.reduce((tot,x)=>tot+residuoSaldoPacchetto(x),0);
+}
+
 function activeLabel(c){return (c.stato||"attivo")==="inattivo"?"Inattivo":"Attivo"}
-function payLabel(c){return balance(c)>0?`🔴 Da saldare ${euro(balance(c))}`:"🟢 Saldo regolare"}
+function payLabel(c){return totalBalance(c)>0?`🔴 Da saldare ${euro(totalBalance(c))}`:"🟢 Saldo regolare"}
 
 let coachPhone11801 = "393793701208";
 function coachWhatsappLink(){
@@ -377,6 +398,72 @@ function renderPacchettiClienteArea(){
  box.innerHTML=html;
 }
 
+
+function renderSaldiPacchettiCliente(){
+ const box=document.getElementById("saldoPacchettiBox");
+ if(!box || !currentClient)return;
+
+ const lista=saldiCliente(currentClient);
+
+ if(!lista.length){
+   box.classList.add("hidden");
+   box.innerHTML="";
+   return;
+ }
+
+ const currentId=String(currentClient.renewalCycleId||"");
+
+ const ordinati=lista.slice().reverse();
+
+ const righe=ordinati.map((p,i)=>{
+   const isCurrent=String(p.id||"")===currentId;
+
+   const start=p.start||"";
+   const end=p.end || (isCurrent ? currentClient.scadenza||"" : "");
+
+   const residuo=residuoSaldoPacchetto(p);
+   const saldato=residuo<=0;
+
+   return `
+    <div style="border:1px solid #e5e7eb;border-radius:16px;padding:14px;margin-top:12px;background:#f8fafc">
+      <div style="font-weight:900;font-size:17px">
+        ${isCurrent?"📦 Pacchetto attuale":"📚 Pacchetto precedente"}
+      </div>
+
+      <div class="meta" style="margin-top:6px">
+        ${start?fmt(start):"Data iniziale non disponibile"}
+        ${end?" → "+fmt(end):""}
+      </div>
+
+      <div style="margin-top:10px">
+        Dovuto: <b>${euro(p.dovuto)}</b><br>
+        Pagato: <b>${euro(p.pagato)}</b><br>
+        ${
+          saldato
+          ? `<span class="badge ok" style="margin-top:8px">🟢 Saldato</span>`
+          : `<span class="badge bad" style="margin-top:8px">🔴 Da saldare ${euro(residuo)}</span>`
+        }
+      </div>
+    </div>`;
+ }).join("");
+
+ const totale=totalBalance(currentClient);
+
+ box.innerHTML=`
+   <h2>💳 Situazione pagamenti</h2>
+
+   <div style="font-size:20px;font-weight:900;margin-top:10px;color:${totale>0?"#991b1b":"#166534"}">
+     ${totale>0
+       ? `🔴 Totale da saldare: ${euro(totale)}`
+       : "🟢 Tutti i pacchetti risultano saldati"}
+   </div>
+
+   ${righe}
+ `;
+
+ box.classList.remove("hidden");
+}
+
 function renderClientArea(){
  const c=currentClient;
 
@@ -386,11 +473,26 @@ function renderClientArea(){
  document.getElementById("heroBadges").innerHTML=
    `<span class="badge ok">${activeLabel(c)}</span>`+
    `<span class="badge ok">${residue(c)} residue su ${total(c)}</span>`+
-   `<span class="badge ${balance(c)>0?"bad":"ok"}">${payLabel(c)}</span>`+
+   `<span class="badge ${totalBalance(c)>0?"bad":"ok"}">${payLabel(c)}</span>`+
    `<span class="badge ok">📋 ${c.regolamentoAccettato?"Regolamento accettato":"Regolamento non accettato"}</span>`;
+
+ const okBox=document.getElementById("okBox");
+ if(okBox){
+   if(totalBalance(c)>0){
+     okBox.style.background="#fee2e2";
+     okBox.style.color="#991b1b";
+     okBox.textContent=`🔴 Pagamento da regolarizzare: ${euro(totalBalance(c))}`;
+   }else{
+     okBox.style.background="#dcfce7";
+     okBox.style.color="#166534";
+     okBox.textContent="🟢 Tutto regolare: pacchetto e scadenze sotto controllo.";
+   }
+ }
 
  const wa=document.getElementById("waClienteBtn");
  if(wa)wa.href=coachWhatsappLink();
+
+ renderSaldiPacchettiCliente();
 
  document.getElementById("kResidue").textContent=residue(c);
 
